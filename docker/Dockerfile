@@ -47,7 +47,7 @@ ENV PYTHONPATH=/app/backend \
     PORT=8000
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
 EXPOSE 8080 8000
 

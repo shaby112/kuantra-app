@@ -24,15 +24,25 @@ if [ "${RUN_MIGRATIONS_ON_START:-true}" = "true" ]; then
   fi
 fi
 
-# Nginx serves the frontend and reverse-proxies /api to Uvicorn.
-nginx -g 'daemon off;' &
-NGINX_PID=$!
-
 # DuckDB is embedded and file-locked; keep a single worker process.
 python -m uvicorn app.main:app \
   --host 0.0.0.0 \
   --port 8000 \
   --workers "${UVICORN_WORKERS:-1}" \
-  --log-level "${UVICORN_LOG_LEVEL:-info}"
+  --log-level "${UVICORN_LOG_LEVEL:-info}" &
+UVICORN_PID=$!
 
-kill "$NGINX_PID" 2>/dev/null || true
+# Nginx serves frontend and reverse-proxies /api.
+nginx -g 'daemon off;' &
+NGINX_PID=$!
+
+cleanup() {
+  kill "$UVICORN_PID" "$NGINX_PID" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+# Exit container if either process exits unexpectedly.
+wait -n "$UVICORN_PID" "$NGINX_PID"
+EXIT_CODE=$?
+echo "One of the core processes exited. Shutting down..."
+exit "$EXIT_CODE"
