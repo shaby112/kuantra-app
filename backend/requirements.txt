@@ -1,0 +1,40 @@
+fastapi
+uvicorn
+google-genai
+sqlalchemy
+asyncpg
+redis
+pydantic-settings
+python-dotenv
+sqlglot
+sse-starlette
+cryptography
+clerk-backend-api
+PyJWT
+pydantic[email]
+python-multipart
+psycopg2-binary
+
+# Data Processing
+polars>=1.0.0
+openpyxl
+duckdb>=1.0.0
+
+# SSH Tunneling
+sshtunnel>=0.4.0
+
+# ETL Pipeline
+dlt[duckdb]>=1.0.0
+
+# Database Connectors
+pymongo>=4.0.0
+pymysql>=1.0.0
+
+# Scheduling
+apscheduler>=3.10.0
+
+# Alembic for migrations
+alembic
+
+# Enhanced MDL Generation
+rapidfuzz

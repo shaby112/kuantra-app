@@ -1,0 +1,29 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Env files
+.env
+*.env
+backend/.env
+frontend/.env
+
+# Python
+**/__pycache__/
+**/*.pyc
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+website/node_modules/
+website/dist/
+
+# Runtime data
+backend/uploads/
+backend/ssh_keys/
+backend/*.db
+backend/*.duckdb

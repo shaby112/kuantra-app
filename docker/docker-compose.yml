@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  insightops:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "${INSIGHTOPS_PORT:-8080}:8080"
+    environment:
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+      - CLERK_ISSUER=${CLERK_ISSUER}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
+      - AI_PROVIDER=${AI_PROVIDER:-gemini}
+      - ALLOW_CLOUD_LLM=${ALLOW_CLOUD_LLM:-true}
+      - LOCAL_LLM_BASE_URL=${LOCAL_LLM_BASE_URL:-}
+      - LOCAL_LLM_MODEL=${LOCAL_LLM_MODEL:-local-model}
+      - LOCAL_LLM_API_KEY=${LOCAL_LLM_API_KEY:-}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - DATABASE_URL=postgresql+asyncpg://insightops:${DB_PASSWORD:-insightops}@db:5432/insightops
+      - SQLALCHEMY_DATABASE_URI=postgresql://insightops:${DB_PASSWORD:-insightops}@db:5432/insightops
+      - DUCKDB_MEMORY_LIMIT=${DUCKDB_MEMORY_LIMIT:-4GB}
+      - DUCKDB_THREADS=${DUCKDB_THREADS:-4}
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+    volumes:
+      - insightops-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=insightops
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-insightops}
+      - POSTGRES_DB=insightops
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insightops"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  insightops-data:
+  postgres-data:

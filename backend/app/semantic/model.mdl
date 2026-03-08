@@ -1,0 +1,7782 @@
+version: '1.0'
+models:
+- name: ads_drafts
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: price
+    type: BIGINT
+  - name: price
+    type: BIGINT
+  - name: category
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: subcategory
+    type: VARCHAR
+  - name: subcategory
+    type: VARCHAR
+  - name: is_bidding
+    type: BOOLEAN
+  - name: is_bidding
+    type: BOOLEAN
+  - name: area_id
+    type: BIGINT
+  - name: area_id
+    type: BIGINT
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: location
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_drafts__attribute_ids
+  columns:
+  - name: value
+    type: BIGINT
+  - name: value
+    type: BIGINT
+  - name: _dlt_root_id
+    type: VARCHAR
+  - name: _dlt_root_id
+    type: VARCHAR
+  - name: _dlt_parent_id
+    type: VARCHAR
+  - name: _dlt_parent_id
+    type: VARCHAR
+  - name: _dlt_list_idx
+    type: BIGINT
+  - name: _dlt_list_idx
+    type: BIGINT
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_media
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_reviewed
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: reviewed_by
+    type: VARCHAR
+  - name: reviewed_by
+    type: VARCHAR
+  - name: reviewed_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: reviewed_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_status
+    type: VARCHAR
+  - name: updated_status
+    type: VARCHAR
+  - name: previous_status
+    type: VARCHAR
+  - name: previous_status
+    type: VARCHAR
+  - name: review_notes
+    type: VARCHAR
+  - name: review_notes
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ad_creation_rates
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_count
+    type: BIGINT
+  - name: ad_count
+    type: BIGINT
+  - name: last_reset
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_reset
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: agent_sessions
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: session_id
+    type: VARCHAR
+  - name: session_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: last_activity
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_activity
+    type: TIMESTAMP WITH TIME ZONE
+  - name: title_status
+    type: VARCHAR
+  - name: title_status
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: app_assets
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: asset_type
+    type: VARCHAR
+  - name: asset_type
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: deep_link
+    type: VARCHAR
+  - name: deep_link
+    type: VARCHAR
+  - name: position
+    type: BIGINT
+  - name: position
+    type: BIGINT
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: target_platform
+    type: VARCHAR
+  - name: target_platform
+    type: VARCHAR
+  - name: priority
+    type: BIGINT
+  - name: priority
+    type: BIGINT
+  - name: asset_metadata
+    type: VARCHAR
+  - name: asset_metadata
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: areas
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: area
+    type: VARCHAR
+  - name: area
+    type: VARCHAR
+  - name: city_id
+    type: BIGINT
+  - name: city_id
+    type: BIGINT
+  - name: latitude
+    type: DOUBLE
+  - name: latitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: geospatial_location
+    type: VARCHAR
+  - name: geospatial_location
+    type: VARCHAR
+  - name: location_name
+    type: VARCHAR
+  - name: location_name
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: attributes
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: attribute
+    type: VARCHAR
+  - name: attribute
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: bidding_logs
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: bid_id
+    type: BIGINT
+  - name: bid_id
+    type: BIGINT
+  - name: seller_id
+    type: VARCHAR
+  - name: seller_id
+    type: VARCHAR
+  - name: buyer_id
+    type: VARCHAR
+  - name: buyer_id
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: blacklisted_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: ip_address
+    type: VARCHAR
+  - name: ip_address
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_by
+    type: VARCHAR
+  - name: created_by
+    type: VARCHAR
+  - name: notes
+    type: VARCHAR
+  - name: notes
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: business_profile_mapping
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: business_user_id
+    type: VARCHAR
+  - name: business_user_id
+    type: VARCHAR
+  - name: owner_user_id
+    type: VARCHAR
+  - name: owner_user_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: buyer_requests_media
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: buyer_request_id
+    type: BIGINT
+  - name: buyer_request_id
+    type: BIGINT
+  - name: media_key
+    type: VARCHAR
+  - name: media_key
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: category_subcategories
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+  - name: category_id
+    type: BIGINT
+  - name: category_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: chatbot_conversations
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: chat_messages
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: room_id
+    type: VARCHAR
+  - name: room_id
+    type: VARCHAR
+  - name: sender_id
+    type: VARCHAR
+  - name: sender_id
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_read
+    type: BOOLEAN
+  - name: is_read
+    type: BOOLEAN
+  - name: is_system_message
+    type: BOOLEAN
+  - name: is_system_message
+    type: BOOLEAN
+  - name: media_metadata
+    type: VARCHAR
+  - name: media_metadata
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: meeting_id
+    type: BIGINT
+  - name: meeting_id
+    type: BIGINT
+- name: community_events
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: picture
+    type: VARCHAR
+  - name: picture
+    type: VARCHAR
+  - name: deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: enrolled_count
+    type: BIGINT
+  - name: enrolled_count
+    type: BIGINT
+  - name: max_participants
+    type: BIGINT
+  - name: max_participants
+    type: BIGINT
+  - name: category
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: countries
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: country
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: deleted_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deleted_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deleted_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deletion_reason
+    type: VARCHAR
+  - name: deletion_reason
+    type: VARCHAR
+  - name: is_admin
+    type: BOOLEAN
+  - name: is_admin
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: bio
+    type: VARCHAR
+  - name: bio
+    type: VARCHAR
+- name: events
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: start_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: start_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: admin_user_id
+    type: VARCHAR
+  - name: admin_user_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: banner
+    type: VARCHAR
+  - name: banner
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: event_bookings
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: ticket_type_id
+    type: VARCHAR
+  - name: ticket_type_id
+    type: VARCHAR
+  - name: qr_code_data
+    type: VARCHAR
+  - name: qr_code_data
+    type: VARCHAR
+  - name: is_verified
+    type: BOOLEAN
+  - name: is_verified
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: qr_code_image
+    type: VARCHAR
+  - name: qr_code_image
+    type: VARCHAR
+  - name: verification_code
+    type: VARCHAR
+  - name: verification_code
+    type: VARCHAR
+  - name: quantity
+    type: BIGINT
+  - name: quantity
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: event_prizes
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: prize_number
+    type: BIGINT
+  - name: prize_number
+    type: BIGINT
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: image
+    type: VARCHAR
+  - name: image
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: fcm_tokens
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: follows
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: follower_id
+    type: VARCHAR
+  - name: follower_id
+    type: VARCHAR
+  - name: following_id
+    type: VARCHAR
+  - name: following_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: geometry_columns
+  columns:
+  - name: f_table_catalog
+    type: VARCHAR
+  - name: f_table_schema
+    type: VARCHAR
+  - name: f_table_name
+    type: VARCHAR
+  - name: f_geometry_column
+    type: VARCHAR
+  - name: coord_dimension
+    type: BIGINT
+  - name: srid
+    type: BIGINT
+  - name: type
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: giveaway_referral_usage
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: referral_id
+    type: VARCHAR
+  - name: referral_id
+    type: VARCHAR
+  - name: referred_user_id
+    type: VARCHAR
+  - name: referred_user_id
+    type: VARCHAR
+  - name: used_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: used_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: locations
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: city
+    type: VARCHAR
+  - name: city
+    type: VARCHAR
+  - name: province_id
+    type: BIGINT
+  - name: province_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: loyalty_transactions
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: loyalty_points_id
+    type: BIGINT
+  - name: loyalty_points_id
+    type: BIGINT
+  - name: tier
+    type: VARCHAR
+  - name: tier
+    type: VARCHAR
+  - name: points
+    type: BIGINT
+  - name: points
+    type: BIGINT
+  - name: transaction_type
+    type: VARCHAR
+  - name: transaction_type
+    type: VARCHAR
+  - name: reference_type
+    type: VARCHAR
+  - name: reference_type
+    type: VARCHAR
+  - name: reference_id
+    type: VARCHAR
+  - name: reference_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: meetings
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: chat_room_id
+    type: VARCHAR
+  - name: chat_room_id
+    type: VARCHAR
+  - name: store_id
+    type: BIGINT
+  - name: store_id
+    type: BIGINT
+  - name: scheduled_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: scheduled_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: provinces
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: province
+    type: VARCHAR
+  - name: province
+    type: VARCHAR
+  - name: country_id
+    type: BIGINT
+  - name: country_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: recommendation_scores
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: score
+    type: DOUBLE
+  - name: score
+    type: DOUBLE
+  - name: model_version
+    type: VARCHAR
+  - name: model_version
+    type: VARCHAR
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reel_likes
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reports
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: reporter_id
+    type: VARCHAR
+  - name: reporter_id
+    type: VARCHAR
+  - name: target_id
+    type: VARCHAR
+  - name: target_id
+    type: VARCHAR
+  - name: report_type
+    type: VARCHAR
+  - name: report_type
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: report_text
+    type: VARCHAR
+  - name: report_text
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: sessions
+  columns:
+  - name: app_name
+    type: VARCHAR
+  - name: app_name
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: create_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: create_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: stores
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: address
+    type: VARCHAR
+  - name: address
+    type: VARCHAR
+  - name: lat
+    type: DOUBLE
+  - name: lat
+    type: DOUBLE
+  - name: long
+    type: DOUBLE
+  - name: long
+    type: DOUBLE
+  - name: store_location
+    type: VARCHAR
+  - name: store_location
+    type: VARCHAR
+  - name: opening_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: opening_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: closing_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: closing_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: temp_waitlist_user
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: phone_number
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: is_phone_verified
+    type: BOOLEAN
+  - name: is_phone_verified
+    type: BOOLEAN
+  - name: mobile_otp
+    type: VARCHAR
+  - name: mobile_otp
+    type: VARCHAR
+  - name: mobile_otp_expiry
+    type: TIMESTAMP WITH TIME ZONE
+  - name: mobile_otp_expiry
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: hashed_password
+    type: VARCHAR
+  - name: hashed_password
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: login_method
+    type: VARCHAR
+  - name: login_method
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: is_admin
+    type: BOOLEAN
+  - name: is_admin
+    type: BOOLEAN
+  - name: search_vector
+    type: VARCHAR
+  - name: search_vector
+    type: VARCHAR
+  - name: verified
+    type: BOOLEAN
+  - name: verified
+    type: BOOLEAN
+  - name: top_rated
+    type: BOOLEAN
+  - name: top_rated
+    type: BOOLEAN
+  - name: best_seller
+    type: BOOLEAN
+  - name: best_seller
+    type: BOOLEAN
+  - name: trusted
+    type: BOOLEAN
+  - name: trusted
+    type: BOOLEAN
+  - name: new_member
+    type: BOOLEAN
+  - name: new_member
+    type: BOOLEAN
+  - name: referral_code
+    type: VARCHAR
+  - name: referral_code
+    type: VARCHAR
+  - name: is_mobile_public
+    type: BOOLEAN
+  - name: is_mobile_public
+    type: BOOLEAN
+  - name: review_count
+    type: BIGINT
+  - name: review_count
+    type: BIGINT
+  - name: review_score
+    type: BIGINT
+  - name: review_score
+    type: BIGINT
+  - name: is_business
+    type: BOOLEAN
+  - name: is_business
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: date_of_birth
+    type: TIMESTAMP WITH TIME ZONE
+  - name: date_of_birth
+    type: TIMESTAMP WITH TIME ZONE
+  - name: bio
+    type: VARCHAR
+  - name: bio
+    type: VARCHAR
+  - name: profile_picture
+    type: VARCHAR
+  - name: profile_picture
+    type: VARCHAR
+  - name: business_data
+    type: VARCHAR
+  - name: business_data
+    type: VARCHAR
+  - name: closest_area_id
+    type: BIGINT
+  - name: closest_area_id
+    type: BIGINT
+- name: user_behaviors
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: context
+    type: VARCHAR
+  - name: context
+    type: VARCHAR
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_type
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_devices
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: device_name
+    type: VARCHAR
+  - name: device_name
+    type: VARCHAR
+  - name: os_type
+    type: VARCHAR
+  - name: os_type
+    type: VARCHAR
+  - name: os_version
+    type: VARCHAR
+  - name: os_version
+    type: VARCHAR
+  - name: browser
+    type: VARCHAR
+  - name: browser
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: last_login_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_login_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: user_last_location
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: latitude
+    type: DOUBLE
+  - name: latitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_session
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: login_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: login_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: ip_address
+    type: VARCHAR
+  - name: ip_address
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_states
+  columns:
+  - name: app_name
+    type: VARCHAR
+  - name: app_name
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: webhook_logs
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: event_type
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: payload
+    type: VARCHAR
+  - name: payload
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: error_message
+    type: VARCHAR
+  - name: error_message
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: processed_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: processed_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: processing_time
+    type: BIGINT
+  - name: processing_time
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: price
+    type: BIGINT
+  - name: price
+    type: BIGINT
+  - name: category_id
+    type: BIGINT
+  - name: category_id
+    type: BIGINT
+  - name: subcategory_id
+    type: BIGINT
+  - name: subcategory_id
+    type: BIGINT
+  - name: fields
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: bidding_deadline
+    type: VARCHAR
+  - name: bidding_deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_bidding
+    type: BOOLEAN
+  - name: is_bidding
+    type: BOOLEAN
+  - name: bidding_duration
+    type: VARCHAR
+  - name: bidding_duration
+    type: VARCHAR
+  - name: search_vector
+    type: VARCHAR
+  - name: search_vector
+    type: VARCHAR
+  - name: ad_location
+    type: VARCHAR
+  - name: ad_location
+    type: VARCHAR
+  - name: area_id
+    type: BIGINT
+  - name: area_id
+    type: BIGINT
+  - name: user_update_at
+    type: VARCHAR
+  - name: bidding_min_price
+    type: BIGINT
+  - name: bidding_min_price
+    type: BIGINT
+  - name: bidding_offer_accept
+    type: BOOLEAN
+  - name: bidding_offer_accept
+    type: BOOLEAN
+  - name: ai_flag
+    type: BOOLEAN
+  - name: ai_flag
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: user_update_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: ads_drafts
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: price
+    type: BIGINT
+  - name: price
+    type: BIGINT
+  - name: category
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: subcategory
+    type: VARCHAR
+  - name: subcategory
+    type: VARCHAR
+  - name: is_bidding
+    type: BOOLEAN
+  - name: is_bidding
+    type: BOOLEAN
+  - name: area_id
+    type: BIGINT
+  - name: area_id
+    type: BIGINT
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: location
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_drafts__attribute_ids
+  columns:
+  - name: value
+    type: BIGINT
+  - name: value
+    type: BIGINT
+  - name: _dlt_root_id
+    type: VARCHAR
+  - name: _dlt_root_id
+    type: VARCHAR
+  - name: _dlt_parent_id
+    type: VARCHAR
+  - name: _dlt_parent_id
+    type: VARCHAR
+  - name: _dlt_list_idx
+    type: BIGINT
+  - name: _dlt_list_idx
+    type: BIGINT
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_media
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_media_drafts
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_draft_id
+    type: BIGINT
+  - name: ad_draft_id
+    type: BIGINT
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads_reviewed
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: reviewed_by
+    type: VARCHAR
+  - name: reviewed_by
+    type: VARCHAR
+  - name: reviewed_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: reviewed_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_status
+    type: VARCHAR
+  - name: updated_status
+    type: VARCHAR
+  - name: previous_status
+    type: VARCHAR
+  - name: previous_status
+    type: VARCHAR
+  - name: review_notes
+    type: VARCHAR
+  - name: review_notes
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ad_attributes
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ad_creation_rates
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_count
+    type: BIGINT
+  - name: ad_count
+    type: BIGINT
+  - name: last_reset
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_reset
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: agent_messages
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: session_id
+    type: VARCHAR
+  - name: session_id
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: message_metadata
+    type: VARCHAR
+  - name: message_metadata
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: agent_sessions
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: session_id
+    type: VARCHAR
+  - name: session_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: last_activity
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_activity
+    type: TIMESTAMP WITH TIME ZONE
+  - name: title_status
+    type: VARCHAR
+  - name: title_status
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: app_assets
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: asset_type
+    type: VARCHAR
+  - name: asset_type
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: deep_link
+    type: VARCHAR
+  - name: deep_link
+    type: VARCHAR
+  - name: position
+    type: BIGINT
+  - name: position
+    type: BIGINT
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: target_platform
+    type: VARCHAR
+  - name: target_platform
+    type: VARCHAR
+  - name: priority
+    type: BIGINT
+  - name: priority
+    type: BIGINT
+  - name: asset_metadata
+    type: VARCHAR
+  - name: asset_metadata
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: app_states
+  columns:
+  - name: app_name
+    type: VARCHAR
+  - name: app_name
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: update_time
+    type: VARCHAR
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: areas
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: area
+    type: VARCHAR
+  - name: area
+    type: VARCHAR
+  - name: city_id
+    type: BIGINT
+  - name: city_id
+    type: BIGINT
+  - name: latitude
+    type: DOUBLE
+  - name: latitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: geospatial_location
+    type: VARCHAR
+  - name: geospatial_location
+    type: VARCHAR
+  - name: location_name
+    type: VARCHAR
+  - name: location_name
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: attributes
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: attribute
+    type: VARCHAR
+  - name: attribute
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: attribute_values
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: attribute_id
+    type: BIGINT
+  - name: attribute_id
+    type: BIGINT
+  - name: attribute_values
+    type: VARCHAR
+  - name: attribute_values
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: auth_temporary_user
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: otp_code
+    type: VARCHAR
+  - name: temporary_token
+    type: VARCHAR
+  - name: otp_code_expiration
+    type: VARCHAR
+  - name: otp_count_today
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: registration_state
+    type: VARCHAR
+  - name: registration_data
+    type: '"NULL"'
+  - name: whatsapp_otp_count_today
+    type: BIGINT
+  - name: temporary_token
+    type: VARCHAR
+  - name: login_method
+    type: VARCHAR
+  - name: otp_type
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: last_otp_sent_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: otp_count_today
+    type: BIGINT
+  - name: _dlt_id
+    type: VARCHAR
+  - name: hashed_password
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: last_otp_sent_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: first_name
+    type: '"NULL"'
+  - name: phone_otp
+    type: VARCHAR
+  - name: last_name
+    type: '"NULL"'
+  - name: profile_picture
+    type: VARCHAR
+  - name: username
+    type: '"NULL"'
+  - name: otp_code
+    type: VARCHAR
+  - name: phone_otp
+    type: VARCHAR
+  - name: otp_code_expiration
+    type: TIMESTAMP WITH TIME ZONE
+  - name: registration_state
+    type: VARCHAR
+  - name: gender
+    type: '"NULL"'
+  - name: hashed_password
+    type: VARCHAR
+  - name: otp_type
+    type: VARCHAR
+  - name: date_of_birth
+    type: '"NULL"'
+  - name: whatsapp_otp_count_today
+    type: BIGINT
+  - name: profile_picture
+    type: VARCHAR
+  - name: referral_code
+    type: '"NULL"'
+  - name: login_method
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+- name: bidding_logs
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: bid_id
+    type: BIGINT
+  - name: bid_id
+    type: BIGINT
+  - name: seller_id
+    type: VARCHAR
+  - name: seller_id
+    type: VARCHAR
+  - name: buyer_id
+    type: VARCHAR
+  - name: buyer_id
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: bids
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: bid_amount
+    type: BIGINT
+  - name: bid_amount
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: bid_description
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: bid_description
+    type: VARCHAR
+- name: blacklisted_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: ip_address
+    type: VARCHAR
+  - name: ip_address
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_by
+    type: VARCHAR
+  - name: created_by
+    type: VARCHAR
+  - name: notes
+    type: VARCHAR
+  - name: notes
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: blocked_users
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: blocker_id
+    type: VARCHAR
+  - name: blocker_id
+    type: VARCHAR
+  - name: blocked_id
+    type: VARCHAR
+  - name: blocked_id
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: business_profile_mapping
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: business_user_id
+    type: VARCHAR
+  - name: business_user_id
+    type: VARCHAR
+  - name: owner_user_id
+    type: VARCHAR
+  - name: owner_user_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: buyer_requests
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: request_type
+    type: VARCHAR
+  - name: request_type
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: request_text
+    type: VARCHAR
+  - name: request_text
+    type: VARCHAR
+  - name: event_name
+    type: '"NULL"'
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_description
+    type: '"NULL"'
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_date
+    type: '"NULL"'
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: location_address
+    type: '"NULL"'
+  - name: _dlt_id
+    type: VARCHAR
+  - name: geospatial_location
+    type: '"NULL"'
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: VARCHAR
+- name: buyer_requests_media
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: buyer_request_id
+    type: BIGINT
+  - name: buyer_request_id
+    type: BIGINT
+  - name: media_key
+    type: VARCHAR
+  - name: media_key
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: categories
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: is_24_hour
+    type: BOOLEAN
+  - name: fields
+    type: VARCHAR
+  - name: featured
+    type: BOOLEAN
+  - name: is_24_hour
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: featured
+    type: BOOLEAN
+  - name: _dlt_id
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+- name: category_subcategories
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+  - name: category_id
+    type: BIGINT
+  - name: category_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: chatbot_conversations
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: chatbot_messages
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: conversation_id
+    type: VARCHAR
+  - name: conversation_id
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: chat_messages
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: room_id
+    type: VARCHAR
+  - name: room_id
+    type: VARCHAR
+  - name: sender_id
+    type: VARCHAR
+  - name: sender_id
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_read
+    type: BOOLEAN
+  - name: is_read
+    type: BOOLEAN
+  - name: is_system_message
+    type: BOOLEAN
+  - name: is_system_message
+    type: BOOLEAN
+  - name: media_metadata
+    type: VARCHAR
+  - name: media_metadata
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: meeting_id
+    type: BIGINT
+  - name: meeting_id
+    type: BIGINT
+- name: chat_rooms
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: buyer_id
+    type: VARCHAR
+  - name: buyer_id
+    type: VARCHAR
+  - name: seller_id
+    type: VARCHAR
+  - name: seller_id
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_message_at
+    type: VARCHAR
+  - name: last_message_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: community_events
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: picture
+    type: VARCHAR
+  - name: picture
+    type: VARCHAR
+  - name: deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: enrolled_count
+    type: BIGINT
+  - name: enrolled_count
+    type: BIGINT
+  - name: max_participants
+    type: BIGINT
+  - name: max_participants
+    type: BIGINT
+  - name: category
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: complaint_tickets
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ticket_title
+    type: VARCHAR
+  - name: ticket_title
+    type: VARCHAR
+  - name: ticket_description
+    type: VARCHAR
+  - name: ticket_description
+    type: VARCHAR
+  - name: submitted_by
+    type: VARCHAR
+  - name: submitted_by
+    type: VARCHAR
+  - name: priority
+    type: VARCHAR
+  - name: priority
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: assignee_name
+    type: '"NULL"'
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: updated_at
+    type: '"NULL"'
+  - name: resolution_notes
+    type: '"NULL"'
+  - name: resolved_at
+    type: '"NULL"'
+  - name: assigned_at
+    type: '"NULL"'
+- name: coupons
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: meeting_id
+    type: BIGINT
+  - name: meeting_id
+    type: BIGINT
+  - name: code
+    type: VARCHAR
+  - name: code
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: expires_at
+    type: VARCHAR
+  - name: expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: deleted_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deleted_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deleted_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deletion_reason
+    type: VARCHAR
+  - name: deletion_reason
+    type: VARCHAR
+  - name: is_admin
+    type: BOOLEAN
+  - name: is_admin
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: bio
+    type: VARCHAR
+  - name: bio
+    type: VARCHAR
+- name: events
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: start_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: start_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: admin_user_id
+    type: VARCHAR
+  - name: admin_user_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: banner
+    type: VARCHAR
+  - name: banner
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: event_bookings
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: ticket_type_id
+    type: VARCHAR
+  - name: ticket_type_id
+    type: VARCHAR
+  - name: qr_code_data
+    type: VARCHAR
+  - name: qr_code_data
+    type: VARCHAR
+  - name: is_verified
+    type: BOOLEAN
+  - name: is_verified
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: qr_code_image
+    type: VARCHAR
+  - name: qr_code_image
+    type: VARCHAR
+  - name: verification_code
+    type: VARCHAR
+  - name: verification_code
+    type: VARCHAR
+  - name: quantity
+    type: BIGINT
+  - name: quantity
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: event_participants
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: joined_at
+    type: VARCHAR
+  - name: joined_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: event_prizes
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: prize_number
+    type: BIGINT
+  - name: prize_number
+    type: BIGINT
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: image
+    type: VARCHAR
+  - name: image
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: favorite_ads
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: fcm_tokens
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: feature_flags
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: feature_key
+    type: VARCHAR
+  - name: feature_key
+    type: VARCHAR
+  - name: is_enabled
+    type: BOOLEAN
+  - name: is_enabled
+    type: BOOLEAN
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: follows
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: follower_id
+    type: VARCHAR
+  - name: follower_id
+    type: VARCHAR
+  - name: following_id
+    type: VARCHAR
+  - name: following_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: giveaway_referrals
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: referral_code
+    type: VARCHAR
+  - name: referral_code
+    type: VARCHAR
+  - name: referral_count
+    type: BIGINT
+  - name: referral_count
+    type: BIGINT
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: giveaway_referral_usage
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: referral_id
+    type: VARCHAR
+  - name: referral_id
+    type: VARCHAR
+  - name: referred_user_id
+    type: VARCHAR
+  - name: referred_user_id
+    type: VARCHAR
+  - name: used_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: used_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: locations
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: city
+    type: VARCHAR
+  - name: city
+    type: VARCHAR
+  - name: province_id
+    type: BIGINT
+  - name: province_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: loyalty_points
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: tier
+    type: VARCHAR
+  - name: tier
+    type: VARCHAR
+  - name: points
+    type: BIGINT
+  - name: points
+    type: BIGINT
+  - name: total_earned
+    type: BIGINT
+  - name: total_earned
+    type: BIGINT
+  - name: total_spent
+    type: BIGINT
+  - name: total_spent
+    type: BIGINT
+  - name: expiration_days
+    type: '"NULL"'
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: loyalty_rewards
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: points_required
+    type: BIGINT
+  - name: points_required
+    type: BIGINT
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: quantity_available
+    type: BIGINT
+  - name: quantity_available
+    type: BIGINT
+  - name: quantity_claimed
+    type: BIGINT
+  - name: quantity_claimed
+    type: BIGINT
+  - name: start_date
+    type: VARCHAR
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_date
+    type: VARCHAR
+  - name: end_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: points
+    type: BIGINT
+  - name: points
+    type: BIGINT
+  - name: reward_type
+    type: VARCHAR
+  - name: reward_type
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: loyalty_transactions
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: loyalty_points_id
+    type: BIGINT
+  - name: loyalty_points_id
+    type: BIGINT
+  - name: tier
+    type: VARCHAR
+  - name: tier
+    type: VARCHAR
+  - name: points
+    type: BIGINT
+  - name: points
+    type: BIGINT
+  - name: transaction_type
+    type: VARCHAR
+  - name: transaction_type
+    type: VARCHAR
+  - name: reference_type
+    type: VARCHAR
+  - name: reference_type
+    type: VARCHAR
+  - name: reference_id
+    type: VARCHAR
+  - name: reference_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: mate_waitlist_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: first_name
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: date_of_birth
+    type: DATE
+  - name: date_of_birth
+    type: DATE
+  - name: email
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+- name: meetings
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: chat_room_id
+    type: VARCHAR
+  - name: chat_room_id
+    type: VARCHAR
+  - name: store_id
+    type: BIGINT
+  - name: store_id
+    type: BIGINT
+  - name: scheduled_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: scheduled_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: notifications
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: message
+    type: VARCHAR
+  - name: message
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: data
+    type: VARCHAR
+  - name: data
+    type: VARCHAR
+  - name: is_read
+    type: BOOLEAN
+  - name: is_read
+    type: BOOLEAN
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: read_at
+    type: VARCHAR
+  - name: read_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_global
+    type: BOOLEAN
+  - name: is_global
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: provinces
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: province
+    type: VARCHAR
+  - name: province
+    type: VARCHAR
+  - name: country_id
+    type: BIGINT
+  - name: country_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: recommendation_models
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: model_name
+    type: VARCHAR
+  - name: model_name
+    type: VARCHAR
+  - name: model_version
+    type: VARCHAR
+  - name: model_version
+    type: VARCHAR
+  - name: model_type
+    type: VARCHAR
+  - name: model_type
+    type: VARCHAR
+  - name: training_date
+    type: VARCHAR
+  - name: training_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: metrics
+    type: VARCHAR
+  - name: metrics
+    type: VARCHAR
+  - name: parameters
+    type: VARCHAR
+  - name: parameters
+    type: VARCHAR
+  - name: file_path
+    type: VARCHAR
+  - name: file_path
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: recommendation_scores
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: score
+    type: DOUBLE
+  - name: score
+    type: DOUBLE
+  - name: model_version
+    type: VARCHAR
+  - name: model_version
+    type: VARCHAR
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reels
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: title
+    type: VARCHAR
+  - name: original_filename
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: s3_key
+    type: VARCHAR
+  - name: original_filename
+    type: VARCHAR
+  - name: s3_url
+    type: VARCHAR
+  - name: s3_key
+    type: VARCHAR
+  - name: duration_seconds
+    type: BIGINT
+  - name: s3_url
+    type: VARCHAR
+  - name: file_size_bytes
+    type: BIGINT
+  - name: duration_seconds
+    type: BIGINT
+  - name: width
+    type: BIGINT
+  - name: height
+    type: BIGINT
+  - name: file_size_bytes
+    type: BIGINT
+  - name: width
+    type: BIGINT
+  - name: quality
+    type: VARCHAR
+  - name: processing_status
+    type: VARCHAR
+  - name: height
+    type: BIGINT
+  - name: likes_count
+    type: BIGINT
+  - name: quality
+    type: VARCHAR
+  - name: views_count
+    type: BIGINT
+  - name: processing_status
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: processing_error
+    type: VARCHAR
+  - name: likes_count
+    type: BIGINT
+  - name: is_public
+    type: BOOLEAN
+  - name: views_count
+    type: BIGINT
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_active
+    type: BOOLEAN
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_public
+    type: BOOLEAN
+  - name: processed_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: thumbnail_s3_key
+    type: VARCHAR
+  - name: updated_at
+    type: VARCHAR
+  - name: task_id
+    type: VARCHAR
+  - name: processed_at
+    type: VARCHAR
+  - name: retry_count
+    type: BIGINT
+  - name: thumbnail_s3_key
+    type: VARCHAR
+  - name: thumbnail_s3_url
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: task_id
+    type: VARCHAR
+  - name: retry_count
+    type: BIGINT
+  - name: copyright_flag
+    type: BOOLEAN
+  - name: last_retry_at
+    type: '"NULL"'
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: thumbnail_s3_url
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: copyright_flag
+    type: BOOLEAN
+  - name: copyright_analysis
+    type: VARCHAR
+  - name: copyright_analysis
+    type: VARCHAR
+  - name: copyright_detected_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: copyright_detected_at
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: processing_error
+    type: VARCHAR
+- name: reel_comments
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: parent_id
+    type: '"NULL"'
+  - name: is_deleted
+    type: BOOLEAN
+  - name: is_deleted
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reel_likes
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reports
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: reporter_id
+    type: VARCHAR
+  - name: reporter_id
+    type: VARCHAR
+  - name: target_id
+    type: VARCHAR
+  - name: target_id
+    type: VARCHAR
+  - name: report_type
+    type: VARCHAR
+  - name: report_type
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: report_text
+    type: VARCHAR
+  - name: report_text
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reviews
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: reviewer_id
+    type: VARCHAR
+  - name: reviewer_id
+    type: VARCHAR
+  - name: reviewee_id
+    type: VARCHAR
+  - name: reviewee_id
+    type: VARCHAR
+  - name: rating
+    type: BIGINT
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: comment
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: updated_at
+    type: VARCHAR
+  - name: is_seller
+    type: BOOLEAN
+  - name: ad_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: is_seller
+    type: BOOLEAN
+  - name: rating
+    type: BIGINT
+  - name: comment
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: sessions
+  columns:
+  - name: app_name
+    type: VARCHAR
+  - name: app_name
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: create_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: create_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: spatial_ref_sys
+  columns:
+  - name: srid
+    type: BIGINT
+  - name: srid
+    type: BIGINT
+  - name: auth_name
+    type: VARCHAR
+  - name: auth_name
+    type: VARCHAR
+  - name: auth_srid
+    type: BIGINT
+  - name: auth_srid
+    type: BIGINT
+  - name: srtext
+    type: VARCHAR
+  - name: srtext
+    type: VARCHAR
+  - name: proj4text
+    type: VARCHAR
+  - name: proj4text
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: stores
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: address
+    type: VARCHAR
+  - name: address
+    type: VARCHAR
+  - name: lat
+    type: DOUBLE
+  - name: lat
+    type: DOUBLE
+  - name: long
+    type: DOUBLE
+  - name: long
+    type: DOUBLE
+  - name: store_location
+    type: VARCHAR
+  - name: store_location
+    type: VARCHAR
+  - name: opening_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: opening_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: closing_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: closing_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: subcategory_attributes
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: sub_category_id
+    type: BIGINT
+  - name: sub_category_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_id
+    type: BIGINT
+  - name: attribute_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: temp_waitlist_user
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: phone_number
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: is_phone_verified
+    type: BOOLEAN
+  - name: is_phone_verified
+    type: BOOLEAN
+  - name: mobile_otp
+    type: VARCHAR
+  - name: mobile_otp
+    type: VARCHAR
+  - name: mobile_otp_expiry
+    type: TIMESTAMP WITH TIME ZONE
+  - name: mobile_otp_expiry
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ticket_types
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: price
+    type: DECIMAL(38,2)
+  - name: price
+    type: DECIMAL(38,9)
+  - name: access_description
+    type: VARCHAR
+  - name: access_description
+    type: VARCHAR
+  - name: max_per_booking
+    type: BIGINT
+  - name: max_per_booking
+    type: BIGINT
+  - name: max_total
+    type: BIGINT
+  - name: max_total
+    type: BIGINT
+  - name: total_booked
+    type: BIGINT
+  - name: total_booked
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: username
+    type: VARCHAR
+  - name: hashed_password
+    type: VARCHAR
+  - name: hashed_password
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: login_method
+    type: VARCHAR
+  - name: login_method
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: is_admin
+    type: BOOLEAN
+  - name: is_admin
+    type: BOOLEAN
+  - name: search_vector
+    type: VARCHAR
+  - name: search_vector
+    type: VARCHAR
+  - name: verified
+    type: BOOLEAN
+  - name: verified
+    type: BOOLEAN
+  - name: top_rated
+    type: BOOLEAN
+  - name: top_rated
+    type: BOOLEAN
+  - name: best_seller
+    type: BOOLEAN
+  - name: best_seller
+    type: BOOLEAN
+  - name: trusted
+    type: BOOLEAN
+  - name: trusted
+    type: BOOLEAN
+  - name: new_member
+    type: BOOLEAN
+  - name: new_member
+    type: BOOLEAN
+  - name: referral_code
+    type: VARCHAR
+  - name: referral_code
+    type: VARCHAR
+  - name: is_mobile_public
+    type: BOOLEAN
+  - name: is_mobile_public
+    type: BOOLEAN
+  - name: review_count
+    type: BIGINT
+  - name: review_count
+    type: BIGINT
+  - name: review_score
+    type: BIGINT
+  - name: review_score
+    type: BIGINT
+  - name: is_business
+    type: BOOLEAN
+  - name: is_business
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: gender
+    type: VARCHAR
+  - name: date_of_birth
+    type: TIMESTAMP WITH TIME ZONE
+  - name: date_of_birth
+    type: TIMESTAMP WITH TIME ZONE
+  - name: bio
+    type: VARCHAR
+  - name: bio
+    type: VARCHAR
+  - name: profile_picture
+    type: VARCHAR
+  - name: profile_picture
+    type: VARCHAR
+  - name: business_data
+    type: VARCHAR
+  - name: business_data
+    type: VARCHAR
+  - name: closest_area_id
+    type: BIGINT
+  - name: closest_area_id
+    type: BIGINT
+- name: user_behaviors
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: context
+    type: VARCHAR
+  - name: context
+    type: VARCHAR
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: timestamp
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_type
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_contact_requests
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: requested_at
+    type: VARCHAR
+  - name: requested_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: buyer_notification_id
+    type: BIGINT
+  - name: buyer_notification_id
+    type: BIGINT
+  - name: seller_notification_id
+    type: BIGINT
+  - name: seller_notification_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_devices
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: device_name
+    type: VARCHAR
+  - name: device_name
+    type: VARCHAR
+  - name: os_type
+    type: VARCHAR
+  - name: os_type
+    type: VARCHAR
+  - name: os_version
+    type: VARCHAR
+  - name: os_version
+    type: VARCHAR
+  - name: browser
+    type: VARCHAR
+  - name: browser
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: last_login_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_login_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: user_interests
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: sub_category_id
+    type: BIGINT
+  - name: sub_category_id
+    type: BIGINT
+  - name: rank
+    type: BIGINT
+  - name: rank
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deadline
+    type: VARCHAR
+  - name: deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_last_location
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: latitude
+    type: DOUBLE
+  - name: latitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: longitude
+    type: DOUBLE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_profile_visits
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: visitor_id
+    type: VARCHAR
+  - name: visitor_id
+    type: VARCHAR
+  - name: visited_id
+    type: VARCHAR
+  - name: visited_id
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: visited_at
+    type: VARCHAR
+  - name: visited_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_business
+    type: BOOLEAN
+  - name: is_business
+    type: BOOLEAN
+  - name: visit_count
+    type: BIGINT
+  - name: visit_count
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_session
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: device_id
+    type: VARCHAR
+  - name: login_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: login_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: ip_address
+    type: VARCHAR
+  - name: ip_address
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: token
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_settings
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: push_notifications
+    type: BOOLEAN
+  - name: push_notifications
+    type: BOOLEAN
+  - name: top_products_near_you
+    type: BOOLEAN
+  - name: top_products_near_you
+    type: BOOLEAN
+  - name: bids
+    type: BOOLEAN
+  - name: bids
+    type: BOOLEAN
+  - name: promotional
+    type: BOOLEAN
+  - name: promotional
+    type: BOOLEAN
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_states
+  columns:
+  - name: app_name
+    type: VARCHAR
+  - name: app_name
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: waitlist_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: is_verified
+    type: BOOLEAN
+  - name: phone_number
+    type: VARCHAR
+  - name: verification_token
+    type: VARCHAR
+  - name: token_expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_verified
+    type: BOOLEAN
+  - name: verification_token
+    type: VARCHAR
+  - name: joined_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: token_expires_at
+    type: VARCHAR
+  - name: verified_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: joined_at
+    type: VARCHAR
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: verified_at
+    type: VARCHAR
+  - name: email_verification_token
+    type: VARCHAR
+  - name: dob
+    type: VARCHAR
+  - name: email_verification_token_expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: email_verification_token
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: email_verification_token_expires_at
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: email_verified_at
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: dob
+    type: TIMESTAMP WITH TIME ZONE
+  - name: email_verified_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: webhook_logs
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: event_type
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: payload
+    type: VARCHAR
+  - name: payload
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: error_message
+    type: VARCHAR
+  - name: error_message
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: processed_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: processed_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: processing_time
+    type: BIGINT
+  - name: processing_time
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ads
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: price
+    type: BIGINT
+  - name: price
+    type: BIGINT
+  - name: category_id
+    type: BIGINT
+  - name: category_id
+    type: BIGINT
+  - name: subcategory_id
+    type: BIGINT
+  - name: subcategory_id
+    type: BIGINT
+  - name: fields
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: location
+    type: VARCHAR
+  - name: bidding_deadline
+    type: VARCHAR
+  - name: bidding_deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_bidding
+    type: BOOLEAN
+  - name: is_bidding
+    type: BOOLEAN
+  - name: bidding_duration
+    type: VARCHAR
+  - name: bidding_duration
+    type: VARCHAR
+  - name: search_vector
+    type: VARCHAR
+  - name: search_vector
+    type: VARCHAR
+  - name: ad_location
+    type: VARCHAR
+  - name: ad_location
+    type: VARCHAR
+  - name: area_id
+    type: BIGINT
+  - name: area_id
+    type: BIGINT
+  - name: user_update_at
+    type: VARCHAR
+  - name: bidding_min_price
+    type: BIGINT
+  - name: bidding_min_price
+    type: BIGINT
+  - name: bidding_offer_accept
+    type: BOOLEAN
+  - name: bidding_offer_accept
+    type: BOOLEAN
+  - name: ai_flag
+    type: BOOLEAN
+  - name: ai_flag
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: user_update_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: ads_import_staging
+  columns:
+  - name: category_id
+    type: BIGINT
+  - name: category_name
+    type: VARCHAR
+  - name: subcategory_id
+    type: BIGINT
+  - name: subcategory_name
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: price
+    type: BIGINT
+- name: ads_media_drafts
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_draft_id
+    type: BIGINT
+  - name: ad_draft_id
+    type: BIGINT
+  - name: media_url
+    type: VARCHAR
+  - name: media_url
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: media_type
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ad_attributes
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: agent_messages
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: session_id
+    type: VARCHAR
+  - name: session_id
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: message_metadata
+    type: VARCHAR
+  - name: message_metadata
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: app_states
+  columns:
+  - name: app_name
+    type: VARCHAR
+  - name: app_name
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: state
+    type: VARCHAR
+  - name: update_time
+    type: VARCHAR
+  - name: update_time
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: attribute_values
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: attribute_id
+    type: BIGINT
+  - name: attribute_id
+    type: BIGINT
+  - name: attribute_values
+    type: VARCHAR
+  - name: attribute_values
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: auth_temporary_user
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: otp_code
+    type: VARCHAR
+  - name: temporary_token
+    type: VARCHAR
+  - name: otp_code_expiration
+    type: VARCHAR
+  - name: otp_count_today
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: registration_state
+    type: VARCHAR
+  - name: registration_data
+    type: '"NULL"'
+  - name: whatsapp_otp_count_today
+    type: BIGINT
+  - name: temporary_token
+    type: VARCHAR
+  - name: login_method
+    type: VARCHAR
+  - name: otp_type
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: last_otp_sent_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: otp_count_today
+    type: BIGINT
+  - name: _dlt_id
+    type: VARCHAR
+  - name: hashed_password
+    type: VARCHAR
+  - name: mobile_number
+    type: VARCHAR
+  - name: last_otp_sent_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: first_name
+    type: '"NULL"'
+  - name: phone_otp
+    type: VARCHAR
+  - name: last_name
+    type: '"NULL"'
+  - name: profile_picture
+    type: VARCHAR
+  - name: username
+    type: '"NULL"'
+  - name: otp_code
+    type: VARCHAR
+  - name: phone_otp
+    type: VARCHAR
+  - name: otp_code_expiration
+    type: TIMESTAMP WITH TIME ZONE
+  - name: registration_state
+    type: VARCHAR
+  - name: gender
+    type: '"NULL"'
+  - name: hashed_password
+    type: VARCHAR
+  - name: otp_type
+    type: VARCHAR
+  - name: date_of_birth
+    type: '"NULL"'
+  - name: whatsapp_otp_count_today
+    type: BIGINT
+  - name: profile_picture
+    type: VARCHAR
+  - name: referral_code
+    type: '"NULL"'
+  - name: login_method
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+- name: bids
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: bid_amount
+    type: BIGINT
+  - name: bid_amount
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: bid_description
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: bid_description
+    type: VARCHAR
+- name: blocked_users
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: blocker_id
+    type: VARCHAR
+  - name: blocker_id
+    type: VARCHAR
+  - name: blocked_id
+    type: VARCHAR
+  - name: blocked_id
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: reason
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: buyer_requests
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: request_type
+    type: VARCHAR
+  - name: request_type
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: request_text
+    type: VARCHAR
+  - name: request_text
+    type: VARCHAR
+  - name: event_name
+    type: '"NULL"'
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_description
+    type: '"NULL"'
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_date
+    type: '"NULL"'
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: location_address
+    type: '"NULL"'
+  - name: _dlt_id
+    type: VARCHAR
+  - name: geospatial_location
+    type: '"NULL"'
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: VARCHAR
+- name: categories
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: name
+    type: VARCHAR
+  - name: name
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: is_24_hour
+    type: BOOLEAN
+  - name: fields
+    type: VARCHAR
+  - name: featured
+    type: BOOLEAN
+  - name: is_24_hour
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: featured
+    type: BOOLEAN
+  - name: _dlt_id
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: fields
+    type: VARCHAR
+- name: chatbot_messages
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: conversation_id
+    type: VARCHAR
+  - name: conversation_id
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: role
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: chat_rooms
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: buyer_id
+    type: VARCHAR
+  - name: buyer_id
+    type: VARCHAR
+  - name: seller_id
+    type: VARCHAR
+  - name: seller_id
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: last_message_at
+    type: VARCHAR
+  - name: last_message_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: complaint_tickets
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: ticket_title
+    type: VARCHAR
+  - name: ticket_title
+    type: VARCHAR
+  - name: ticket_description
+    type: VARCHAR
+  - name: ticket_description
+    type: VARCHAR
+  - name: submitted_by
+    type: VARCHAR
+  - name: submitted_by
+    type: VARCHAR
+  - name: priority
+    type: VARCHAR
+  - name: priority
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: category
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: assignee_name
+    type: '"NULL"'
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: updated_at
+    type: '"NULL"'
+  - name: resolution_notes
+    type: '"NULL"'
+  - name: resolved_at
+    type: '"NULL"'
+  - name: assigned_at
+    type: '"NULL"'
+- name: coupons
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: meeting_id
+    type: BIGINT
+  - name: meeting_id
+    type: BIGINT
+  - name: code
+    type: VARCHAR
+  - name: code
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: expires_at
+    type: VARCHAR
+  - name: expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: event_participants
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: joined_at
+    type: VARCHAR
+  - name: joined_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: favorite_ads
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: feature_flags
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: feature_key
+    type: VARCHAR
+  - name: feature_key
+    type: VARCHAR
+  - name: is_enabled
+    type: BOOLEAN
+  - name: is_enabled
+    type: BOOLEAN
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: giveaway_referrals
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: referral_code
+    type: VARCHAR
+  - name: referral_code
+    type: VARCHAR
+  - name: referral_count
+    type: BIGINT
+  - name: referral_count
+    type: BIGINT
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: loyalty_points
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: tier
+    type: VARCHAR
+  - name: tier
+    type: VARCHAR
+  - name: points
+    type: BIGINT
+  - name: points
+    type: BIGINT
+  - name: total_earned
+    type: BIGINT
+  - name: total_earned
+    type: BIGINT
+  - name: total_spent
+    type: BIGINT
+  - name: total_spent
+    type: BIGINT
+  - name: expiration_days
+    type: '"NULL"'
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: loyalty_rewards
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: image_url
+    type: VARCHAR
+  - name: points_required
+    type: BIGINT
+  - name: points_required
+    type: BIGINT
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: quantity_available
+    type: BIGINT
+  - name: quantity_available
+    type: BIGINT
+  - name: quantity_claimed
+    type: BIGINT
+  - name: quantity_claimed
+    type: BIGINT
+  - name: start_date
+    type: VARCHAR
+  - name: start_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: end_date
+    type: VARCHAR
+  - name: end_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: points
+    type: BIGINT
+  - name: points
+    type: BIGINT
+  - name: reward_type
+    type: VARCHAR
+  - name: reward_type
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: mate_waitlist_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: first_name
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: date_of_birth
+    type: DATE
+  - name: date_of_birth
+    type: DATE
+  - name: email
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+- name: notifications
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: message
+    type: VARCHAR
+  - name: message
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: data
+    type: VARCHAR
+  - name: data
+    type: VARCHAR
+  - name: is_read
+    type: BOOLEAN
+  - name: is_read
+    type: BOOLEAN
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: read_at
+    type: VARCHAR
+  - name: read_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_global
+    type: BOOLEAN
+  - name: is_global
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: recommendation_models
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: model_name
+    type: VARCHAR
+  - name: model_name
+    type: VARCHAR
+  - name: model_version
+    type: VARCHAR
+  - name: model_version
+    type: VARCHAR
+  - name: model_type
+    type: VARCHAR
+  - name: model_type
+    type: VARCHAR
+  - name: training_date
+    type: VARCHAR
+  - name: training_date
+    type: TIMESTAMP WITH TIME ZONE
+  - name: metrics
+    type: VARCHAR
+  - name: metrics
+    type: VARCHAR
+  - name: parameters
+    type: VARCHAR
+  - name: parameters
+    type: VARCHAR
+  - name: file_path
+    type: VARCHAR
+  - name: file_path
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: is_active
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reels
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: title
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: title
+    type: VARCHAR
+  - name: original_filename
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: s3_key
+    type: VARCHAR
+  - name: original_filename
+    type: VARCHAR
+  - name: s3_url
+    type: VARCHAR
+  - name: s3_key
+    type: VARCHAR
+  - name: duration_seconds
+    type: BIGINT
+  - name: s3_url
+    type: VARCHAR
+  - name: file_size_bytes
+    type: BIGINT
+  - name: duration_seconds
+    type: BIGINT
+  - name: width
+    type: BIGINT
+  - name: height
+    type: BIGINT
+  - name: file_size_bytes
+    type: BIGINT
+  - name: width
+    type: BIGINT
+  - name: quality
+    type: VARCHAR
+  - name: processing_status
+    type: VARCHAR
+  - name: height
+    type: BIGINT
+  - name: likes_count
+    type: BIGINT
+  - name: quality
+    type: VARCHAR
+  - name: views_count
+    type: BIGINT
+  - name: processing_status
+    type: VARCHAR
+  - name: is_active
+    type: BOOLEAN
+  - name: processing_error
+    type: VARCHAR
+  - name: likes_count
+    type: BIGINT
+  - name: is_public
+    type: BOOLEAN
+  - name: views_count
+    type: BIGINT
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_active
+    type: BOOLEAN
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_public
+    type: BOOLEAN
+  - name: processed_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: thumbnail_s3_key
+    type: VARCHAR
+  - name: updated_at
+    type: VARCHAR
+  - name: task_id
+    type: VARCHAR
+  - name: processed_at
+    type: VARCHAR
+  - name: retry_count
+    type: BIGINT
+  - name: thumbnail_s3_key
+    type: VARCHAR
+  - name: thumbnail_s3_url
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: task_id
+    type: VARCHAR
+  - name: retry_count
+    type: BIGINT
+  - name: copyright_flag
+    type: BOOLEAN
+  - name: last_retry_at
+    type: '"NULL"'
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: thumbnail_s3_url
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: description
+    type: VARCHAR
+  - name: copyright_flag
+    type: BOOLEAN
+  - name: copyright_analysis
+    type: VARCHAR
+  - name: copyright_analysis
+    type: VARCHAR
+  - name: copyright_detected_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: copyright_detected_at
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: processing_error
+    type: VARCHAR
+- name: reel_comments
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: reel_id
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: content
+    type: VARCHAR
+  - name: parent_id
+    type: '"NULL"'
+  - name: is_deleted
+    type: BOOLEAN
+  - name: is_deleted
+    type: BOOLEAN
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: created_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: reviews
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: reviewer_id
+    type: VARCHAR
+  - name: reviewer_id
+    type: VARCHAR
+  - name: reviewee_id
+    type: VARCHAR
+  - name: reviewee_id
+    type: VARCHAR
+  - name: rating
+    type: BIGINT
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: comment
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: updated_at
+    type: VARCHAR
+  - name: is_seller
+    type: BOOLEAN
+  - name: ad_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: is_seller
+    type: BOOLEAN
+  - name: rating
+    type: BIGINT
+  - name: comment
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+- name: spatial_ref_sys
+  columns:
+  - name: srid
+    type: BIGINT
+  - name: srid
+    type: BIGINT
+  - name: auth_name
+    type: VARCHAR
+  - name: auth_name
+    type: VARCHAR
+  - name: auth_srid
+    type: BIGINT
+  - name: auth_srid
+    type: BIGINT
+  - name: srtext
+    type: VARCHAR
+  - name: srtext
+    type: VARCHAR
+  - name: proj4text
+    type: VARCHAR
+  - name: proj4text
+    type: VARCHAR
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: subcategory_attributes
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: sub_category_id
+    type: BIGINT
+  - name: sub_category_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_id
+    type: BIGINT
+  - name: attribute_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: ticket_types
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: event_id
+    type: VARCHAR
+  - name: event_id
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: type
+    type: VARCHAR
+  - name: price
+    type: DECIMAL(38,2)
+  - name: price
+    type: DECIMAL(38,9)
+  - name: access_description
+    type: VARCHAR
+  - name: access_description
+    type: VARCHAR
+  - name: max_per_booking
+    type: BIGINT
+  - name: max_per_booking
+    type: BIGINT
+  - name: max_total
+    type: BIGINT
+  - name: max_total
+    type: BIGINT
+  - name: total_booked
+    type: BIGINT
+  - name: total_booked
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_contact_requests
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: ad_id
+    type: BIGINT
+  - name: ad_id
+    type: BIGINT
+  - name: status
+    type: VARCHAR
+  - name: status
+    type: VARCHAR
+  - name: requested_at
+    type: VARCHAR
+  - name: requested_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: buyer_notification_id
+    type: BIGINT
+  - name: buyer_notification_id
+    type: BIGINT
+  - name: seller_notification_id
+    type: BIGINT
+  - name: seller_notification_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_interests
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: sub_category_id
+    type: BIGINT
+  - name: sub_category_id
+    type: BIGINT
+  - name: rank
+    type: BIGINT
+  - name: rank
+    type: BIGINT
+  - name: created_at
+    type: VARCHAR
+  - name: created_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: deadline
+    type: VARCHAR
+  - name: deadline
+    type: TIMESTAMP WITH TIME ZONE
+  - name: attribute_value_id
+    type: BIGINT
+  - name: attribute_value_id
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_profile_visits
+  columns:
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: id
+    type: BIGINT
+    primary_key: true
+  - name: visitor_id
+    type: VARCHAR
+  - name: visitor_id
+    type: VARCHAR
+  - name: visited_id
+    type: VARCHAR
+  - name: visited_id
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: event_type
+    type: VARCHAR
+  - name: visited_at
+    type: VARCHAR
+  - name: visited_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_business
+    type: BOOLEAN
+  - name: is_business
+    type: BOOLEAN
+  - name: visit_count
+    type: BIGINT
+  - name: visit_count
+    type: BIGINT
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: user_settings
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: user_id
+    type: VARCHAR
+  - name: user_id
+    type: VARCHAR
+  - name: push_notifications
+    type: BOOLEAN
+  - name: push_notifications
+    type: BOOLEAN
+  - name: top_products_near_you
+    type: BOOLEAN
+  - name: top_products_near_you
+    type: BOOLEAN
+  - name: bids
+    type: BOOLEAN
+  - name: bids
+    type: BOOLEAN
+  - name: promotional
+    type: BOOLEAN
+  - name: promotional
+    type: BOOLEAN
+  - name: updated_at
+    type: VARCHAR
+  - name: updated_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+- name: waitlist_users
+  columns:
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: id
+    type: VARCHAR
+    primary_key: true
+  - name: email
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: phone_number
+    type: VARCHAR
+  - name: email
+    type: VARCHAR
+  - name: is_verified
+    type: BOOLEAN
+  - name: phone_number
+    type: VARCHAR
+  - name: verification_token
+    type: VARCHAR
+  - name: token_expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_verified
+    type: BOOLEAN
+  - name: verification_token
+    type: VARCHAR
+  - name: joined_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: token_expires_at
+    type: VARCHAR
+  - name: verified_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: joined_at
+    type: VARCHAR
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: verified_at
+    type: VARCHAR
+  - name: email_verification_token
+    type: VARCHAR
+  - name: dob
+    type: VARCHAR
+  - name: email_verification_token_expires_at
+    type: TIMESTAMP WITH TIME ZONE
+  - name: is_email_verified
+    type: BOOLEAN
+  - name: _dlt_load_id
+    type: VARCHAR
+  - name: email_verification_token
+    type: VARCHAR
+  - name: _dlt_id
+    type: VARCHAR
+  - name: email_verification_token_expires_at
+    type: VARCHAR
+  - name: first_name
+    type: VARCHAR
+  - name: email_verified_at
+    type: VARCHAR
+  - name: last_name
+    type: VARCHAR
+  - name: dob
+    type: TIMESTAMP WITH TIME ZONE
+  - name: email_verified_at
+    type: TIMESTAMP WITH TIME ZONE
+relationships:
+- name: ads_drafts_users
+  from: users
+  to: ads_drafts
+  join_type: one_to_many
+  condition: users.id = ads_drafts.user_id
+- name: ads_drafts_users
+  from: users
+  to: ads_drafts
+  join_type: one_to_many
+  condition: users.id = ads_drafts.user_id
+- name: ads_drafts_areas
+  from: areas
+  to: ads_drafts
+  join_type: one_to_many
+  condition: areas.id = ads_drafts.area_id
+- name: ads_drafts_areas
+  from: areas
+  to: ads_drafts
+  join_type: one_to_many
+  condition: areas.id = ads_drafts.area_id
+- name: ads_media_ads
+  from: ads
+  to: ads_media
+  join_type: one_to_many
+  condition: ads.id = ads_media.ad_id
+- name: ads_media_ads
+  from: ads
+  to: ads_media
+  join_type: one_to_many
+  condition: ads.id = ads_media.ad_id
+- name: ads_reviewed_ads
+  from: ads
+  to: ads_reviewed
+  join_type: one_to_many
+  condition: ads.id = ads_reviewed.ad_id
+- name: ads_reviewed_ads
+  from: ads
+  to: ads_reviewed
+  join_type: one_to_many
+  condition: ads.id = ads_reviewed.ad_id
+- name: ad_creation_rates_users
+  from: users
+  to: ad_creation_rates
+  join_type: one_to_many
+  condition: users.id = ad_creation_rates.user_id
+- name: ad_creation_rates_users
+  from: users
+  to: ad_creation_rates
+  join_type: one_to_many
+  condition: users.id = ad_creation_rates.user_id
+- name: agent_sessions_sessions
+  from: sessions
+  to: agent_sessions
+  join_type: one_to_many
+  condition: sessions.id = agent_sessions.session_id
+- name: agent_sessions_sessions
+  from: sessions
+  to: agent_sessions
+  join_type: one_to_many
+  condition: sessions.id = agent_sessions.session_id
+- name: agent_sessions_users
+  from: users
+  to: agent_sessions
+  join_type: one_to_many
+  condition: users.id = agent_sessions.user_id
+- name: agent_sessions_users
+  from: users
+  to: agent_sessions
+  join_type: one_to_many
+  condition: users.id = agent_sessions.user_id
+- name: bidding_logs_ads
+  from: ads
+  to: bidding_logs
+  join_type: one_to_many
+  condition: ads.id = bidding_logs.ad_id
+- name: bidding_logs_ads
+  from: ads
+  to: bidding_logs
+  join_type: one_to_many
+  condition: ads.id = bidding_logs.ad_id
+- name: bidding_logs_bids
+  from: bids
+  to: bidding_logs
+  join_type: one_to_many
+  condition: bids.id = bidding_logs.bid_id
+- name: bidding_logs_bids
+  from: bids
+  to: bidding_logs
+  join_type: one_to_many
+  condition: bids.id = bidding_logs.bid_id
+- name: buyer_requests_media_buyer_requests
+  from: buyer_requests
+  to: buyer_requests_media
+  join_type: one_to_many
+  condition: buyer_requests.id = buyer_requests_media.buyer_request_id
+- name: buyer_requests_media_buyer_requests
+  from: buyer_requests
+  to: buyer_requests_media
+  join_type: one_to_many
+  condition: buyer_requests.id = buyer_requests_media.buyer_request_id
+- name: chatbot_conversations_users
+  from: users
+  to: chatbot_conversations
+  join_type: one_to_many
+  condition: users.id = chatbot_conversations.user_id
+- name: chatbot_conversations_users
+  from: users
+  to: chatbot_conversations
+  join_type: one_to_many
+  condition: users.id = chatbot_conversations.user_id
+- name: chat_messages_meetings
+  from: meetings
+  to: chat_messages
+  join_type: one_to_many
+  condition: meetings.id = chat_messages.meeting_id
+- name: chat_messages_meetings
+  from: meetings
+  to: chat_messages
+  join_type: one_to_many
+  condition: meetings.id = chat_messages.meeting_id
+- name: event_bookings_users
+  from: users
+  to: event_bookings
+  join_type: one_to_many
+  condition: users.id = event_bookings.user_id
+- name: event_bookings_users
+  from: users
+  to: event_bookings
+  join_type: one_to_many
+  condition: users.id = event_bookings.user_id
+- name: event_bookings_events
+  from: events
+  to: event_bookings
+  join_type: one_to_many
+  condition: events.id = event_bookings.event_id
+- name: event_bookings_events
+  from: events
+  to: event_bookings
+  join_type: one_to_many
+  condition: events.id = event_bookings.event_id
+- name: event_bookings_ticket_types
+  from: ticket_types
+  to: event_bookings
+  join_type: one_to_many
+  condition: ticket_types.id = event_bookings.ticket_type_id
+- name: event_bookings_ticket_types
+  from: ticket_types
+  to: event_bookings
+  join_type: one_to_many
+  condition: ticket_types.id = event_bookings.ticket_type_id
+- name: event_prizes_events
+  from: events
+  to: event_prizes
+  join_type: one_to_many
+  condition: events.id = event_prizes.event_id
+- name: event_prizes_events
+  from: events
+  to: event_prizes
+  join_type: one_to_many
+  condition: events.id = event_prizes.event_id
+- name: fcm_tokens_users
+  from: users
+  to: fcm_tokens
+  join_type: one_to_many
+  condition: users.id = fcm_tokens.user_id
+- name: fcm_tokens_users
+  from: users
+  to: fcm_tokens
+  join_type: one_to_many
+  condition: users.id = fcm_tokens.user_id
+- name: locations_provinces
+  from: provinces
+  to: locations
+  join_type: one_to_many
+  condition: provinces.id = locations.province_id
+- name: locations_provinces
+  from: provinces
+  to: locations
+  join_type: one_to_many
+  condition: provinces.id = locations.province_id
+- name: loyalty_transactions_users
+  from: users
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: users.id = loyalty_transactions.user_id
+- name: loyalty_transactions_users
+  from: users
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: users.id = loyalty_transactions.user_id
+- name: loyalty_transactions_loyalty_points
+  from: loyalty_points
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: loyalty_points.id = loyalty_transactions.loyalty_points_id
+- name: loyalty_transactions_loyalty_points
+  from: loyalty_points
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: loyalty_points.id = loyalty_transactions.loyalty_points_id
+- name: meetings_chat_rooms
+  from: chat_rooms
+  to: meetings
+  join_type: one_to_many
+  condition: chat_rooms.id = meetings.chat_room_id
+- name: meetings_chat_rooms
+  from: chat_rooms
+  to: meetings
+  join_type: one_to_many
+  condition: chat_rooms.id = meetings.chat_room_id
+- name: meetings_stores
+  from: stores
+  to: meetings
+  join_type: one_to_many
+  condition: stores.id = meetings.store_id
+- name: meetings_stores
+  from: stores
+  to: meetings
+  join_type: one_to_many
+  condition: stores.id = meetings.store_id
+- name: recommendation_scores_users
+  from: users
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: users.id = recommendation_scores.user_id
+- name: recommendation_scores_users
+  from: users
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: users.id = recommendation_scores.user_id
+- name: recommendation_scores_ads
+  from: ads
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: ads.id = recommendation_scores.ad_id
+- name: recommendation_scores_ads
+  from: ads
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: ads.id = recommendation_scores.ad_id
+- name: reel_likes_users
+  from: users
+  to: reel_likes
+  join_type: one_to_many
+  condition: users.id = reel_likes.user_id
+- name: reel_likes_users
+  from: users
+  to: reel_likes
+  join_type: one_to_many
+  condition: users.id = reel_likes.user_id
+- name: reel_likes_reels
+  from: reels
+  to: reel_likes
+  join_type: one_to_many
+  condition: reels.id = reel_likes.reel_id
+- name: reel_likes_reels
+  from: reels
+  to: reel_likes
+  join_type: one_to_many
+  condition: reels.id = reel_likes.reel_id
+- name: sessions_users
+  from: users
+  to: sessions
+  join_type: one_to_many
+  condition: users.id = sessions.user_id
+- name: sessions_users
+  from: users
+  to: sessions
+  join_type: one_to_many
+  condition: users.id = sessions.user_id
+- name: user_behaviors_users
+  from: users
+  to: user_behaviors
+  join_type: one_to_many
+  condition: users.id = user_behaviors.user_id
+- name: user_behaviors_users
+  from: users
+  to: user_behaviors
+  join_type: one_to_many
+  condition: users.id = user_behaviors.user_id
+- name: user_behaviors_ads
+  from: ads
+  to: user_behaviors
+  join_type: one_to_many
+  condition: ads.id = user_behaviors.ad_id
+- name: user_behaviors_ads
+  from: ads
+  to: user_behaviors
+  join_type: one_to_many
+  condition: ads.id = user_behaviors.ad_id
+- name: user_devices_users
+  from: users
+  to: user_devices
+  join_type: one_to_many
+  condition: users.id = user_devices.user_id
+- name: user_devices_users
+  from: users
+  to: user_devices
+  join_type: one_to_many
+  condition: users.id = user_devices.user_id
+- name: user_last_location_users
+  from: users
+  to: user_last_location
+  join_type: one_to_many
+  condition: users.id = user_last_location.user_id
+- name: user_last_location_users
+  from: users
+  to: user_last_location
+  join_type: one_to_many
+  condition: users.id = user_last_location.user_id
+- name: user_session_users
+  from: users
+  to: user_session
+  join_type: one_to_many
+  condition: users.id = user_session.user_id
+- name: user_session_users
+  from: users
+  to: user_session
+  join_type: one_to_many
+  condition: users.id = user_session.user_id
+- name: user_states_users
+  from: users
+  to: user_states
+  join_type: one_to_many
+  condition: users.id = user_states.user_id
+- name: user_states_users
+  from: users
+  to: user_states
+  join_type: one_to_many
+  condition: users.id = user_states.user_id
+- name: ads_users
+  from: users
+  to: ads
+  join_type: one_to_many
+  condition: users.id = ads.user_id
+- name: ads_users
+  from: users
+  to: ads
+  join_type: one_to_many
+  condition: users.id = ads.user_id
+- name: ads_areas
+  from: areas
+  to: ads
+  join_type: one_to_many
+  condition: areas.id = ads.area_id
+- name: ads_areas
+  from: areas
+  to: ads
+  join_type: one_to_many
+  condition: areas.id = ads.area_id
+- name: ads_drafts_users
+  from: users
+  to: ads_drafts
+  join_type: one_to_many
+  condition: users.id = ads_drafts.user_id
+- name: ads_drafts_users
+  from: users
+  to: ads_drafts
+  join_type: one_to_many
+  condition: users.id = ads_drafts.user_id
+- name: ads_drafts_areas
+  from: areas
+  to: ads_drafts
+  join_type: one_to_many
+  condition: areas.id = ads_drafts.area_id
+- name: ads_drafts_areas
+  from: areas
+  to: ads_drafts
+  join_type: one_to_many
+  condition: areas.id = ads_drafts.area_id
+- name: ads_media_ads
+  from: ads
+  to: ads_media
+  join_type: one_to_many
+  condition: ads.id = ads_media.ad_id
+- name: ads_media_ads
+  from: ads
+  to: ads_media
+  join_type: one_to_many
+  condition: ads.id = ads_media.ad_id
+- name: ads_reviewed_ads
+  from: ads
+  to: ads_reviewed
+  join_type: one_to_many
+  condition: ads.id = ads_reviewed.ad_id
+- name: ads_reviewed_ads
+  from: ads
+  to: ads_reviewed
+  join_type: one_to_many
+  condition: ads.id = ads_reviewed.ad_id
+- name: ad_attributes_ads
+  from: ads
+  to: ad_attributes
+  join_type: one_to_many
+  condition: ads.id = ad_attributes.ad_id
+- name: ad_attributes_ads
+  from: ads
+  to: ad_attributes
+  join_type: one_to_many
+  condition: ads.id = ad_attributes.ad_id
+- name: ad_attributes_attribute_values
+  from: attribute_values
+  to: ad_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = ad_attributes.attribute_value_id
+- name: ad_attributes_attribute_values
+  from: attribute_values
+  to: ad_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = ad_attributes.attribute_value_id
+- name: ad_creation_rates_users
+  from: users
+  to: ad_creation_rates
+  join_type: one_to_many
+  condition: users.id = ad_creation_rates.user_id
+- name: ad_creation_rates_users
+  from: users
+  to: ad_creation_rates
+  join_type: one_to_many
+  condition: users.id = ad_creation_rates.user_id
+- name: agent_messages_sessions
+  from: sessions
+  to: agent_messages
+  join_type: one_to_many
+  condition: sessions.id = agent_messages.session_id
+- name: agent_messages_sessions
+  from: sessions
+  to: agent_messages
+  join_type: one_to_many
+  condition: sessions.id = agent_messages.session_id
+- name: agent_sessions_sessions
+  from: sessions
+  to: agent_sessions
+  join_type: one_to_many
+  condition: sessions.id = agent_sessions.session_id
+- name: agent_sessions_sessions
+  from: sessions
+  to: agent_sessions
+  join_type: one_to_many
+  condition: sessions.id = agent_sessions.session_id
+- name: agent_sessions_users
+  from: users
+  to: agent_sessions
+  join_type: one_to_many
+  condition: users.id = agent_sessions.user_id
+- name: agent_sessions_users
+  from: users
+  to: agent_sessions
+  join_type: one_to_many
+  condition: users.id = agent_sessions.user_id
+- name: attribute_values_attributes
+  from: attributes
+  to: attribute_values
+  join_type: one_to_many
+  condition: attributes.id = attribute_values.attribute_id
+- name: attribute_values_attributes
+  from: attributes
+  to: attribute_values
+  join_type: one_to_many
+  condition: attributes.id = attribute_values.attribute_id
+- name: bidding_logs_ads
+  from: ads
+  to: bidding_logs
+  join_type: one_to_many
+  condition: ads.id = bidding_logs.ad_id
+- name: bidding_logs_ads
+  from: ads
+  to: bidding_logs
+  join_type: one_to_many
+  condition: ads.id = bidding_logs.ad_id
+- name: bidding_logs_bids
+  from: bids
+  to: bidding_logs
+  join_type: one_to_many
+  condition: bids.id = bidding_logs.bid_id
+- name: bidding_logs_bids
+  from: bids
+  to: bidding_logs
+  join_type: one_to_many
+  condition: bids.id = bidding_logs.bid_id
+- name: bids_ads
+  from: ads
+  to: bids
+  join_type: one_to_many
+  condition: ads.id = bids.ad_id
+- name: bids_ads
+  from: ads
+  to: bids
+  join_type: one_to_many
+  condition: ads.id = bids.ad_id
+- name: bids_users
+  from: users
+  to: bids
+  join_type: one_to_many
+  condition: users.id = bids.user_id
+- name: bids_users
+  from: users
+  to: bids
+  join_type: one_to_many
+  condition: users.id = bids.user_id
+- name: buyer_requests_users
+  from: users
+  to: buyer_requests
+  join_type: one_to_many
+  condition: users.id = buyer_requests.user_id
+- name: buyer_requests_users
+  from: users
+  to: buyer_requests
+  join_type: one_to_many
+  condition: users.id = buyer_requests.user_id
+- name: buyer_requests_media_buyer_requests
+  from: buyer_requests
+  to: buyer_requests_media
+  join_type: one_to_many
+  condition: buyer_requests.id = buyer_requests_media.buyer_request_id
+- name: buyer_requests_media_buyer_requests
+  from: buyer_requests
+  to: buyer_requests_media
+  join_type: one_to_many
+  condition: buyer_requests.id = buyer_requests_media.buyer_request_id
+- name: chatbot_conversations_users
+  from: users
+  to: chatbot_conversations
+  join_type: one_to_many
+  condition: users.id = chatbot_conversations.user_id
+- name: chatbot_conversations_users
+  from: users
+  to: chatbot_conversations
+  join_type: one_to_many
+  condition: users.id = chatbot_conversations.user_id
+- name: chat_messages_meetings
+  from: meetings
+  to: chat_messages
+  join_type: one_to_many
+  condition: meetings.id = chat_messages.meeting_id
+- name: chat_messages_meetings
+  from: meetings
+  to: chat_messages
+  join_type: one_to_many
+  condition: meetings.id = chat_messages.meeting_id
+- name: chat_rooms_ads
+  from: ads
+  to: chat_rooms
+  join_type: one_to_many
+  condition: ads.id = chat_rooms.ad_id
+- name: chat_rooms_ads
+  from: ads
+  to: chat_rooms
+  join_type: one_to_many
+  condition: ads.id = chat_rooms.ad_id
+- name: complaint_tickets_users
+  from: users
+  to: complaint_tickets
+  join_type: one_to_many
+  condition: users.id = complaint_tickets.user_id
+- name: complaint_tickets_users
+  from: users
+  to: complaint_tickets
+  join_type: one_to_many
+  condition: users.id = complaint_tickets.user_id
+- name: coupons_users
+  from: users
+  to: coupons
+  join_type: one_to_many
+  condition: users.id = coupons.user_id
+- name: coupons_users
+  from: users
+  to: coupons
+  join_type: one_to_many
+  condition: users.id = coupons.user_id
+- name: coupons_meetings
+  from: meetings
+  to: coupons
+  join_type: one_to_many
+  condition: meetings.id = coupons.meeting_id
+- name: coupons_meetings
+  from: meetings
+  to: coupons
+  join_type: one_to_many
+  condition: meetings.id = coupons.meeting_id
+- name: event_bookings_users
+  from: users
+  to: event_bookings
+  join_type: one_to_many
+  condition: users.id = event_bookings.user_id
+- name: event_bookings_users
+  from: users
+  to: event_bookings
+  join_type: one_to_many
+  condition: users.id = event_bookings.user_id
+- name: event_bookings_events
+  from: events
+  to: event_bookings
+  join_type: one_to_many
+  condition: events.id = event_bookings.event_id
+- name: event_bookings_events
+  from: events
+  to: event_bookings
+  join_type: one_to_many
+  condition: events.id = event_bookings.event_id
+- name: event_bookings_ticket_types
+  from: ticket_types
+  to: event_bookings
+  join_type: one_to_many
+  condition: ticket_types.id = event_bookings.ticket_type_id
+- name: event_bookings_ticket_types
+  from: ticket_types
+  to: event_bookings
+  join_type: one_to_many
+  condition: ticket_types.id = event_bookings.ticket_type_id
+- name: event_participants_events
+  from: events
+  to: event_participants
+  join_type: one_to_many
+  condition: events.id = event_participants.event_id
+- name: event_participants_events
+  from: events
+  to: event_participants
+  join_type: one_to_many
+  condition: events.id = event_participants.event_id
+- name: event_participants_users
+  from: users
+  to: event_participants
+  join_type: one_to_many
+  condition: users.id = event_participants.user_id
+- name: event_participants_users
+  from: users
+  to: event_participants
+  join_type: one_to_many
+  condition: users.id = event_participants.user_id
+- name: event_prizes_events
+  from: events
+  to: event_prizes
+  join_type: one_to_many
+  condition: events.id = event_prizes.event_id
+- name: event_prizes_events
+  from: events
+  to: event_prizes
+  join_type: one_to_many
+  condition: events.id = event_prizes.event_id
+- name: favorite_ads_users
+  from: users
+  to: favorite_ads
+  join_type: one_to_many
+  condition: users.id = favorite_ads.user_id
+- name: favorite_ads_users
+  from: users
+  to: favorite_ads
+  join_type: one_to_many
+  condition: users.id = favorite_ads.user_id
+- name: favorite_ads_ads
+  from: ads
+  to: favorite_ads
+  join_type: one_to_many
+  condition: ads.id = favorite_ads.ad_id
+- name: favorite_ads_ads
+  from: ads
+  to: favorite_ads
+  join_type: one_to_many
+  condition: ads.id = favorite_ads.ad_id
+- name: fcm_tokens_users
+  from: users
+  to: fcm_tokens
+  join_type: one_to_many
+  condition: users.id = fcm_tokens.user_id
+- name: fcm_tokens_users
+  from: users
+  to: fcm_tokens
+  join_type: one_to_many
+  condition: users.id = fcm_tokens.user_id
+- name: giveaway_referrals_users
+  from: users
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: users.id = giveaway_referrals.user_id
+- name: giveaway_referrals_users
+  from: users
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: users.id = giveaway_referrals.user_id
+- name: giveaway_referrals_events
+  from: events
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: events.id = giveaway_referrals.event_id
+- name: giveaway_referrals_events
+  from: events
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: events.id = giveaway_referrals.event_id
+- name: locations_provinces
+  from: provinces
+  to: locations
+  join_type: one_to_many
+  condition: provinces.id = locations.province_id
+- name: locations_provinces
+  from: provinces
+  to: locations
+  join_type: one_to_many
+  condition: provinces.id = locations.province_id
+- name: loyalty_points_users
+  from: users
+  to: loyalty_points
+  join_type: one_to_many
+  condition: users.id = loyalty_points.user_id
+- name: loyalty_points_users
+  from: users
+  to: loyalty_points
+  join_type: one_to_many
+  condition: users.id = loyalty_points.user_id
+- name: loyalty_transactions_users
+  from: users
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: users.id = loyalty_transactions.user_id
+- name: loyalty_transactions_users
+  from: users
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: users.id = loyalty_transactions.user_id
+- name: loyalty_transactions_loyalty_points
+  from: loyalty_points
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: loyalty_points.id = loyalty_transactions.loyalty_points_id
+- name: loyalty_transactions_loyalty_points
+  from: loyalty_points
+  to: loyalty_transactions
+  join_type: one_to_many
+  condition: loyalty_points.id = loyalty_transactions.loyalty_points_id
+- name: meetings_chat_rooms
+  from: chat_rooms
+  to: meetings
+  join_type: one_to_many
+  condition: chat_rooms.id = meetings.chat_room_id
+- name: meetings_chat_rooms
+  from: chat_rooms
+  to: meetings
+  join_type: one_to_many
+  condition: chat_rooms.id = meetings.chat_room_id
+- name: meetings_stores
+  from: stores
+  to: meetings
+  join_type: one_to_many
+  condition: stores.id = meetings.store_id
+- name: meetings_stores
+  from: stores
+  to: meetings
+  join_type: one_to_many
+  condition: stores.id = meetings.store_id
+- name: notifications_users
+  from: users
+  to: notifications
+  join_type: one_to_many
+  condition: users.id = notifications.user_id
+- name: notifications_users
+  from: users
+  to: notifications
+  join_type: one_to_many
+  condition: users.id = notifications.user_id
+- name: recommendation_scores_users
+  from: users
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: users.id = recommendation_scores.user_id
+- name: recommendation_scores_users
+  from: users
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: users.id = recommendation_scores.user_id
+- name: recommendation_scores_ads
+  from: ads
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: ads.id = recommendation_scores.ad_id
+- name: recommendation_scores_ads
+  from: ads
+  to: recommendation_scores
+  join_type: one_to_many
+  condition: ads.id = recommendation_scores.ad_id
+- name: reels_users
+  from: users
+  to: reels
+  join_type: one_to_many
+  condition: users.id = reels.user_id
+- name: reels_users
+  from: users
+  to: reels
+  join_type: one_to_many
+  condition: users.id = reels.user_id
+- name: reels_ads
+  from: ads
+  to: reels
+  join_type: one_to_many
+  condition: ads.id = reels.ad_id
+- name: reels_ads
+  from: ads
+  to: reels
+  join_type: one_to_many
+  condition: ads.id = reels.ad_id
+- name: reel_comments_users
+  from: users
+  to: reel_comments
+  join_type: one_to_many
+  condition: users.id = reel_comments.user_id
+- name: reel_comments_users
+  from: users
+  to: reel_comments
+  join_type: one_to_many
+  condition: users.id = reel_comments.user_id
+- name: reel_comments_reels
+  from: reels
+  to: reel_comments
+  join_type: one_to_many
+  condition: reels.id = reel_comments.reel_id
+- name: reel_comments_reels
+  from: reels
+  to: reel_comments
+  join_type: one_to_many
+  condition: reels.id = reel_comments.reel_id
+- name: reel_likes_users
+  from: users
+  to: reel_likes
+  join_type: one_to_many
+  condition: users.id = reel_likes.user_id
+- name: reel_likes_users
+  from: users
+  to: reel_likes
+  join_type: one_to_many
+  condition: users.id = reel_likes.user_id
+- name: reel_likes_reels
+  from: reels
+  to: reel_likes
+  join_type: one_to_many
+  condition: reels.id = reel_likes.reel_id
+- name: reel_likes_reels
+  from: reels
+  to: reel_likes
+  join_type: one_to_many
+  condition: reels.id = reel_likes.reel_id
+- name: reviews_ads
+  from: ads
+  to: reviews
+  join_type: one_to_many
+  condition: ads.id = reviews.ad_id
+- name: reviews_ads
+  from: ads
+  to: reviews
+  join_type: one_to_many
+  condition: ads.id = reviews.ad_id
+- name: sessions_users
+  from: users
+  to: sessions
+  join_type: one_to_many
+  condition: users.id = sessions.user_id
+- name: sessions_users
+  from: users
+  to: sessions
+  join_type: one_to_many
+  condition: users.id = sessions.user_id
+- name: subcategory_attributes_attribute_values
+  from: attribute_values
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = subcategory_attributes.attribute_value_id
+- name: subcategory_attributes_attribute_values
+  from: attribute_values
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = subcategory_attributes.attribute_value_id
+- name: subcategory_attributes_attributes
+  from: attributes
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attributes.id = subcategory_attributes.attribute_id
+- name: subcategory_attributes_attributes
+  from: attributes
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attributes.id = subcategory_attributes.attribute_id
+- name: ticket_types_events
+  from: events
+  to: ticket_types
+  join_type: one_to_many
+  condition: events.id = ticket_types.event_id
+- name: ticket_types_events
+  from: events
+  to: ticket_types
+  join_type: one_to_many
+  condition: events.id = ticket_types.event_id
+- name: user_behaviors_users
+  from: users
+  to: user_behaviors
+  join_type: one_to_many
+  condition: users.id = user_behaviors.user_id
+- name: user_behaviors_users
+  from: users
+  to: user_behaviors
+  join_type: one_to_many
+  condition: users.id = user_behaviors.user_id
+- name: user_behaviors_ads
+  from: ads
+  to: user_behaviors
+  join_type: one_to_many
+  condition: ads.id = user_behaviors.ad_id
+- name: user_behaviors_ads
+  from: ads
+  to: user_behaviors
+  join_type: one_to_many
+  condition: ads.id = user_behaviors.ad_id
+- name: user_contact_requests_users
+  from: users
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: users.id = user_contact_requests.user_id
+- name: user_contact_requests_users
+  from: users
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: users.id = user_contact_requests.user_id
+- name: user_contact_requests_ads
+  from: ads
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: ads.id = user_contact_requests.ad_id
+- name: user_contact_requests_ads
+  from: ads
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: ads.id = user_contact_requests.ad_id
+- name: user_devices_users
+  from: users
+  to: user_devices
+  join_type: one_to_many
+  condition: users.id = user_devices.user_id
+- name: user_devices_users
+  from: users
+  to: user_devices
+  join_type: one_to_many
+  condition: users.id = user_devices.user_id
+- name: user_interests_users
+  from: users
+  to: user_interests
+  join_type: one_to_many
+  condition: users.id = user_interests.user_id
+- name: user_interests_users
+  from: users
+  to: user_interests
+  join_type: one_to_many
+  condition: users.id = user_interests.user_id
+- name: user_interests_attribute_values
+  from: attribute_values
+  to: user_interests
+  join_type: one_to_many
+  condition: attribute_values.id = user_interests.attribute_value_id
+- name: user_interests_attribute_values
+  from: attribute_values
+  to: user_interests
+  join_type: one_to_many
+  condition: attribute_values.id = user_interests.attribute_value_id
+- name: user_last_location_users
+  from: users
+  to: user_last_location
+  join_type: one_to_many
+  condition: users.id = user_last_location.user_id
+- name: user_last_location_users
+  from: users
+  to: user_last_location
+  join_type: one_to_many
+  condition: users.id = user_last_location.user_id
+- name: user_session_users
+  from: users
+  to: user_session
+  join_type: one_to_many
+  condition: users.id = user_session.user_id
+- name: user_session_users
+  from: users
+  to: user_session
+  join_type: one_to_many
+  condition: users.id = user_session.user_id
+- name: user_settings_users
+  from: users
+  to: user_settings
+  join_type: one_to_many
+  condition: users.id = user_settings.user_id
+- name: user_settings_users
+  from: users
+  to: user_settings
+  join_type: one_to_many
+  condition: users.id = user_settings.user_id
+- name: user_states_users
+  from: users
+  to: user_states
+  join_type: one_to_many
+  condition: users.id = user_states.user_id
+- name: user_states_users
+  from: users
+  to: user_states
+  join_type: one_to_many
+  condition: users.id = user_states.user_id
+- name: ads_users
+  from: users
+  to: ads
+  join_type: one_to_many
+  condition: users.id = ads.user_id
+- name: ads_users
+  from: users
+  to: ads
+  join_type: one_to_many
+  condition: users.id = ads.user_id
+- name: ads_areas
+  from: areas
+  to: ads
+  join_type: one_to_many
+  condition: areas.id = ads.area_id
+- name: ads_areas
+  from: areas
+  to: ads
+  join_type: one_to_many
+  condition: areas.id = ads.area_id
+- name: ad_attributes_ads
+  from: ads
+  to: ad_attributes
+  join_type: one_to_many
+  condition: ads.id = ad_attributes.ad_id
+- name: ad_attributes_ads
+  from: ads
+  to: ad_attributes
+  join_type: one_to_many
+  condition: ads.id = ad_attributes.ad_id
+- name: ad_attributes_attribute_values
+  from: attribute_values
+  to: ad_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = ad_attributes.attribute_value_id
+- name: ad_attributes_attribute_values
+  from: attribute_values
+  to: ad_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = ad_attributes.attribute_value_id
+- name: agent_messages_sessions
+  from: sessions
+  to: agent_messages
+  join_type: one_to_many
+  condition: sessions.id = agent_messages.session_id
+- name: agent_messages_sessions
+  from: sessions
+  to: agent_messages
+  join_type: one_to_many
+  condition: sessions.id = agent_messages.session_id
+- name: attribute_values_attributes
+  from: attributes
+  to: attribute_values
+  join_type: one_to_many
+  condition: attributes.id = attribute_values.attribute_id
+- name: attribute_values_attributes
+  from: attributes
+  to: attribute_values
+  join_type: one_to_many
+  condition: attributes.id = attribute_values.attribute_id
+- name: bids_ads
+  from: ads
+  to: bids
+  join_type: one_to_many
+  condition: ads.id = bids.ad_id
+- name: bids_ads
+  from: ads
+  to: bids
+  join_type: one_to_many
+  condition: ads.id = bids.ad_id
+- name: bids_users
+  from: users
+  to: bids
+  join_type: one_to_many
+  condition: users.id = bids.user_id
+- name: bids_users
+  from: users
+  to: bids
+  join_type: one_to_many
+  condition: users.id = bids.user_id
+- name: buyer_requests_users
+  from: users
+  to: buyer_requests
+  join_type: one_to_many
+  condition: users.id = buyer_requests.user_id
+- name: buyer_requests_users
+  from: users
+  to: buyer_requests
+  join_type: one_to_many
+  condition: users.id = buyer_requests.user_id
+- name: chat_rooms_ads
+  from: ads
+  to: chat_rooms
+  join_type: one_to_many
+  condition: ads.id = chat_rooms.ad_id
+- name: chat_rooms_ads
+  from: ads
+  to: chat_rooms
+  join_type: one_to_many
+  condition: ads.id = chat_rooms.ad_id
+- name: complaint_tickets_users
+  from: users
+  to: complaint_tickets
+  join_type: one_to_many
+  condition: users.id = complaint_tickets.user_id
+- name: complaint_tickets_users
+  from: users
+  to: complaint_tickets
+  join_type: one_to_many
+  condition: users.id = complaint_tickets.user_id
+- name: coupons_users
+  from: users
+  to: coupons
+  join_type: one_to_many
+  condition: users.id = coupons.user_id
+- name: coupons_users
+  from: users
+  to: coupons
+  join_type: one_to_many
+  condition: users.id = coupons.user_id
+- name: coupons_meetings
+  from: meetings
+  to: coupons
+  join_type: one_to_many
+  condition: meetings.id = coupons.meeting_id
+- name: coupons_meetings
+  from: meetings
+  to: coupons
+  join_type: one_to_many
+  condition: meetings.id = coupons.meeting_id
+- name: event_participants_events
+  from: events
+  to: event_participants
+  join_type: one_to_many
+  condition: events.id = event_participants.event_id
+- name: event_participants_events
+  from: events
+  to: event_participants
+  join_type: one_to_many
+  condition: events.id = event_participants.event_id
+- name: event_participants_users
+  from: users
+  to: event_participants
+  join_type: one_to_many
+  condition: users.id = event_participants.user_id
+- name: event_participants_users
+  from: users
+  to: event_participants
+  join_type: one_to_many
+  condition: users.id = event_participants.user_id
+- name: favorite_ads_users
+  from: users
+  to: favorite_ads
+  join_type: one_to_many
+  condition: users.id = favorite_ads.user_id
+- name: favorite_ads_users
+  from: users
+  to: favorite_ads
+  join_type: one_to_many
+  condition: users.id = favorite_ads.user_id
+- name: favorite_ads_ads
+  from: ads
+  to: favorite_ads
+  join_type: one_to_many
+  condition: ads.id = favorite_ads.ad_id
+- name: favorite_ads_ads
+  from: ads
+  to: favorite_ads
+  join_type: one_to_many
+  condition: ads.id = favorite_ads.ad_id
+- name: giveaway_referrals_users
+  from: users
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: users.id = giveaway_referrals.user_id
+- name: giveaway_referrals_users
+  from: users
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: users.id = giveaway_referrals.user_id
+- name: giveaway_referrals_events
+  from: events
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: events.id = giveaway_referrals.event_id
+- name: giveaway_referrals_events
+  from: events
+  to: giveaway_referrals
+  join_type: one_to_many
+  condition: events.id = giveaway_referrals.event_id
+- name: loyalty_points_users
+  from: users
+  to: loyalty_points
+  join_type: one_to_many
+  condition: users.id = loyalty_points.user_id
+- name: loyalty_points_users
+  from: users
+  to: loyalty_points
+  join_type: one_to_many
+  condition: users.id = loyalty_points.user_id
+- name: notifications_users
+  from: users
+  to: notifications
+  join_type: one_to_many
+  condition: users.id = notifications.user_id
+- name: notifications_users
+  from: users
+  to: notifications
+  join_type: one_to_many
+  condition: users.id = notifications.user_id
+- name: reels_users
+  from: users
+  to: reels
+  join_type: one_to_many
+  condition: users.id = reels.user_id
+- name: reels_users
+  from: users
+  to: reels
+  join_type: one_to_many
+  condition: users.id = reels.user_id
+- name: reels_ads
+  from: ads
+  to: reels
+  join_type: one_to_many
+  condition: ads.id = reels.ad_id
+- name: reels_ads
+  from: ads
+  to: reels
+  join_type: one_to_many
+  condition: ads.id = reels.ad_id
+- name: reel_comments_users
+  from: users
+  to: reel_comments
+  join_type: one_to_many
+  condition: users.id = reel_comments.user_id
+- name: reel_comments_users
+  from: users
+  to: reel_comments
+  join_type: one_to_many
+  condition: users.id = reel_comments.user_id
+- name: reel_comments_reels
+  from: reels
+  to: reel_comments
+  join_type: one_to_many
+  condition: reels.id = reel_comments.reel_id
+- name: reel_comments_reels
+  from: reels
+  to: reel_comments
+  join_type: one_to_many
+  condition: reels.id = reel_comments.reel_id
+- name: reviews_ads
+  from: ads
+  to: reviews
+  join_type: one_to_many
+  condition: ads.id = reviews.ad_id
+- name: reviews_ads
+  from: ads
+  to: reviews
+  join_type: one_to_many
+  condition: ads.id = reviews.ad_id
+- name: subcategory_attributes_attribute_values
+  from: attribute_values
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = subcategory_attributes.attribute_value_id
+- name: subcategory_attributes_attribute_values
+  from: attribute_values
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attribute_values.id = subcategory_attributes.attribute_value_id
+- name: subcategory_attributes_attributes
+  from: attributes
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attributes.id = subcategory_attributes.attribute_id
+- name: subcategory_attributes_attributes
+  from: attributes
+  to: subcategory_attributes
+  join_type: one_to_many
+  condition: attributes.id = subcategory_attributes.attribute_id
+- name: ticket_types_events
+  from: events
+  to: ticket_types
+  join_type: one_to_many
+  condition: events.id = ticket_types.event_id
+- name: ticket_types_events
+  from: events
+  to: ticket_types
+  join_type: one_to_many
+  condition: events.id = ticket_types.event_id
+- name: user_contact_requests_users
+  from: users
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: users.id = user_contact_requests.user_id
+- name: user_contact_requests_users
+  from: users
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: users.id = user_contact_requests.user_id
+- name: user_contact_requests_ads
+  from: ads
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: ads.id = user_contact_requests.ad_id
+- name: user_contact_requests_ads
+  from: ads
+  to: user_contact_requests
+  join_type: one_to_many
+  condition: ads.id = user_contact_requests.ad_id
+- name: user_interests_users
+  from: users
+  to: user_interests
+  join_type: one_to_many
+  condition: users.id = user_interests.user_id
+- name: user_interests_users
+  from: users
+  to: user_interests
+  join_type: one_to_many
+  condition: users.id = user_interests.user_id
+- name: user_interests_attribute_values
+  from: attribute_values
+  to: user_interests
+  join_type: one_to_many
+  condition: attribute_values.id = user_interests.attribute_value_id
+- name: user_interests_attribute_values
+  from: attribute_values
+  to: user_interests
+  join_type: one_to_many
+  condition: attribute_values.id = user_interests.attribute_value_id
+- name: user_settings_users
+  from: users
+  to: user_settings
+  join_type: one_to_many
+  condition: users.id = user_settings.user_id
+- name: user_settings_users
+  from: users
+  to: user_settings
+  join_type: one_to_many
+  condition: users.id = user_settings.user_id

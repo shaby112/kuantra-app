@@ -1,0 +1,8 @@
+# Optional heavyweight ML dependencies.
+# Keep these out of default deploys (especially Vercel) to stay below size limits.
+
+sentence-transformers
+scikit-learn
+numpy
+scipy
+connectorx

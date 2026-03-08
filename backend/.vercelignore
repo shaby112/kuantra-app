@@ -1,0 +1,20 @@
+# Runtime/local artifacts
+data/
+uploads/
+*.duckdb
+*.parquet
+*.csv
+*.xlsx
+*.tar.gz
+import_time.log
+
+# Local dev/test caches
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Non-runtime helper scripts and test fixtures
+docs/
+tests/
+debug_*.py
+test_*.py
