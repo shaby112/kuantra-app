@@ -1,11 +1,12 @@
 import json
 import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from app.services.schema_service import schema_service
 from app.core.logging import logger
 from app.core.config import settings
+from app.core.request_context import set_request_llm_api_key, reset_request_llm_api_key
 import os
 from contextlib import asynccontextmanager
 
@@ -69,6 +70,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def request_context_middleware(request: Request, call_next):
+    token = set_request_llm_api_key(request.headers.get("X-Google-Api-Key"))
+    try:
+        return await call_next(request)
+    finally:
+        reset_request_llm_api_key(token)
 
 # Register endpoints
 app.include_router(api_router, prefix="/api/v1")

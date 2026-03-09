@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-react";
 
 const ENV_API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL?.replace(/\/$/, "");
+const LLM_API_KEY_STORAGE_KEY = "insightops_google_api_key";
 
 type TokenProvider = (() => Promise<string | null> | string | null) | null;
 
@@ -10,9 +11,10 @@ function inferApiBaseUrl(): string {
   if (ENV_API_BASE_URL) return ENV_API_BASE_URL;
 
   if (typeof window !== "undefined") {
+    const isDev = Boolean((import.meta as any).env?.DEV);
     const host = window.location.hostname;
     const isLocalHost = host === "localhost" || host === "127.0.0.1";
-    if (isLocalHost) {
+    if (isDev && isLocalHost) {
       return "http://127.0.0.1:8000";
     }
 
@@ -20,7 +22,7 @@ function inferApiBaseUrl(): string {
     return "";
   }
 
-  return "http://127.0.0.1:8000";
+  return "";
 }
 
 export const API_BASE_URL = inferApiBaseUrl();
@@ -50,6 +52,21 @@ export async function getAuthToken(): Promise<string | null> {
 
   const token = await authTokenProvider();
   return token || null;
+}
+
+export function getStoredLLMApiKey(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = localStorage.getItem(LLM_API_KEY_STORAGE_KEY);
+  return value?.trim() ? value.trim() : null;
+}
+
+export function setStoredLLMApiKey(apiKey: string | null): void {
+  if (typeof window === "undefined") return;
+  if (!apiKey || !apiKey.trim()) {
+    localStorage.removeItem(LLM_API_KEY_STORAGE_KEY);
+    return;
+  }
+  localStorage.setItem(LLM_API_KEY_STORAGE_KEY, apiKey.trim());
 }
 
 export function useAuthFetch() {
@@ -89,6 +106,11 @@ export async function apiFetch<T>(
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
+  }
+
+  const llmApiKey = getStoredLLMApiKey();
+  if (llmApiKey) {
+    headers.set("X-Google-Api-Key", llmApiKey);
   }
 
   const res = await fetch(url, { ...init, headers });

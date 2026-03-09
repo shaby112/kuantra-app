@@ -8,6 +8,7 @@ from app.db.models import DbConnection
 from app.utils.crypto import crypto_service
 import asyncpg
 from .file_query_service import FileQueryService
+from .llm_provider_service import resolve_google_api_key
 
 class AgentService:
     def __init__(self):
@@ -23,7 +24,7 @@ class AgentService:
                     "AgentService Gemini client is disabled when AI_PROVIDER is not 'gemini'."
                 )
             logger.info(f"Initializing Gemini Client with model: {self.model_id}")
-            self._client = genai.Client(api_key=settings.GOOGLE_API_KEY)
+            self._client = genai.Client(api_key=resolve_google_api_key())
         return self._client
 
     async def execute_sql_tool(self, sql_query: str, connection_id: int) -> str:

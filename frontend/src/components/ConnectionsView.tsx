@@ -85,7 +85,11 @@ export function ConnectionsView() {
             setIsUploading(false);
         },
         onError: (e: any) => {
-            toast({ title: "Upload Failed", description: e.message || "Failed to upload file", variant: "destructive" });
+            const description =
+                e?.status === 413
+                    ? "File is too large. Maximum upload size is 200 MB."
+                    : e?.message || "Failed to upload file";
+            toast({ title: "Upload Failed", description, variant: "destructive" });
             setIsUploading(false);
         }
     });

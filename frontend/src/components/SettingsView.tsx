@@ -6,8 +6,32 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { getStoredLLMApiKey, setStoredLLMApiKey } from "@/lib/api";
 
 export function SettingsView() {
+    const { toast } = useToast();
+    const [googleApiKey, setGoogleApiKey] = useState(() => getStoredLLMApiKey() ?? "");
+
+    const handleSaveGoogleApiKey = () => {
+        setStoredLLMApiKey(googleApiKey);
+        toast({
+            title: "Saved",
+            description: googleApiKey.trim()
+                ? "Google API key saved for this browser."
+                : "Google API key removed from this browser.",
+        });
+    };
+
+    const handleClearGoogleApiKey = () => {
+        setGoogleApiKey("");
+        setStoredLLMApiKey(null);
+        toast({
+            title: "Removed",
+            description: "Google API key removed from this browser.",
+        });
+    };
+
     return (
         <div className="h-full flex flex-col p-6 space-y-6 overflow-y-auto bg-background/50">
             <div>
@@ -68,27 +92,36 @@ export function SettingsView() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Key className="w-5 h-5 text-primary" />
-                                API Keys
+                                AI API Key
                             </CardTitle>
-                            <CardDescription>Manage keys used for external integrations and CLI tools.</CardDescription>
+                            <CardDescription>
+                                Set your Google API key for AI analysis. The key is stored locally in your browser.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="p-4 rounded-lg bg-muted/30 border border-border flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                        <Globe className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold">Production Key</p>
-                                        <p className="text-xs text-muted-foreground">Created on Oct 12, 2023</p>
-                                    </div>
-                                </div>
-                                <Button variant="ghost" size="sm">Revoke</Button>
+                            <div className="space-y-2">
+                                <Label htmlFor="google-api-key">Google API Key</Label>
+                                <Input
+                                    id="google-api-key"
+                                    type="password"
+                                    placeholder="AIza..."
+                                    value={googleApiKey}
+                                    onChange={(e) => setGoogleApiKey(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    This key is sent as `X-Google-Api-Key` with requests from this browser.
+                                </p>
                             </div>
-                            <Button className="w-full gap-2" variant="outline">
-                                <Lock className="w-4 h-4" />
-                                Create New Key
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button className="flex-1 gap-2" onClick={handleSaveGoogleApiKey}>
+                                    <Lock className="w-4 h-4" />
+                                    Save Key
+                                </Button>
+                                <Button className="flex-1 gap-2" variant="outline" onClick={handleClearGoogleApiKey}>
+                                    <Trash2 className="w-4 h-4" />
+                                    Clear Key
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

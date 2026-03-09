@@ -10,6 +10,19 @@ from google.genai import types as genai_types
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.request_context import get_request_llm_api_key
+
+
+def resolve_google_api_key() -> str:
+    request_key = get_request_llm_api_key()
+    if request_key:
+        return request_key
+    if settings.GOOGLE_API_KEY:
+        return settings.GOOGLE_API_KEY
+    raise RuntimeError(
+        "Google API key is not configured. Add it in Settings -> API Keys "
+        "or set GOOGLE_API_KEY on the server."
+    )
 
 
 class LLMProvider(ABC):
@@ -26,11 +39,19 @@ class LLMProvider(ABC):
 
 class GeminiProvider(LLMProvider):
     def __init__(self):
-        self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
+        self._clients: Dict[str, genai.Client] = {}
+
+    def _get_client(self) -> genai.Client:
+        api_key = resolve_google_api_key()
+        client = self._clients.get(api_key)
+        if client is None:
+            client = genai.Client(api_key=api_key)
+            self._clients[api_key] = client
+        return client
 
     async def generate(self, prompt: str, config: Optional[Dict[str, Any]] = None) -> str:
         def _call() -> str:
-            response = self.client.models.generate_content(
+            response = self._get_client().models.generate_content(
                 model=settings.LLM_MODEL,
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(**(config or {})),
