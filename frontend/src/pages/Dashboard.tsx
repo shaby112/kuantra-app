@@ -9,7 +9,6 @@ import { SettingsView } from "@/components/SettingsView";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useGlobalState } from "@/context/GlobalStateContext";
-import { useClerk } from "@clerk/clerk-react";
 
 export default function Dashboard() {
   const {
@@ -22,7 +21,6 @@ export default function Dashboard() {
   const [dangerModalOpen, setDangerModalOpen] = useState(false);
   const [pendingSQL, setPendingSQL] = useState("");
   const { toast } = useToast();
-  const { signOut } = useClerk();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,9 +36,10 @@ export default function Dashboard() {
   }, [location.pathname, setActiveTab]);
 
   const handleLogout = async () => {
-    await signOut();
-    toast({ title: "Signed out", description: "See you later!" });
-    window.location.href = "/sign-in";
+    localStorage.removeItem("license_key");
+    localStorage.removeItem("access_token");
+    toast({ title: "Signed out", description: "License session cleared." });
+    window.location.href = "/license";
   };
 
   const handleOpenDangerModal = (sql: string) => {

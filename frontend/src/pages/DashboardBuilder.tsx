@@ -37,9 +37,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TemplateStore } from "@/components/dashboard/TemplateStore";
 import { DashboardHistory } from "@/components/dashboard/DashboardHistory";
+import { DashboardSplitView } from "@/components/dashboard/DashboardSplitView";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useClerk } from "@clerk/clerk-react";
 
 const COLOR_SCHEMES: { id: ColorScheme; name: string; colors: string[] }[] = [
   { id: "default", name: "Default", colors: ["#f43f5e", "#f59e0b", "#10b981", "#3b82f6"] },
@@ -142,7 +142,6 @@ const WIDGET_CATEGORIES = {
 export default function DashboardBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signOut } = useClerk();
   const [chatCollapsed, setChatCollapsed] = useState(false);
   const [libraryCollapsed, setLibraryCollapsed] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -162,9 +161,10 @@ export default function DashboardBuilder() {
   } = useGlobalState();
 
   const handleLogout = async () => {
-    await signOut();
-    toast({ title: "Signed out", description: "See you later!" });
-    navigate("/sign-in");
+    localStorage.removeItem("license_key");
+    localStorage.removeItem("access_token");
+    toast({ title: "Signed out", description: "License session cleared." });
+    navigate("/license");
   };
 
   const handlePlanReady = (plan: DashboardPlan) => {
@@ -558,12 +558,16 @@ export default function DashboardBuilder() {
               {chatCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
             </Button>
 
-            <EditableDashboard
-              dashboard={dashboard}
-              onUpdate={handleUpdateDashboard}
-              onAddWidget={() => handleAddWidget()}
-              onRefreshWidget={handleRefreshWidgetData}
-            />
+            {dashboard.widgets.length === 0 ? (
+              <DashboardSplitView />
+            ) : (
+              <EditableDashboard
+                dashboard={dashboard}
+                onUpdate={handleUpdateDashboard}
+                onAddWidget={() => handleAddWidget()}
+                onRefreshWidget={handleRefreshWidgetData}
+              />
+            )}
 
             <ComponentLibrary
               collapsed={libraryCollapsed}

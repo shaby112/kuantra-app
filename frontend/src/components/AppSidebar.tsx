@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
-import { useAuth } from "@clerk/clerk-react";
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -25,7 +24,6 @@ const navItems = [
 
 export function AppSidebar({ collapsed, onToggle, activeTab, onTabChange, onLogout }: AppSidebarProps) {
   const location = useLocation();
-  const { isSignedIn } = useAuth();
   return (
     <aside
       className={cn(
@@ -85,18 +83,16 @@ export function AppSidebar({ collapsed, onToggle, activeTab, onTabChange, onLogo
 
       {/* Footer */}
       <div className="p-2 border-t border-sidebar-border space-y-2">
-        {isSignedIn && (
-          <button
-            onClick={onLogout}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-destructive hover:bg-destructive/10",
-              collapsed && "justify-center"
-            )}
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>Logout</span>}
-          </button>
-        )}
+        <button
+          onClick={onLogout}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-destructive hover:bg-destructive/10",
+            collapsed && "justify-center"
+          )}
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          {!collapsed && <span>Logout</span>}
+        </button>
 
         <div className={cn("flex items-center pt-2", collapsed ? "justify-center" : "justify-between border-t border-sidebar-border/50")}>
           {!collapsed && <ThemeToggle />}

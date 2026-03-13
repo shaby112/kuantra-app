@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Shield, Lock, Eye, Key, Bell, User, Database, Globe, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Shield, Lock, Key, Bell, User, Database, Trash2, Building2, Mail, Wand2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,15 @@ import { getStoredLLMApiKey, setStoredLLMApiKey } from "@/lib/api";
 export function SettingsView() {
     const { toast } = useToast();
     const [googleApiKey, setGoogleApiKey] = useState(() => getStoredLLMApiKey() ?? "");
+    const [authEmail, setAuthEmail] = useState("");
+    const [authGateLocked, setAuthGateLocked] = useState(false);
+    const [licenseView, setLicenseView] = useState<"none" | "empty" | "active">("none");
+    const [activeLicenseKey, setActiveLicenseKey] = useState("");
+
+    const enterpriseDomains = ["acme.com", "globex.com", "kuantra.ai", "enterprise.io"];
+    const emailDomain = useMemo(() => authEmail.split("@")[1]?.toLowerCase() ?? "", [authEmail]);
+    const isEnterpriseDomain = enterpriseDomains.includes(emailDomain);
+    const prismButtonClass = "w-full h-12 mt-4 bg-white/5 text-white border border-white/10 backdrop-blur-md hover:bg-white/10 hover:border-white/20";
 
     const handleSaveGoogleApiKey = () => {
         setStoredLLMApiKey(googleApiKey);
@@ -29,6 +38,48 @@ export function SettingsView() {
         toast({
             title: "Removed",
             description: "Google API key removed from this browser.",
+        });
+    };
+
+    const handleSendMagicLink = () => {
+        setAuthGateLocked(false);
+        setLicenseView("empty");
+        setActiveLicenseKey("");
+        toast({
+            title: "Magic link sent",
+            description: `A secure sign-in link was sent to ${authEmail || "your email"}.`,
+        });
+    };
+
+    const handleGoogleContinue = () => {
+        setAuthGateLocked(false);
+        setLicenseView("empty");
+        setActiveLicenseKey("");
+        toast({
+            title: "Google auth started",
+            description: "Continue authentication via Google.",
+        });
+    };
+
+    const handleEnterpriseLogin = () => {
+        setAuthGateLocked(true);
+        setLicenseView("active");
+        const domainSeed = (emailDomain || "enterprise").replace(/[^a-z]/g, "").slice(0, 8) || "enterprise";
+        setActiveLicenseKey(`kuan_live_${domainSeed}_A9X4F2Q7`);
+        toast({
+            title: "Enterprise SSO success",
+            description: "Active enterprise license detected.",
+        });
+    };
+
+    const handleGenerateLicense = () => {
+        const domainSeed = (emailDomain || "trial").replace(/[^a-z]/g, "").slice(0, 8) || "trial";
+        const newKey = `kuan_live_${domainSeed}_${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+        setActiveLicenseKey(newKey);
+        setLicenseView("active");
+        toast({
+            title: "License key generated",
+            description: "Your live license key is now active.",
         });
     };
 
@@ -149,14 +200,75 @@ export function SettingsView() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-primary/10 bg-primary/5">
-                        <CardContent className="pt-6">
-                            <div className="text-center space-y-2">
-                                <Lock className="w-8 h-8 text-primary mx-auto mb-2" />
-                                <h3 className="font-bold">Enterprise ready?</h3>
-                                <p className="text-sm text-muted-foreground">Unlock SSO, SAML, and audit logs with our Enterprise plan.</p>
-                                <Button className="w-full mt-4 bg-primary text-white">Upgrade Now</Button>
+                    <Card className="border border-white/10 bg-[#0A0A0A] shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-white">Unified Authentication & License</CardTitle>
+                            <CardDescription>
+                                Enter work email to route to the right auth flow.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="auth-gate-email" className="text-zinc-200">The Unified Gate</Label>
+                                <div className="relative">
+                                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                                    <Input
+                                        id="auth-gate-email"
+                                        type="email"
+                                        value={authEmail}
+                                        disabled={authGateLocked}
+                                        onChange={(e) => {
+                                            setAuthEmail(e.target.value);
+                                            setLicenseView("none");
+                                        }}
+                                        placeholder="you@company.com"
+                                        className="h-12 border-white/10 bg-black/50 pl-9 font-mono text-sm text-white placeholder:text-zinc-600"
+                                    />
+                                </div>
                             </div>
+
+                            {!authEmail.includes("@") ? (
+                                <p className="text-xs text-zinc-400">Enter an email to continue.</p>
+                            ) : isEnterpriseDomain ? (
+                                <>
+                                    <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+                                        Enterprise domain recognized. SSO-only login enforced.
+                                    </p>
+                                    <Button className={prismButtonClass} onClick={handleEnterpriseLogin}>
+                                        <Building2 className="mr-2 h-4 w-4" />
+                                        Log in with Enterprise SSO
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button className={prismButtonClass} onClick={handleSendMagicLink}>
+                                        <Wand2 className="mr-2 h-4 w-4 text-emerald-300" />
+                                        Send Magic Link
+                                    </Button>
+                                    <Button className={prismButtonClass} variant="outline" onClick={handleGoogleContinue}>
+                                        Continue with Google
+                                    </Button>
+                                </>
+                            )}
+
+                            {licenseView === "empty" && (
+                                <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                                    <p className="text-sm font-medium text-zinc-200">No active licenses</p>
+                                    <p className="mt-1 text-xs text-zinc-500">Generate a license key to activate this workspace.</p>
+                                    <Button className={prismButtonClass} onClick={handleGenerateLicense}>
+                                        Generate License Key
+                                    </Button>
+                                </div>
+                            )}
+
+                            {licenseView === "active" && (
+                                <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
+                                    <p className="text-sm font-medium text-emerald-300">Active License Key</p>
+                                    <p className="mt-2 rounded bg-black/40 px-3 py-2 font-mono text-xs text-emerald-200">
+                                        {activeLicenseKey || "kuan_live_..."}
+                                    </p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

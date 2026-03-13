@@ -1,5 +1,3 @@
-import { useAuth } from "@clerk/clerk-react";
-
 const ENV_API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL?.replace(/\/$/, "");
 const LLM_API_KEY_STORAGE_KEY = "kuantra_google_api_key";
 
@@ -70,13 +68,11 @@ export function setStoredLLMApiKey(apiKey: string | null): void {
 }
 
 export function useAuthFetch() {
-  const { getToken } = useAuth();
-
   return async function authFetch<T>(
     path: string,
     init?: RequestInit,
   ): Promise<T> {
-    const token = await getToken();
+    const token = await getAuthToken();
     return apiFetch<T>(path, { ...init, auth: true, token: token || undefined });
   };
 }

@@ -7,13 +7,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { API_BASE_URL, ApiError } from '@/lib/api';
+import { API_BASE_URL, ApiError, getAuthToken } from '@/lib/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, GitBranch, Sparkles, Save, Lock, Unlock } from 'lucide-react';
 import SchemaGraph from '@/components/modeling/SchemaGraph';
 import PropertySheet from '@/components/modeling/PropertySheet';
-import { useAuth } from '@clerk/clerk-react';
 
 const API_BASE = `${API_BASE_URL}/api/v1`;
 
@@ -47,7 +46,6 @@ interface RelationshipSuggestion {
 
 export default function ModelingStudio() {
     const { toast } = useToast();
-    const { getToken } = useAuth();
     const [mdl, setMdl] = useState<MDLContent | null>(null);
     const [suggestions, setSuggestions] = useState<RelationshipSuggestion[]>([]);
     const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -59,7 +57,7 @@ export default function ModelingStudio() {
 
     // Get auth token
     const authHeaders = async (json = false): Promise<HeadersInit> => {
-        const token = await getToken();
+        const token = await getAuthToken();
         if (!token) {
             throw new ApiError('Not authenticated. Please sign in again.', 401);
         }
