@@ -1,0 +1,7 @@
+# Dependencies for NovaMart demo data generation
+faker>=20.0.0
+openpyxl>=3.1.0
+
+# Optional: only needed if seeding databases directly (not via Docker)
+psycopg2-binary>=2.9.0
+pymongo>=4.0.0
