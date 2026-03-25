@@ -1,0 +1,54 @@
+# NovaMart Demo Environment
+# =========================
+# Spins up Postgres and MongoDB pre-loaded with NovaMart seed data.
+# CSV and Excel files are generated into ./data/ by seed_demo.py.
+#
+# Usage:
+#   1. pip install faker openpyxl
+#   2. python seed_demo.py --files-only
+#   3. docker compose -f docker-compose.demo.yml up -d
+#   4. Connect Kuantra to these sources:
+#        Postgres  -> localhost:5433 / novamart / novamart:novamart
+#        MongoDB   -> localhost:27018 / novamart
+#        CSV       -> upload product_catalog.csv & inventory.csv
+#        Excel     -> upload marketing_spend.xlsx
+
+services:
+  demo-postgres:
+    image: postgres:16-alpine
+    container_name: novamart-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: novamart
+      POSTGRES_PASSWORD: novamart
+      POSTGRES_DB: novamart
+    volumes:
+      - demo-pg-data:/var/lib/postgresql/data
+      - ./data/init_novamart.sql:/docker-entrypoint-initdb.d/01-novamart.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U novamart"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  demo-mongo:
+    image: mongo:7
+    container_name: novamart-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - demo-mongo-data:/data/db
+      - ./data/support_tickets.json:/docker-entrypoint-initdb.d/support_tickets.json:ro
+      - ./init-mongo.sh:/docker-entrypoint-initdb.d/01-seed.sh:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  demo-pg-data:
+  demo-mongo-data:
