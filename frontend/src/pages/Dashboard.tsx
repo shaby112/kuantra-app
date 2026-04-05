@@ -28,12 +28,20 @@ export default function Dashboard() {
   useEffect(() => {
     if (location.pathname.includes("/dashboard/modeling")) {
       setActiveTab("modeling");
-    } else if (location.pathname.includes("/dashboard/builder")) {
-      setActiveTab("dashboards");
-    } else if (location.pathname === "/dashboard") {
-      setActiveTab("connections"); // Default view for /dashboard
+      return;
     }
-  }, [location.pathname, setActiveTab]);
+
+    if (location.pathname.includes("/dashboard/builder")) {
+      setActiveTab("dashboards");
+      return;
+    }
+
+    // Keep current tab on /dashboard to avoid one-click reset bugs (e.g. settings/reports -> connections).
+    // Only coerce if we came from a route-backed tab that no longer matches current path.
+    if (location.pathname === "/dashboard" && ["modeling", "dashboards"].includes(activeTab)) {
+      setActiveTab("connections");
+    }
+  }, [location.pathname, activeTab, setActiveTab]);
 
   const handleLogout = async () => {
     localStorage.removeItem("license_key");
@@ -68,6 +76,7 @@ export default function Dashboard() {
 
   // Check if we are in a nested active route (e.g. /dashboard/modeling)
   const isNestedRoute = location.pathname !== "/dashboard";
+  const appVersion = (import.meta as any)?.env?.VITE_APP_VERSION || "0.0.0";
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -125,6 +134,11 @@ export default function Dashboard() {
             </div>
           </>
         )}
+      </div>
+
+      {/* Dev testing watermark */}
+      <div className="pointer-events-none fixed bottom-3 left-3 z-50 rounded border border-primary/25 bg-background/80 px-2 py-1 text-[11px] font-mono text-muted-foreground backdrop-blur-sm">
+        DEV TESTING • v{appVersion}
       </div>
 
       {/* Danger Modal */}

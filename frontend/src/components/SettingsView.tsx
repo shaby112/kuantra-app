@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
-import { Shield, Lock, Key, Bell, User, Database, Trash2, Building2, Mail, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Shield, Lock, Key, Bell, User, Database, Trash2, Building2, Mail, Wand2, Cpu } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getStoredLLMApiKey, setStoredLLMApiKey } from "@/lib/api";
+import { apiFetch, getStoredLLMApiKey, setStoredLLMApiKey } from "@/lib/api";
 
 export function SettingsView() {
     const { toast } = useToast();
@@ -16,6 +17,11 @@ export function SettingsView() {
     const [authGateLocked, setAuthGateLocked] = useState(false);
     const [licenseView, setLicenseView] = useState<"none" | "empty" | "active">("none");
     const [activeLicenseKey, setActiveLicenseKey] = useState("");
+    const [modelTier, setModelTier] = useState<"Basic" | "Pro">("Pro");
+    const [llmProvider, setLlmProvider] = useState<string>("gemini");
+    const [downloadState, setDownloadState] = useState<string>("idle");
+    const [downloadProgress, setDownloadProgress] = useState<number>(0);
+    const [isDownloadingModel, setIsDownloadingModel] = useState(false);
 
     const enterpriseDomains = ["acme.com", "globex.com", "kuantra.ai", "enterprise.io"];
     const emailDomain = useMemo(() => authEmail.split("@")[1]?.toLowerCase() ?? "", [authEmail]);
@@ -81,6 +87,71 @@ export function SettingsView() {
             title: "License key generated",
             description: "Your live license key is now active.",
         });
+    };
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function detectTier() {
+            try {
+                const payload = await apiFetch<any>("/health/llm");
+                const provider = payload?.provider || "gemini";
+                // Internal mapping only: local model stack => Basic, cloud stack => Pro.
+                const tier = provider === "local" ? "Basic" : "Pro";
+                if (!cancelled) {
+                    setLlmProvider(provider);
+                    setModelTier(tier);
+                }
+            } catch {
+                if (!cancelled) {
+                    setLlmProvider("gemini");
+                    setModelTier("Pro");
+                }
+            }
+        }
+
+        detectTier();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (llmProvider !== "local") {
+            setIsDownloadingModel(false);
+            return;
+        }
+
+        const id = window.setInterval(async () => {
+            try {
+                const progress = await apiFetch<any>("/api/v1/llm/download/progress", { auth: true });
+                const status = progress?.status || "idle";
+                setDownloadState(status);
+                setDownloadProgress(Number(progress?.progress_percent || 0));
+                setIsDownloadingModel(Boolean(progress?.running));
+            } catch {
+                // no-op
+            }
+        }, 1800);
+
+        return () => window.clearInterval(id);
+    }, [llmProvider]);
+
+    const handleDownloadStarterModel = async () => {
+        try {
+            setIsDownloadingModel(true);
+            setDownloadState("starting");
+            await apiFetch<any>("/api/v1/llm/download", {
+                method: "POST",
+                auth: true,
+                body: JSON.stringify({ model: "qwen3.5:4b" }),
+            });
+            toast({ title: "Model download started", description: "Qwen3.5-4B is downloading in the background." });
+        } catch (e: any) {
+            setIsDownloadingModel(false);
+            setDownloadState("failed");
+            toast({ title: "Download failed", description: e?.message || "Could not start model download." });
+        }
     };
 
     return (
@@ -179,6 +250,47 @@ export function SettingsView() {
 
                 {/* Sidebar Column */}
                 <div className="space-y-6">
+                    <Card className="border-primary/10 bg-card/50 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center justify-between">
+                                <span className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary" /> AI Tier</span>
+                                <Badge variant={modelTier === "Basic" ? "secondary" : "default"}>{modelTier}</Badge>
+                            </CardTitle>
+                            <CardDescription>
+                                Active AI plan for this workspace.
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+
+                    <Card className="border-primary/10 bg-card/50 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Local AI Model</CardTitle>
+                            <CardDescription>
+                                Download starter model on demand (keeps Docker image small).
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Model</span>
+                                <span className="font-mono">Starter (Basic)</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Status</span>
+                                <Badge variant={downloadState === "failed" ? "destructive" : "secondary"}>{downloadState}</Badge>
+                            </div>
+                            <div className="h-2 w-full overflow-hidden rounded bg-muted">
+                                <div className="h-full bg-primary transition-all" style={{ width: `${Math.max(0, Math.min(100, downloadProgress))}%` }} />
+                            </div>
+                            <p className="text-xs text-muted-foreground">{downloadProgress.toFixed(0)}% complete</p>
+                            <Button onClick={handleDownloadStarterModel} disabled={isDownloadingModel} className="w-full">
+                                {isDownloadingModel ? "Downloading..." : "Download Starter Model"}
+                            </Button>
+                            {llmProvider !== "local" && (
+                                <p className="text-xs text-amber-500">Model can be pre-downloaded now; runtime will use it once server provider is switched to Local.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+
                     <Card className="border-primary/10 bg-card/50 backdrop-blur-sm">
                         <CardHeader>
                             <CardTitle className="text-lg">Quick Actions</CardTitle>

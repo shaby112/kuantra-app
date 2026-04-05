@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -16,16 +16,16 @@ class User(Base):
     __tablename__ = "users"
 
     id = _uuid_pk()
-    clerk_id = Column(String, unique=True, index=True, nullable=False)
+    subject_id = Column("clerk_id", String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=True)
     email = Column(String, unique=True, index=True, nullable=True)
     is_verified = Column(Boolean, default=True, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     updated_at = Column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.utcnow(),
+        onupdate=lambda: datetime.utcnow(),
         nullable=False,
     )
 
@@ -42,7 +42,7 @@ class OTP(Base):
     code = Column(String, nullable=False)
     is_used = Column(Boolean, default=False, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
 
     user = relationship("User", back_populates="otps")
 
@@ -66,7 +66,7 @@ class DbConnection(Base):
     ssh_port = Column(Integer, default=22, nullable=True)
     ssh_username = Column(String, nullable=True)
     ssh_key_path = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
 
     user = relationship("User", back_populates="connections")
     queries = relationship("QueryHistory", back_populates="connection", cascade="all, delete-orphan")
@@ -84,7 +84,7 @@ class QueryHistory(Base):
     execution_time_ms = Column(Integer, nullable=True)
     status = Column(String, default="success")
     error_message = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
 
     user = relationship("User")
     connection = relationship("DbConnection", back_populates="queries")
@@ -96,11 +96,11 @@ class Conversation(Base):
     id = _uuid_pk()
     user_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     title = Column(String, default="New Conversation", nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     updated_at = Column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.utcnow(),
+        onupdate=lambda: datetime.utcnow(),
         nullable=False,
     )
 
@@ -121,7 +121,7 @@ class ChatMessage(Base):
     role = Column(String, nullable=False)
     content = Column(String, nullable=False)
     sql_query = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
 
     conversation = relationship("Conversation", back_populates="messages")
 
@@ -133,11 +133,11 @@ class Dashboard(Base):
     user_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
     config = Column(JSON, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     updated_at = Column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.utcnow(),
+        onupdate=lambda: datetime.utcnow(),
         nullable=False,
     )
 
@@ -156,8 +156,8 @@ class SyncConfig(Base):
     last_error = Column(String, nullable=True)
     rows_cached = Column(Integer, default=0)
     tables_cached = Column(JSON, default=list)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow())
+    updated_at = Column(DateTime, default=lambda: datetime.utcnow(), onupdate=lambda: datetime.utcnow())
 
     connection = relationship("DbConnection", back_populates="sync_config")
     sync_history = relationship("SyncHistory", back_populates="sync_config", cascade="all, delete-orphan")
@@ -169,7 +169,7 @@ class SyncHistory(Base):
     id = _uuid_pk()
     sync_config_id = Column(PG_UUID(as_uuid=True), ForeignKey("sync_configs.id"), nullable=False)
     connection_id = Column(PG_UUID(as_uuid=True), ForeignKey("db_connections.id"), nullable=False)
-    started_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    started_at = Column(DateTime, default=lambda: datetime.utcnow())
     completed_at = Column(DateTime, nullable=True)
     status = Column(String, default="running")
     rows_synced = Column(Integer, default=0)
@@ -189,7 +189,7 @@ class MDLVersion(Base):
     content = Column(JSON, nullable=False)
     user_overrides = Column(JSON, default=dict)
     created_by = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     change_summary = Column(String, nullable=True)
 
     user = relationship("User")
@@ -200,7 +200,7 @@ class MDLLock(Base):
 
     id = _uuid_pk()
     user_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    acquired_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    acquired_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     expires_at = Column(DateTime, nullable=False)
 
     user = relationship("User")
@@ -217,7 +217,7 @@ class SuggestedRelationship(Base):
     confidence = Column(Float, nullable=False)
     status = Column(String, default="pending")
     confirmed_by = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.utcnow(), onupdate=lambda: datetime.utcnow())
 
     user = relationship("User")

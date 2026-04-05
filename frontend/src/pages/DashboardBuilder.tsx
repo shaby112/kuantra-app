@@ -182,8 +182,12 @@ export default function DashboardBuilder() {
         body: JSON.stringify({ plan: currentPlan, connection_ids: connectionIds }),
         auth: true
       });
+      const widgetStatus = Array.isArray(response.widget_status)
+        ? response.widget_status
+        : [];
+
       const statusByWidget = new Map(
-        (response.widget_status || []).map((s) => [s.widget_id, s]),
+        widgetStatus.map((s) => [s.widget_id, s]),
       );
 
       const newWidgets: WidgetConfig[] = response.config.widgets.map(w => ({
@@ -219,7 +223,7 @@ export default function DashboardBuilder() {
         updatedAt: response.updated_at
       });
 
-      const failed = (response.widget_status || []).filter((w) => w.status === "error");
+      const failed = widgetStatus.filter((w) => w.status === "error");
       if (failed.length > 0) {
         toast({
           title: "Partial dashboard generated",

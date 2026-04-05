@@ -68,105 +68,105 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 8%;
+    --background: 220 45% 98%;
+    --foreground: 229 34% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 229 34% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 229 34% 12%;
 
-    --primary: 0 85% 50%;
+    --primary: 223 84% 57%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 94%;
-    --secondary-foreground: 0 0% 12%;
+    --secondary: 223 42% 95%;
+    --secondary-foreground: 229 30% 18%;
 
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 223 40% 95%;
+    --muted-foreground: 223 16% 43%;
 
-    --accent: 0 75% 60%;
+    --accent: 250 80% 62%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 85% 50%;
+    --border: 223 28% 86%;
+    --input: 223 28% 86%;
+    --ring: 223 84% 57%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 96%;
-    --sidebar-foreground: 0 0% 25%;
-    --sidebar-primary: 0 85% 50%;
+    --sidebar-background: 220 45% 98%;
+    --sidebar-foreground: 223 22% 24%;
+    --sidebar-primary: 223 84% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 90%;
-    --sidebar-accent-foreground: 0 0% 12%;
-    --sidebar-border: 0 0% 88%;
-    --sidebar-ring: 0 85% 50%;
+    --sidebar-accent: 223 42% 95%;
+    --sidebar-accent-foreground: 229 30% 18%;
+    --sidebar-border: 223 28% 86%;
+    --sidebar-ring: 223 84% 57%;
 
     /* Custom tokens */
-    --glow-primary: 0 85% 50%;
-    --glow-accent: 0 75% 60%;
+    --glow-primary: 223 84% 57%;
+    --glow-accent: 250 80% 62%;
     --surface-elevated: 0 0% 100%;
-    --code-bg: 0 0% 96%;
+    --code-bg: 223 40% 96%;
     --success: 142 76% 36%;
     --warning: 38 92% 50%;
-    --gradient-start: 0 85% 50%;
-    --gradient-mid: 0 70% 45%;
-    --gradient-end: 0 0% 8%;
+    --gradient-start: 223 84% 57%;
+    --gradient-mid: 250 80% 62%;
+    --gradient-end: 229 34% 12%;
   }
 
   .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 95%;
+    --background: 228 38% 7%;
+    --foreground: 220 25% 95%;
 
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 95%;
+    --card: 228 34% 10%;
+    --card-foreground: 220 25% 95%;
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 228 34% 10%;
+    --popover-foreground: 220 25% 95%;
 
-    --primary: 0 85% 55%;
+    --primary: 223 92% 68%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 228 24% 16%;
+    --secondary-foreground: 220 25% 95%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 228 24% 16%;
+    --muted-foreground: 220 14% 64%;
 
-    --accent: 0 75% 50%;
+    --accent: 250 84% 66%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
-    --ring: 0 85% 55%;
+    --border: 228 20% 20%;
+    --input: 228 20% 20%;
+    --ring: 223 92% 68%;
 
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 80%;
-    --sidebar-primary: 0 85% 55%;
+    --sidebar-background: 228 38% 7%;
+    --sidebar-foreground: 220 19% 82%;
+    --sidebar-primary: 223 92% 68%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 0 85% 55%;
+    --sidebar-accent: 228 24% 16%;
+    --sidebar-accent-foreground: 220 25% 95%;
+    --sidebar-border: 228 20% 20%;
+    --sidebar-ring: 223 92% 68%;
 
     /* Custom tokens */
-    --glow-primary: 0 85% 55%;
-    --glow-accent: 0 75% 50%;
-    --surface-elevated: 0 0% 8%;
-    --code-bg: 0 0% 9%;
+    --glow-primary: 223 92% 68%;
+    --glow-accent: 250 84% 66%;
+    --surface-elevated: 228 34% 10%;
+    --code-bg: 228 30% 12%;
     --success: 142 70% 45%;
     --warning: 38 92% 50%;
-    --gradient-start: 0 85% 55%;
-    --gradient-mid: 0 70% 45%;
-    --gradient-end: 0 0% 95%;
+    --gradient-start: 223 92% 68%;
+    --gradient-mid: 250 84% 66%;
+    --gradient-end: 220 25% 95%;
   }
 }
 

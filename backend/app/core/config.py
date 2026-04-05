@@ -25,13 +25,16 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     
-    # Auth (Clerk)
-    CLERK_SECRET_KEY: str = ""
-    CLERK_PUBLISHABLE_KEY: str = ""
-    CLERK_WEBHOOK_SECRET: str = ""
-    CLERK_ISSUER: str = ""
-    CLERK_JWKS_URL: str = ""
-    
+    # Auth mode: "jwks" (external IdP), "license" (local HMAC JWT), "dev" (auto dev-user)
+    AUTH_MODE: str = "dev"
+
+    # Auth modes: dev (no token), license (HS256 token), jwks (OIDC/JWKS)
+    AUTH_MODE: str = "dev"
+    AUTH_SECRET_KEY: str = ""
+    AUTH_ISSUER: str = ""
+    AUTH_JWKS_URL: str = ""
+    AUTH_SECRET_KEY: str = ""  # HMAC secret for license mode JWT signing/verification
+
     # Auth (Logto - Self-Hosted SSO)
     LOGTO_ISSUER: str = ""
     LOGTO_JWKS_URL: str = ""
@@ -90,8 +93,17 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "gemini"  # gemini | local
     ALLOW_CLOUD_LLM: bool = True
     LOCAL_LLM_BASE_URL: str = ""
-    LOCAL_LLM_MODEL: str = "local-model"
+    LOCAL_LLM_MODEL: str = "qwen3.5:4b"
     LOCAL_LLM_API_KEY: str = ""
+    LOCAL_LLM_AUTO_PULL: bool = False
+    LOCAL_LLM_HEALTH_TIMEOUT_SECONDS: int = 10
+
+    # Rate limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_DEFAULT: str = "120/minute"
+    RATE_LIMIT_CHAT_STREAM: str = "30/minute"
+    RATE_LIMIT_QUERY_EXECUTE: str = "60/minute"
+    RATE_LIMIT_AUTH_WRITE: str = "20/minute"
     
     @model_validator(mode='after')
     def assemble_db_urls(self):
@@ -134,6 +146,10 @@ class Settings(BaseSettings):
             # If only async URL provided, make sync one
             self.SQLALCHEMY_DATABASE_URI = self.DATABASE_URL.replace("+asyncpg", "")
 
+        auth_mode = (self.AUTH_MODE or "dev").lower()
+        if auth_mode not in {"dev", "license", "jwks"}:
+            raise ValueError("AUTH_MODE must be one of: dev, license, jwks.")
+
         provider = (self.AI_PROVIDER or "gemini").lower()
 
         if provider not in {"gemini", "local"}:
@@ -148,8 +164,8 @@ class Settings(BaseSettings):
         if provider == "local" and not self.LOCAL_LLM_BASE_URL:
             raise ValueError("LOCAL_LLM_BASE_URL must be set when AI_PROVIDER='local'.")
 
-        if self.CLERK_ISSUER and not self.CLERK_JWKS_URL:
-            self.CLERK_JWKS_URL = f"{self.CLERK_ISSUER.rstrip('/')}/.well-known/jwks.json"
+        if self.AUTH_ISSUER and not self.AUTH_JWKS_URL:
+            self.AUTH_JWKS_URL = f"{self.AUTH_ISSUER.rstrip('/')}/.well-known/jwks.json"
         
         if self.LOGTO_ISSUER and not self.LOGTO_JWKS_URL:
             self.LOGTO_JWKS_URL = f"{self.LOGTO_ISSUER.rstrip('/')}/oidc/jwks"
@@ -157,13 +173,22 @@ class Settings(BaseSettings):
 
         # Use an explicit encryption key for secrets-at-rest (DB passwords, SSH creds).
         if not self.ENCRYPTION_KEY:
-            self.ENCRYPTION_KEY = self.CLERK_SECRET_KEY or "local-dev-encryption-key"
+            self.ENCRYPTION_KEY = "local-dev-encryption-key"
+
+        auth_mode = (self.AUTH_MODE or "dev").lower()
+        if auth_mode not in {"jwks", "license", "dev"}:
+            raise ValueError("AUTH_MODE must be 'jwks', 'license', or 'dev'.")
+        self.AUTH_MODE = auth_mode
 
         is_production = (self.ENVIRONMENT or "").lower() == "production"
         if is_production and self.ENCRYPTION_KEY == "local-dev-encryption-key":
             raise ValueError("ENCRYPTION_KEY must be set in production.")
-        if is_production and not (self.CLERK_ISSUER or self.CLERK_JWKS_URL):
-            raise ValueError("CLERK_ISSUER or CLERK_JWKS_URL must be set in production.")
+        if is_production and auth_mode == "dev":
+            raise ValueError("AUTH_MODE='dev' is not allowed in production.")
+        if is_production and auth_mode == "jwks" and not (self.AUTH_ISSUER or self.AUTH_JWKS_URL or self.LOGTO_ISSUER or self.LOGTO_JWKS_URL):
+            raise ValueError("AUTH_JWKS_URL (or LOGTO_JWKS_URL) must be set in production with AUTH_MODE='jwks'.")
+        if auth_mode == "license" and not self.AUTH_SECRET_KEY:
+            raise ValueError("AUTH_SECRET_KEY must be set when AUTH_MODE='license'.")
             
         return self
 
