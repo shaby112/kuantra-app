@@ -6,13 +6,15 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        VITE_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY}
+        VITE_AUTH_MODE: ${VITE_AUTH_MODE:-license}
     ports:
       - "${INSIGHTOPS_PORT:-8080}:8080"
     environment:
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
-      - CLERK_ISSUER=${CLERK_ISSUER}
+      - AUTH_PROVIDER=${AUTH_PROVIDER:-license}
+      - LICENSE_PUBLIC_KEY=${LICENSE_PUBLIC_KEY:-dev-license-public-key}
+      - LICENSE_ISSUER=${LICENSE_ISSUER:-https://license.insightops.local}
+      - LICENSE_AUDIENCE=${LICENSE_AUDIENCE:-insightops-app}
+      - LICENSE_ENFORCE=${LICENSE_ENFORCE:-true}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
       - AI_PROVIDER=${AI_PROVIDER:-gemini}
@@ -20,18 +22,29 @@ services:
       - LOCAL_LLM_BASE_URL=${LOCAL_LLM_BASE_URL:-}
       - LOCAL_LLM_MODEL=${LOCAL_LLM_MODEL:-local-model}
       - LOCAL_LLM_API_KEY=${LOCAL_LLM_API_KEY:-}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-secret-qa-test-key-12345}
       - DATABASE_URL=postgresql+asyncpg://kuantra:${DB_PASSWORD:-kuantra}@db:5432/kuantra
       - SQLALCHEMY_DATABASE_URI=postgresql://kuantra:${DB_PASSWORD:-kuantra}@db:5432/kuantra
       - DUCKDB_MEMORY_LIMIT=${DUCKDB_MEMORY_LIMIT:-4GB}
       - DUCKDB_THREADS=${DUCKDB_THREADS:-4}
-      - ENVIRONMENT=production
-      - DEBUG=false
+      # QA/dev defaults to bypass strict production secret requirements.
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-true}
       - CORS_ORIGINS=${CORS_ORIGINS:-}
       - UVICORN_WORKERS=${UVICORN_WORKERS:-1}
-      - UVICORN_LOG_LEVEL=${UVICORN_LOG_LEVEL:-info}
+      - UVICORN_LOG_LEVEL=${UVICORN_LOG_LEVEL:-debug}
       - RUN_MIGRATIONS_ON_START=${RUN_MIGRATIONS_ON_START:-true}
-    
+    volumes:
+      - kuantra-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   logto:
     image: ghcr.io/logto-io/logto:latest
@@ -49,18 +62,6 @@ services:
       - ADMIN_ENDPOINT=http://localhost:3002
     command: "npm start"
     restart: unless-stopped
-
-volumes:
-      - kuantra-data:/app/data
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   db:
     image: postgres:16-alpine

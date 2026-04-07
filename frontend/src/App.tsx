@@ -1,4 +1,3 @@
-import { SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp } from "@clerk/clerk-react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,20 +8,14 @@ import DashboardBuilder from "./pages/DashboardBuilder";
 import ModelingStudio from "./pages/ModelingStudio";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import LicenseGate from "./pages/LicenseGate";
 
 const queryClient = new QueryClient();
 
 function ProtectedLayout() {
-  return (
-    <>
-      <SignedIn>
-        <Outlet />
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
+  const hasLicense = typeof window !== "undefined" && !!localStorage.getItem("license_key");
+  if (!hasLicense) return <Navigate to="/license" replace />;
+  return <Outlet />;
 }
 
 const App = () => (
@@ -34,13 +27,7 @@ const App = () => (
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-            <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" />} />
-            <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
-
-            {/* Backward-compatible auth paths */}
-            <Route path="/signin/*" element={<Navigate to="/sign-in" replace />} />
-            <Route path="/signup/*" element={<Navigate to="/sign-up" replace />} />
+            <Route path="/license" element={<LicenseGate />} />
 
             <Route element={<ProtectedLayout />}>
               <Route path="/dashboard" element={<Dashboard />}>

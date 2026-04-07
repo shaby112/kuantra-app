@@ -9,9 +9,8 @@ import { DashboardActionsToolbar } from "./DashboardActionsToolbar";
 import type { DashboardConfig, WidgetConfig, LayoutItem } from "@/types/dashboard";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Plus, ZoomIn, ZoomOut, RotateCcw, Move } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Icon } from "@/components/Icon";
 import { apiFetch } from "@/lib/api";
 import { Slider } from "@/components/ui/slider";
 
@@ -39,7 +38,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  // Handle Pan Tool Mouse Events
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (toolMode === "pan") {
       setIsPanning(true);
@@ -60,14 +58,12 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
     setIsPanning(false);
   }, []);
 
-  // Stop panning if mouse leaves window/container
   useEffect(() => {
     const handleGlobalMouseUp = () => setIsPanning(false);
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, []);
 
-  // Fetch connections for data source selection
   useEffect(() => {
     apiFetch<any[]>("/api/v1/connections/", { auth: true })
       .then(data => setConnections(data))
@@ -81,28 +77,22 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
     setPanOffset({ x: 0, y: 0 });
   };
 
-  // ... (Zoom gesture logic - keep existing) ...
-  // Handle trackpad/mouse wheel zoom with pinch gesture support
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
-      // Check if it's a pinch gesture (ctrlKey is true for trackpad pinch on macOS)
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         e.stopPropagation();
-
-        // deltaY is negative when zooming in, positive when zooming out
         const delta = -e.deltaY * 0.01;
         setZoomLevel(prev => {
           const newZoom = Math.min(Math.max(prev + delta, 0.3), 2);
-          return Math.round(newZoom * 100) / 100; // Round to 2 decimal places
+          return Math.round(newZoom * 100) / 100;
         });
       }
     };
 
-    // Use both wheel and gesturechange for better cross-browser support
     const handleGestureStart = (e: Event) => {
       e.preventDefault();
     };
@@ -127,7 +117,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
     };
   }, []);
 
-  // Handle touch zoom for mobile
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -175,7 +164,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
     };
   }, [zoomLevel]);
 
-  // Measure container width
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
@@ -192,7 +180,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
     return () => observer.disconnect();
   }, []);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "e") {
@@ -200,7 +187,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
         setIsEditMode(prev => !prev);
         toast({ title: isEditMode ? "View Mode" : "Edit Mode" });
       }
-      // Zoom shortcuts
       if ((e.ctrlKey || e.metaKey) && e.key === "=") {
         e.preventDefault();
         handleZoomIn();
@@ -213,10 +199,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
         e.preventDefault();
         handleResetZoom();
       }
-      // Pan tool shortcut (Spacebar or H)
-      if (e.code === "Space" && !isPanning) {
-        // Spacebar for temporary pan could be implemented, but simple H for toggle is safer for now
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -224,7 +206,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
   }, [isEditMode, toast, isPanning]);
 
   const handleLayoutChange = useCallback((newLayout: GridLayout.Layout[]) => {
-    // Only update if we are allowed to (not panning)
     if (toolMode === "pan") return;
 
     const updatedLayout: LayoutItem[] = newLayout.map(item => ({
@@ -254,7 +235,6 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
   };
 
   const handleOpenSettings = (widget: WidgetConfig) => {
-    // Prevent opening settings if panning
     if (toolMode === "pan") return;
     setSelectedWidget(widget);
     setSettingsModalOpen(true);
@@ -278,38 +258,34 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
     toast({ title: isPublic ? "Dashboard is now public" : "Dashboard is now private" });
   };
 
-  // Calculate dynamic dot size based on zoom
   const dotSize = Math.max(1, 1.5 / zoomLevel);
   const dotSpacing = 24 * zoomLevel;
-
-  // Calculate Grid Width
-  // If fixedLayout is true, use a large fixed width (e.g. 1920px) scaled by zoom
-  // If false, use responsive container width (guarded > 0)
   const gridWidth = fixedLayout ? 1920 : Math.max(600, (containerWidth - 32) / zoomLevel);
 
-  // Empty state
   if (dashboard.widgets.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background/50">
-        {/* ... (keep existing empty state) ... */}
+      <div className="flex-1 flex items-center justify-center bg-obsidian-surface">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center gap-6 text-center max-w-md p-8"
         >
-          <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-            <LayoutDashboard className="w-10 h-10 text-primary" />
+          <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-obsidian-surface-mid border border-obsidian-outline-variant/15">
+            <Icon name="dashboard_customize" size="lg" className="text-obsidian-primary" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold">Your dashboard will appear here</h3>
-            <p className="text-muted-foreground">
+            <h3 className="text-lg font-bold text-obsidian-on-surface">Your dashboard will appear here</h3>
+            <p className="text-sm text-obsidian-on-surface-variant">
               Use the AI assistant on the left to describe what kind of dashboard you want to create, then click "Generate Dashboard".
             </p>
           </div>
-          <Button onClick={onAddWidget} className="gap-2">
-            <Plus className="w-4 h-4" />
+          <button
+            onClick={onAddWidget}
+            className="flex items-center gap-2 h-10 px-5 rounded-lg bg-obsidian-primary-container text-obsidian-surface font-bold text-sm hover:bg-obsidian-primary transition-colors"
+          >
+            <Icon name="add" size="sm" />
             Add First Widget
-          </Button>
+          </button>
         </motion.div>
       </div>
     );
@@ -335,19 +311,16 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
         onCompactTypeChange={setCompactType}
       />
 
-      {/* Zoom Controls - Fixed bottom-left */}
-      <div className="absolute bottom-4 left-4 z-30 flex items-center gap-2 p-2 bg-background/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
-        {/* ... (zoom controls stay same) ... */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+      {/* Zoom Controls */}
+      <div className="absolute bottom-4 left-4 z-30 flex items-center gap-2 p-2 bg-obsidian-surface-mid/95 backdrop-blur-md rounded-lg border border-obsidian-outline-variant/10">
+        <button
+          className="h-7 w-7 rounded flex items-center justify-center text-obsidian-on-surface-variant hover:bg-obsidian-surface-high hover:text-obsidian-on-surface transition-colors disabled:opacity-30"
           onClick={handleZoomOut}
           disabled={zoomLevel <= 0.3}
         >
-          <ZoomOut className="w-4 h-4" />
-        </Button>
-        <div className="w-24">
+          <Icon name="zoom_out" size="sm" />
+        </button>
+        <div className="w-20">
           <Slider
             value={[zoomLevel * 100]}
             min={30}
@@ -356,37 +329,32 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
             onValueChange={([value]) => setZoomLevel(value / 100)}
           />
         </div>
-        <span className="text-xs font-medium w-10 text-center">{Math.round(zoomLevel * 100)}%</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+        <span className="font-label text-[10px] font-bold w-10 text-center text-obsidian-on-surface-variant">{Math.round(zoomLevel * 100)}%</span>
+        <button
+          className="h-7 w-7 rounded flex items-center justify-center text-obsidian-on-surface-variant hover:bg-obsidian-surface-high hover:text-obsidian-on-surface transition-colors disabled:opacity-30"
           onClick={handleZoomIn}
           disabled={zoomLevel >= 2}
         >
-          <ZoomIn className="w-4 h-4" />
-        </Button>
-        <div className="w-px h-6 bg-border mx-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+          <Icon name="zoom_in" size="sm" />
+        </button>
+        <div className="w-px h-5 bg-obsidian-outline-variant/20 mx-0.5" />
+        <button
+          className="h-7 w-7 rounded flex items-center justify-center text-obsidian-on-surface-variant hover:bg-obsidian-surface-high hover:text-obsidian-on-surface transition-colors"
           onClick={handleResetZoom}
           title="Reset zoom (Ctrl+0)"
         >
-          <RotateCcw className="w-4 h-4" />
-        </Button>
+          <Icon name="restart_alt" size="sm" />
+        </button>
       </div>
 
       <div
         ref={containerRef}
         className={cn(
-          "flex-1 overflow-hidden p-4 bg-background/30 scrollbar-thin scrollbar-thumb-primary/20 relative",
+          "flex-1 overflow-hidden p-4 bg-obsidian-surface/50 scrollbar-thin relative",
           toolMode === "pan" ? "cursor-grab active:cursor-grabbing" : "cursor-default"
         )}
         style={{
-          // Dynamic dot pattern that scales with zoom
-          backgroundImage: `radial-gradient(circle, hsl(var(--muted-foreground) / 0.3) ${dotSize}px, transparent ${dotSize}px)`,
+          backgroundImage: `radial-gradient(circle, rgba(133,148,139,0.2) ${dotSize}px, transparent ${dotSize}px)`,
           backgroundSize: `${dotSpacing}px ${dotSpacing}px`,
           backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
         }}
@@ -399,13 +367,12 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
           style={{
             transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
             transformOrigin: "top left",
-            width: fixedLayout ? 1920 : `${100 / zoomLevel}%`, // Fixed width or relative to zoom
+            width: fixedLayout ? 1920 : `${100 / zoomLevel}%`,
             minHeight: "100%",
             transition: isPanning ? "none" : "transform 0.1s ease-out"
           }}
           className="transition-transform duration-100 ease-out"
         >
-          {/* Layout Grid */}
           <div className={cn("transition-opacity duration-200", isPanning && "pointer-events-none")}>
             <GridLayout
               className="layout"
@@ -418,14 +385,14 @@ export function EditableDashboard({ dashboard, onUpdate, onAddWidget, onRefreshW
               isResizable={isEditMode && toolMode === "select"}
               draggableHandle=".drag-handle"
               compactType={compactType}
-              preventCollision={compactType === null} // Prevent overlap if free movement
+              preventCollision={compactType === null}
               margin={[16, 16]}
             >
               {dashboard.widgets.map((widget) => (
                 <div key={widget.id} className="overflow-hidden">
                   <WidgetCard
                     config={widget}
-                    isEditMode={isEditMode && toolMode === "select"} // Disable editing interactions in pan mode
+                    isEditMode={isEditMode && toolMode === "select"}
                     onSettings={() => handleOpenSettings(widget)}
                     onDelete={() => handleDeleteWidget(widget.id)}
                     onUpdate={(updates) => {

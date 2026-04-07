@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createConnection, updateConnection, testConnectionParams, ConnectionResponse, ConnectionCreate } from "@/lib/connections";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const connectionSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -55,6 +56,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
     const [isTesting, setIsTesting] = useState(false);
 
     const isEdit = !!editingConnection;
+    const prismInputClass = "bg-black/50 border-white/10 text-white font-mono text-sm placeholder:text-zinc-600";
 
     const {
         register,
@@ -76,7 +78,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
     const onTypeChange = (type: string) => {
         setValue("connection_type", type as any);
         if (type === "mysql") setValue("port", 3306);
-        else if (type === "mongodb") setValue("port", 27017);
+        else if (type === "file") setValue("port", null);
         else setValue("port", 5432);
     };
 
@@ -191,7 +193,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[550px] rounded-xl border border-white/10 bg-[#0A0A0A] shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl">
                 <AnimatePresence mode="wait">
                     {step === "form" ? (
                         <motion.div
@@ -220,30 +222,37 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                             id="name"
                                             placeholder="e.g. Analytics Prod DB"
                                             {...register("name")}
-                                            className={cn(errors.name && "border-destructive")}
+                                            className={cn(prismInputClass, errors.name && "border-destructive")}
                                         />
                                         {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Connection Type</Label>
-                                        <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                                            {["postgres", "mysql", "mongodb"].map((type) => (
-                                                <button
-                                                    key={type}
-                                                    type="button"
-                                                    onClick={() => onTypeChange(type)}
+                                        <Label>Database Type</Label>
+                                        <RadioGroup
+                                            value={watch("connection_type")}
+                                            onValueChange={onTypeChange}
+                                            className="grid grid-cols-3 gap-2"
+                                        >
+                                            {[
+                                                { value: "postgres", label: "PostgreSQL" },
+                                                { value: "mysql", label: "MySQL" },
+                                                { value: "file", label: "CSV" },
+                                            ].map((type) => (
+                                                <label
+                                                    key={type.value}
+                                                    htmlFor={`db-type-${type.value}`}
                                                     className={cn(
-                                                        "flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all capitalize",
-                                                        watch("connection_type") === type
-                                                            ? "bg-primary text-primary-foreground shadow-sm"
-                                                            : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                                                        "group cursor-pointer rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-center text-xs font-medium text-zinc-300 transition-all hover:bg-white/10",
+                                                        "data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500/10"
                                                     )}
+                                                    data-state={watch("connection_type") === type.value ? "checked" : "unchecked"}
                                                 >
-                                                    {type}
-                                                </button>
+                                                    <RadioGroupItem id={`db-type-${type.value}`} value={type.value} className="sr-only" />
+                                                    {type.label}
+                                                </label>
                                             ))}
-                                        </div>
+                                        </RadioGroup>
                                     </div>
 
                                     <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
@@ -264,7 +273,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                                         <Server className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                                         <Input
                                                             id="host"
-                                                            className="pl-9"
+                                                            className={cn(prismInputClass, "pl-9")}
                                                             placeholder={
                                                                 watch("connection_type") === "mysql" ? "mysql.example.com" :
                                                                     watch("connection_type") === "mongodb" ? "cluster0.mongo.net" :
@@ -276,13 +285,14 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="port">Port</Label>
-                                                    <Input id="port" type="number" {...register("port")} />
+                                                    <Input id="port" type="number" className={prismInputClass} {...register("port")} />
                                                 </div>
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label htmlFor="database_name">Database Name</Label>
                                                 <Input
+                                                    className={prismInputClass}
                                                     id="database_name"
                                                     placeholder={
                                                         watch("connection_type") === "mysql" ? "ecommerce_db" :
@@ -297,6 +307,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                                 <div className="space-y-2">
                                                     <Label htmlFor="username">Username</Label>
                                                     <Input
+                                                        className={prismInputClass}
                                                         id="username"
                                                         placeholder={
                                                             watch("connection_type") === "mongodb" ? "app_user" :
@@ -307,7 +318,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="password">Password</Label>
-                                                    <Input id="password" type="password" placeholder={isEdit ? "••••••••" : "Password"} {...register("password")} />
+                                                    <Input id="password" type="password" className={prismInputClass} placeholder={isEdit ? "••••••••" : "Password"} {...register("password")} />
                                                 </div>
                                             </div>
                                         </TabsContent>
@@ -319,7 +330,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                                     <Link2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         id="connection_uri"
-                                                        className="pl-9"
+                                                        className={cn(prismInputClass, "pl-9")}
                                                         placeholder={
                                                             watch("connection_type") === "mysql" ? "mysql://user:pass@host:3306/db" :
                                                                 watch("connection_type") === "mongodb" ? "mongodb+srv://user:pass@cluster.net/db" :
@@ -335,7 +346,7 @@ export function ConnectionModal({ open, onOpenChange, editingConnection }: Conne
                                             {isEdit && (
                                                 <div className="space-y-2">
                                                     <Label htmlFor="password_uri">Override Password (Optional)</Label>
-                                                    <Input id="password_uri" type="password" placeholder="Leave empty to keep existing" {...register("password")} />
+                                                    <Input id="password_uri" type="password" className={prismInputClass} placeholder="Leave empty to keep existing" {...register("password")} />
                                                 </div>
                                             )}
                                         </TabsContent>

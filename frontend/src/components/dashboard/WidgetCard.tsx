@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { GripVertical, Settings, Trash2, MoreVertical, Code2, Palette, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/Icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +28,6 @@ interface WidgetCardProps {
   onExecuteQuery?: (sql: string) => void;
 }
 
-// Color presets with actual CSS colors for the picker
 const COLOR_PRESETS = [
   { name: "Rose & Amber", colors: ["rose", "amber"], preview: ["#f43f5e", "#f59e0b"] },
   { name: "Blue & Emerald", colors: ["blue", "emerald"], preview: ["#3b82f6", "#10b981"] },
@@ -52,10 +50,8 @@ export function WidgetCard({
   const [showSql, setShowSql] = useState(false);
   const [sqlInput, setSqlInput] = useState(config.sql_query || "");
 
-  // Get widget-specific settings
   const widgetSettings = getWidgetSettings(config.chartType);
 
-  // Sync state if config changes externally
   useEffect(() => {
     if (config.sql_query !== undefined && config.sql_query !== sqlInput && !showSql) {
       setSqlInput(config.sql_query);
@@ -86,13 +82,12 @@ export function WidgetCard({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "h-full flex flex-col transition-all duration-200",
-        config.showBackground !== false ? "bg-card" : "bg-transparent",
-        config.showBorder !== false ? "border border-border rounded-xl" : "border-none",
-        config.errorMessage && "border-destructive/60 ring-1 ring-destructive/20",
-        isEditMode && "ring-1 ring-primary/20 hover:ring-primary/40",
-        isHovered && isEditMode && "shadow-lg shadow-primary/10",
-        isEditMode && "rounded-xl border border-border bg-card/50"
+        "h-full flex flex-col transition-all duration-200 rounded-lg",
+        config.showBackground !== false ? "bg-obsidian-surface-low" : "bg-transparent",
+        config.showBorder !== false ? "border border-obsidian-outline-variant/15" : "border-none",
+        config.errorMessage && "border-red-500/40 ring-1 ring-red-500/20",
+        isEditMode && "ring-1 ring-obsidian-primary/10 hover:ring-obsidian-primary/30",
+        isHovered && isEditMode && "shadow-lg shadow-obsidian-primary/5",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -101,75 +96,72 @@ export function WidgetCard({
       {(isEditMode || (config.showBorder !== false && config.showBackground !== false)) && (
         <div
           className={cn(
-            "flex items-center justify-between px-4 py-3 border-b border-border/50 bg-muted/30",
+            "flex items-center justify-between px-4 py-2.5 border-b border-obsidian-outline-variant/10 bg-obsidian-surface-mid/30",
             !isEditMode && (config.showBorder === false || config.showBackground === false) && "hidden"
           )}
         >
           <div className="flex items-center gap-2 min-w-0">
             {isEditMode && (
-              <div className="drag-handle cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-muted rounded transition-colors">
-                <GripVertical className="w-4 h-4 text-muted-foreground" />
+              <div className="drag-handle cursor-grab active:cursor-grabbing p-0.5 -ml-1 hover:bg-obsidian-surface-high rounded transition-colors">
+                <Icon name="drag_indicator" size="sm" className="text-obsidian-outline" />
               </div>
             )}
-            <h3 className="text-sm font-semibold text-foreground truncate">{config.title}</h3>
+            <h3 className="text-xs font-bold text-obsidian-on-surface truncate">{config.title}</h3>
             {config.errorMessage && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                <AlertTriangle className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1 rounded bg-red-500/10 px-1.5 py-0.5 text-[9px] font-label font-bold text-red-400 uppercase tracking-wider">
+                <Icon name="warning" size="sm" className="text-red-400" />
                 Failed
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1">
-            {/* SQL Button - Only show for data widgets */}
+          <div className="flex items-center gap-0.5">
             {widgetSettings.showSqlButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
+              <button
+                className={cn(
+                  "h-6 w-6 rounded flex items-center justify-center hover:bg-obsidian-surface-high transition-colors",
+                  showSql ? "text-obsidian-primary" : "text-obsidian-outline"
+                )}
                 onClick={() => setShowSql(!showSql)}
                 title="View/Edit SQL Query"
               >
-                <Code2 className={cn("w-4 h-4", showSql ? "text-primary" : "text-muted-foreground")} />
-              </Button>
+                <Icon name="code" size="sm" />
+              </button>
             )}
 
-            {/* Color Picker - Only show for widgets with color schemes */}
             {widgetSettings.showColorScheme && isEditMode && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
+                  <button
+                    className="h-6 w-6 rounded flex items-center justify-center text-obsidian-outline hover:bg-obsidian-surface-high hover:text-obsidian-primary transition-colors"
                     title="Change Colors"
                   >
-                    <Palette className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
-                  </Button>
+                    <Icon name="palette" size="sm" />
+                  </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56 p-2" align="end">
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground px-2 py-1">Color Scheme</p>
+                <PopoverContent className="w-52 p-2 bg-obsidian-surface-mid border-obsidian-outline-variant/20" align="end">
+                  <div className="space-y-0.5">
+                    <p className="font-label text-[9px] uppercase tracking-[0.15em] text-obsidian-outline font-bold px-2 py-1">Color Scheme</p>
                     {COLOR_PRESETS.map((preset) => (
                       <button
                         key={preset.name}
                         onClick={() => handleColorChange(preset.colors)}
                         className={cn(
-                          "w-full flex items-center gap-3 px-2 py-2 rounded-md text-left transition-all",
-                          "hover:bg-muted",
-                          JSON.stringify(config.colors) === JSON.stringify(preset.colors) && "bg-primary/10 ring-1 ring-primary/20"
+                          "w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left transition-all",
+                          "hover:bg-obsidian-surface-high",
+                          JSON.stringify(config.colors) === JSON.stringify(preset.colors) && "bg-obsidian-primary/10 ring-1 ring-obsidian-primary/20"
                         )}
                       >
                         <div className="flex gap-1">
                           {preset.preview.map((color, i) => (
                             <div
                               key={i}
-                              className="w-4 h-4 rounded-full"
+                              className="w-3.5 h-3.5 rounded-full"
                               style={{ backgroundColor: color }}
                             />
                           ))}
                         </div>
-                        <span className="text-xs font-medium text-foreground">{preset.name}</span>
+                        <span className="text-xs font-medium text-obsidian-on-surface">{preset.name}</span>
                       </button>
                     ))}
                   </div>
@@ -180,18 +172,18 @@ export function WidgetCard({
             {isEditMode && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
+                  <button className="h-6 w-6 rounded flex items-center justify-center text-obsidian-outline hover:bg-obsidian-surface-high transition-colors">
+                    <Icon name="more_vert" size="sm" />
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem onClick={onSettings} className="gap-2">
-                    <Settings className="w-4 h-4" />
+                <DropdownMenuContent align="end" className="w-40 bg-obsidian-surface-mid border-obsidian-outline-variant/20">
+                  <DropdownMenuItem onClick={onSettings} className="gap-2 text-xs">
+                    <Icon name="settings" size="sm" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-destructive">
-                    <Trash2 className="w-4 h-4" />
+                  <DropdownMenuSeparator className="bg-obsidian-outline-variant/15" />
+                  <DropdownMenuItem onClick={onDelete} className="gap-2 text-xs text-red-400 focus:text-red-400">
+                    <Icon name="delete" size="sm" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -205,40 +197,41 @@ export function WidgetCard({
       <div
         className={cn(
           "flex-1 min-h-0 relative",
-          config.showBackground !== false ? "bg-card" : "bg-transparent"
+          config.showBackground !== false ? "bg-obsidian-surface-low" : "bg-transparent"
         )}
       >
         {config.errorMessage && !showSql && (
-          <div className="px-4 pt-3 text-xs text-destructive">{config.errorMessage}</div>
+          <div className="px-4 pt-3 text-xs text-red-400">{config.errorMessage}</div>
         )}
         {showSql ? (
-          <div className="absolute inset-0 p-4 bg-background flex flex-col z-10">
+          <div className="absolute inset-0 p-4 bg-obsidian-surface flex flex-col z-10">
             {isEditMode ? (
               <>
                 <textarea
-                  className="flex-1 bg-zinc-950 dark:bg-zinc-900 text-zinc-300 font-mono text-xs p-3 rounded-md resize-none border border-border focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+                  className="flex-1 bg-obsidian-surface-lowest text-obsidian-primary/80 font-mono text-xs p-3 rounded-lg resize-none border border-obsidian-outline-variant/20 focus:outline-none focus:border-obsidian-primary mb-2"
                   value={sqlInput}
                   onChange={(e) => setSqlInput(e.target.value)}
                   placeholder="SELECT ... FROM ..."
                   spellCheck={false}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
+                  <button
+                    className="h-7 px-3 text-xs font-label rounded-lg bg-obsidian-surface-mid text-obsidian-on-surface-variant hover:bg-obsidian-surface-high transition-colors"
                     onClick={() => setShowSql(false)}
                   >
                     Cancel
-                  </Button>
-                  <Button size="sm" className="h-7 text-xs" onClick={handleSaveSql}>
+                  </button>
+                  <button
+                    className="h-7 px-3 text-xs font-label rounded-lg bg-obsidian-primary-container text-obsidian-surface font-bold hover:bg-obsidian-primary transition-colors"
+                    onClick={handleSaveSql}
+                  >
                     Save & Run
-                  </Button>
+                  </button>
                 </div>
               </>
             ) : (
-              <div className="h-full rounded-lg bg-zinc-950 dark:bg-zinc-900 p-3 shadow-inner border border-zinc-800 overflow-auto">
-                <pre className="text-xs leading-relaxed font-mono text-zinc-300 whitespace-pre-wrap">
+              <div className="h-full rounded-lg bg-obsidian-surface-lowest p-3 border border-obsidian-outline-variant/10 overflow-auto">
+                <pre className="text-xs leading-relaxed font-mono text-obsidian-primary/70 whitespace-pre-wrap">
                   {config.sql_query || "-- No SQL query configured for this widget"}
                 </pre>
               </div>

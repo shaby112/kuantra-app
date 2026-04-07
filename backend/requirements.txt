@@ -9,7 +9,6 @@ python-dotenv
 sqlglot
 sse-starlette
 cryptography
-clerk-backend-api
 PyJWT
 pydantic[email]
 python-multipart
@@ -40,3 +39,5 @@ alembic
 rapidfuzz
 pyarrow
 prql-python
+slowapi
+limits

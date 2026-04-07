@@ -1,10 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Sparkles, Database, Settings, ChevronLeft, ChevronRight, LayoutDashboard, Mail, LogOut, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
-import { useAuth } from "@clerk/clerk-react";
+import { Icon } from "@/components/Icon";
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -15,104 +12,117 @@ interface AppSidebarProps {
 }
 
 const navItems = [
-  { id: "history", label: "AI Assistant", icon: Sparkles },
-  { id: "connections", label: "Connections", icon: Database },
-  { id: "modeling", label: "Modeling Studio", icon: GitBranch, route: "/dashboard/modeling" },
-  { id: "dashboards", label: "Dashboards", icon: LayoutDashboard },
-  { id: "reports", label: "Weekly Reports", icon: Mail },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "history", label: "AI Assistant", icon: "smart_toy", filledWhenActive: true },
+  { id: "connections", label: "Connections", icon: "hub" },
+  { id: "modeling", label: "Modeling Studio", icon: "schema", route: "/dashboard/modeling" },
+  { id: "dashboards", label: "Dashboards", icon: "dashboard_customize" },
+  { id: "reports", label: "Weekly Reports", icon: "equalizer" },
 ];
 
 export function AppSidebar({ collapsed, onToggle, activeTab, onTabChange, onLogout }: AppSidebarProps) {
   const location = useLocation();
-  const { isSignedIn } = useAuth();
+
+  const isActive = (item: typeof navItems[0]) => {
+    if (item.route) return location.pathname === item.route;
+    return activeTab === item.id;
+  };
+
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "flex flex-col h-full bg-obsidian-surface-low border-r border-obsidian-outline-variant/15 transition-all duration-300 shrink-0",
         collapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-sidebar-border">
-        <Link to="/" className="flex items-center">
+      <div className="p-6 flex items-center">
+        <Link to="/">
           <Logo showText={!collapsed} size="sm" />
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2">
-        <ul className="space-y-1">
-          {navItems.map((item) => (
-            <li key={item.id}>
-              {item.route ? (
-                <Link
-                  to={item.route}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    location.pathname === item.route
-                      ? "bg-gradient-primary-subtle text-accent border border-accent/20"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <item.icon className={cn(
-                    "w-4 h-4 shrink-0",
-                    location.pathname === item.route ? "text-accent" : ""
-                  )} />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              ) : (
-                <button
-                  onClick={() => onTabChange(item.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    activeTab === item.id
-                      ? "bg-gradient-primary-subtle text-accent border border-accent/20"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <item.icon className={cn(
-                    "w-4 h-4 shrink-0",
-                    activeTab === item.id ? "text-accent" : ""
-                  )} />
-                  {!collapsed && <span>{item.label}</span>}
-                </button>
+      <nav className="flex-1 mt-4 px-3 space-y-1">
+        {navItems.map((item) => {
+          const active = isActive(item);
+          const content = (
+            <>
+              <Icon
+                name={item.icon}
+                filled={active && item.filledWhenActive}
+                className={cn("shrink-0", active ? "text-primary" : "text-zinc-500")}
+                size="md"
+              />
+              {!collapsed && (
+                <span className="font-label uppercase tracking-widest text-[10px]">
+                  {item.label}
+                </span>
               )}
-            </li>
-          ))}
-        </ul>
+            </>
+          );
+
+          const baseClasses = cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-150",
+            active
+              ? "text-primary bg-obsidian-surface-mid border-l-2 border-primary"
+              : "text-zinc-500 hover:text-zinc-300 hover:bg-obsidian-surface-highest/50 rounded-lg"
+          );
+
+          if (item.route) {
+            return (
+              <Link key={item.id} to={item.route} className={baseClasses}>
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <button key={item.id} onClick={() => onTabChange(item.id)} className={baseClasses}>
+              {content}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Footer */}
-      <div className="p-2 border-t border-sidebar-border space-y-2">
-        {isSignedIn && (
-          <button
-            onClick={onLogout}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-destructive hover:bg-destructive/10",
-              collapsed && "justify-center"
-            )}
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>Logout</span>}
-          </button>
-        )}
+      <div className="mt-auto p-4 border-t border-obsidian-outline-variant/15 space-y-1">
+        {/* Settings */}
+        <button
+          onClick={() => onTabChange("settings")}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-150",
+            activeTab === "settings"
+              ? "text-primary bg-obsidian-surface-mid border-l-2 border-primary"
+              : "text-zinc-500 hover:text-zinc-300 hover:bg-obsidian-surface-highest/50 rounded-lg"
+          )}
+        >
+          <Icon name="settings" className={activeTab === "settings" ? "text-primary" : "text-zinc-500"} />
+          {!collapsed && (
+            <span className="font-label uppercase tracking-widest text-[10px]">Settings</span>
+          )}
+        </button>
 
-        <div className={cn("flex items-center pt-2", collapsed ? "justify-center" : "justify-between border-t border-sidebar-border/50")}>
-          {!collapsed && <ThemeToggle />}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className="h-9 w-9 text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        {/* Logout */}
+        <button
+          onClick={onLogout}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-400/5 transition-all duration-150",
+            collapsed && "justify-center"
+          )}
+        >
+          <Icon name="logout" className="text-zinc-500" />
+          {!collapsed && (
+            <span className="font-label uppercase tracking-widest text-[10px]">Logout</span>
+          )}
+        </button>
+
+        {/* Collapse toggle */}
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center justify-center py-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          <Icon name={collapsed ? "chevron_right" : "chevron_left"} size="sm" />
+        </button>
       </div>
     </aside>
   );
