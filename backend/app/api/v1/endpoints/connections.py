@@ -59,7 +59,7 @@ class ConnectionUpdate(BaseModel):
 
 
 class ConnectionResponse(BaseModel):
-    id: str
+    id: UUID
     name: str
     host: Optional[str]
     port: Optional[int]
@@ -125,7 +125,7 @@ class TestConnectionResponse(BaseModel):
     message: str
 
 class QueryHistoryResponse(BaseModel):
-    id: str
+    id: UUID
     sql_query: str
     row_count: int
     execution_time_ms: Optional[int]

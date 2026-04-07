@@ -1,12 +1,16 @@
 import json
 import asyncio
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from app.services.schema_service import schema_service
 from app.core.logging import logger
 from app.core.config import settings
 from app.core.request_context import set_request_llm_api_key, reset_request_llm_api_key
+from app.core.rate_limit import limiter
 import os
 from contextlib import asynccontextmanager
 
@@ -21,6 +25,12 @@ async def lifespan(app: FastAPI):
         # Schema refresh is now event-driven (post-sync)
         # logger.info("Refreshing Semantic Model (MDL)...")
         # schema_service.refresh_mdl()
+
+        if settings.AI_PROVIDER.lower() == "local" and settings.LOCAL_LLM_AUTO_PULL:
+            from app.services.local_llm_runtime_service import local_llm_runtime_service
+
+            logger.info(f"Auto-pull enabled. Ensuring local model: {settings.LOCAL_LLM_MODEL}")
+            await local_llm_runtime_service.ensure_model(settings.LOCAL_LLM_MODEL)
     except Exception as e:
         logger.error(f"Failed to start components: {e}")
         
@@ -36,6 +46,20 @@ async def lifespan(app: FastAPI):
 
 logger.info("Initializing Kuantra API")
 app = FastAPI(title="Kuantra AI Backend", lifespan=lifespan)
+
+app.state.limiter = limiter
+
+
+def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded"},
+        headers={"Retry-After": "60"},
+    )
+
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 def _build_cors_origins() -> list[str]:
     origins = {
@@ -124,6 +148,17 @@ async def health_duckdb():
         return duckdb_manager.health_check()
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
+
+@app.get("/health/llm")
+async def health_llm():
+    """LLM provider health check."""
+    if settings.AI_PROVIDER.lower() != "local":
+        return {"status": "disabled", "provider": settings.AI_PROVIDER}
+
+    from app.services.local_llm_runtime_service import local_llm_runtime_service
+
+    return await local_llm_runtime_service.health()
+
 
 @app.get("/health/etl")
 async def health_etl():

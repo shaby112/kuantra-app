@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, Database } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/Icon";
 import { cn } from "@/lib/utils";
 import type { ChatMessage, DashboardPlan, PlanningResponse } from "@/types/dashboard";
 import { apiFetch } from "@/lib/api";
@@ -13,7 +12,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, CheckCircle2 } from "lucide-react";
 
 interface DashboardChatProps {
     onPlanReady: (plan: DashboardPlan) => void;
@@ -47,7 +45,6 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
     }, [messages]);
 
     useEffect(() => {
-        // Fetch available connections
         apiFetch<{ id: string, name: string }[]>("/api/v1/connections/", { auth: true })
             .then(data => setConnections(data))
             .catch(err => console.error("Failed to fetch connections", err));
@@ -76,7 +73,6 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
             content: input,
         };
 
-        // Enforce data source selection
         if (connections.length > 0 && selectedConnectionIds.length === 0) {
             setMessages(prev => [...prev, userMessage]);
             setInput("");
@@ -140,25 +136,23 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
     };
 
     return (
-        <div className="flex flex-col h-full bg-background/50 backdrop-blur-sm">
+        <div className="flex flex-col h-full bg-obsidian-surface">
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 h-14 border-b border-border/50 bg-card/50">
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20">
-                    <Sparkles className="w-4 h-4 text-primary-foreground" />
-                </div>
+            <div className="flex items-center gap-3 px-4 h-12 border-b border-obsidian-outline-variant/10 bg-obsidian-surface-low">
+                <Icon name="auto_awesome" size="sm" className="text-obsidian-primary" />
                 <div>
-                    <h2 className="text-sm font-semibold">Dashboard Builder</h2>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">AI-POWERED</span>
+                    <h2 className="text-sm font-bold text-obsidian-on-surface">Dashboard Builder</h2>
+                    <span className="font-label text-[9px] uppercase tracking-[0.15em] text-obsidian-on-surface-variant">AI-Powered</span>
                 </div>
             </div>
 
             {/* Connection Selector */}
-            <div className="px-4 py-3 border-b border-border/50 bg-muted/20 flex items-center justify-between">
+            <div className="px-4 py-2.5 border-b border-obsidian-outline-variant/10 bg-obsidian-surface-low/50 flex items-center justify-between">
                 <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <span className="font-label text-[9px] uppercase tracking-[0.15em] text-obsidian-outline font-bold">
                         Data Context
                     </span>
-                    <span className="text-xs font-medium text-foreground">
+                    <span className="text-xs font-medium text-obsidian-on-surface">
                         {selectedConnectionIds.length === 0
                             ? "No sources selected"
                             : `${selectedConnectionIds.length} source${selectedConnectionIds.length > 1 ? 's' : ''} active`}
@@ -167,19 +161,19 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 gap-2 border-dashed border-primary/30 hover:border-primary/60 transition-colors">
-                            <Database className="w-3.5 h-3.5 text-primary" />
-                            Sources
-                            <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                        </Button>
+                        <button className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg bg-obsidian-surface-mid text-obsidian-on-surface-variant text-xs hover:bg-obsidian-surface-high transition-colors border border-obsidian-outline-variant/15">
+                            <Icon name="database" size="sm" className="text-obsidian-primary" />
+                            <span className="font-label text-[10px] tracking-wider">Sources</span>
+                            <Icon name="expand_more" size="sm" />
+                        </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 p-2 backdrop-blur-xl bg-card/80 border-border/50">
-                        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 px-2 py-1.5 font-bold">
+                    <DropdownMenuContent align="end" className="w-56 p-2 bg-obsidian-surface-mid border-obsidian-outline-variant/20">
+                        <DropdownMenuLabel className="font-label text-[9px] uppercase tracking-[0.15em] text-obsidian-outline px-2 py-1.5 font-bold">
                             Select Data Sources
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator className="bg-border/30" />
+                        <DropdownMenuSeparator className="bg-obsidian-outline-variant/15" />
                         {connections.length === 0 ? (
-                            <div className="px-2 py-3 text-xs text-muted-foreground italic">
+                            <div className="px-2 py-3 text-xs text-obsidian-on-surface-variant italic">
                                 No data sources found...
                             </div>
                         ) : (
@@ -188,29 +182,25 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                                     key={conn.id}
                                     checked={selectedConnectionIds.includes(conn.id)}
                                     onCheckedChange={() => toggleConnection(conn.id)}
-                                    className="rounded-lg text-sm font-medium focus:bg-primary/10 focus:text-primary py-2 cursor-pointer"
+                                    className="rounded-lg text-sm font-medium py-2 cursor-pointer"
                                 >
-                                    <div className="flex items-center gap-2">
-                                        {selectedConnectionIds.includes(conn.id) && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                        {conn.name}
-                                    </div>
+                                    {conn.name}
                                 </DropdownMenuCheckboxItem>
                             ))
                         )}
-                        <DropdownMenuSeparator className="bg-border/30" />
+                        <DropdownMenuSeparator className="bg-obsidian-outline-variant/15" />
                         <div className="px-2 py-2">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full h-8 text-[10px] uppercase font-bold text-primary hover:bg-primary/5"
+                            <button
+                                className="w-full h-7 text-obsidian-primary font-label text-[10px] uppercase tracking-wider font-bold hover:bg-obsidian-primary/5 rounded-lg transition-colors"
                                 onClick={() => setSelectedConnectionIds(connections.map(c => c.id))}
                             >
                                 Select All
-                            </Button>
+                            </button>
                         </div>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
                 <AnimatePresence initial={false}>
@@ -221,35 +211,30 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
                             className={cn(
-                                "flex gap-3",
+                                "flex gap-2.5",
                                 message.role === "user" ? "justify-end" : "justify-start"
                             )}
                         >
                             {message.role === "assistant" && (
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 shrink-0 mt-1">
-                                    <Bot className="w-4 h-4 text-primary" />
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-obsidian-surface-mid shrink-0 mt-1">
+                                    <Icon name="smart_toy" size="sm" className="text-obsidian-primary" />
                                 </div>
                             )}
                             <div
                                 className={cn(
-                                    "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm",
+                                    "max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm",
                                     message.role === "user"
-                                        ? "bg-primary text-primary-foreground rounded-br-md"
-                                        : "bg-card border border-border rounded-bl-md"
+                                        ? "bg-obsidian-primary/15 text-obsidian-on-surface rounded-br-sm"
+                                        : "bg-obsidian-surface-mid text-obsidian-on-surface rounded-bl-sm"
                                 )}
                             >
-                                <p className="whitespace-pre-wrap leading-relaxed">
+                                <p className="whitespace-pre-wrap leading-relaxed text-[13px]">
                                     {message.content}
                                     {message.isTyping && (
-                                        <span className="inline-block w-1.5 h-4 ml-0.5 bg-current animate-pulse" />
+                                        <span className="inline-block w-1.5 h-4 ml-0.5 bg-obsidian-primary animate-pulse" />
                                     )}
                                 </p>
                             </div>
-                            {message.role === "user" && (
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary shrink-0 mt-1">
-                                    <User className="w-4 h-4 text-primary-foreground" />
-                                </div>
-                            )}
                         </motion.div>
                     ))}
                 </AnimatePresence>
@@ -258,15 +243,15 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex gap-3"
+                        className="flex gap-2.5"
                     >
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 shrink-0">
-                            <Bot className="w-4 h-4 text-primary" />
+                        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-obsidian-surface-mid shrink-0">
+                            <Icon name="smart_toy" size="sm" className="text-obsidian-primary" />
                         </div>
-                        <div className="flex items-center gap-1.5 px-4 py-3 bg-card border border-border rounded-2xl rounded-bl-md">
-                            <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                            <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                            <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" />
+                        <div className="flex items-center gap-1.5 px-4 py-3 bg-obsidian-surface-mid rounded-lg rounded-bl-sm">
+                            <div className="w-1.5 h-1.5 bg-obsidian-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                            <div className="w-1.5 h-1.5 bg-obsidian-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                            <div className="w-1.5 h-1.5 bg-obsidian-primary/60 rounded-full animate-bounce" />
                         </div>
                     </motion.div>
                 )}
@@ -283,19 +268,19 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                         exit={{ opacity: 0, y: 20 }}
                         className="px-4 pb-2"
                     >
-                        <Button
+                        <button
                             onClick={() => onGenerateDashboard(selectedConnectionIds)}
-                            className="w-full h-12 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20 font-semibold"
+                            className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-obsidian-primary-container text-obsidian-surface font-bold text-sm hover:bg-obsidian-primary transition-colors"
                         >
-                            <Sparkles className="w-4 h-4" />
+                            <Icon name="auto_awesome" size="sm" />
                             Generate Dashboard
-                        </Button>
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* Input */}
-            <div className="p-4 border-t border-border/50 bg-card/30">
+            <div className="p-3 border-t border-obsidian-outline-variant/10">
                 <div className="flex gap-2 items-center">
                     <input
                         ref={inputRef}
@@ -304,17 +289,16 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Describe your dashboard..."
-                        className="flex-1 h-11 px-4 bg-background border border-border rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                        className="flex-1 h-10 px-4 bg-obsidian-surface-lowest border border-obsidian-outline-variant/20 rounded-lg text-sm font-label tracking-wider text-obsidian-on-surface placeholder:text-obsidian-outline/40 focus:outline-none focus:border-obsidian-primary transition-all"
                         disabled={isThinking}
                     />
-                    <Button
+                    <button
                         onClick={handleSend}
                         disabled={!input.trim() || isThinking}
-                        size="icon"
-                        className="h-11 w-11 rounded-xl shrink-0"
+                        className="h-10 w-10 rounded-lg bg-obsidian-primary-container text-obsidian-surface flex items-center justify-center hover:bg-obsidian-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     >
-                        <Send className="w-4 h-4" />
-                    </Button>
+                        <Icon name="send" size="sm" />
+                    </button>
                 </div>
             </div>
         </div>

@@ -21,7 +21,7 @@ router = APIRouter()
 # --- Pydantic Schemas ---
 
 class MessageOut(BaseModel):
-    id: str
+    id: UUID
     role: str
     content: str
     sql_query: Optional[str] = None
@@ -32,7 +32,7 @@ class MessageOut(BaseModel):
 
 
 class ConversationOut(BaseModel):
-    id: str
+    id: UUID
     title: str
     created_at: datetime
     updated_at: datetime
@@ -42,7 +42,7 @@ class ConversationOut(BaseModel):
 
 
 class ConversationDetailOut(BaseModel):
-    id: str
+    id: UUID
     title: str
     created_at: datetime
     updated_at: datetime

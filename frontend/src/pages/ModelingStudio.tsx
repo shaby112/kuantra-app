@@ -4,13 +4,10 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { API_BASE_URL, ApiError, getAuthToken } from '@/lib/api';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, GitBranch, Sparkles, Save, Lock, Unlock } from 'lucide-react';
+import { Icon } from '@/components/Icon';
 import SchemaGraph from '@/components/modeling/SchemaGraph';
 import PropertySheet from '@/components/modeling/PropertySheet';
 
@@ -54,24 +51,18 @@ export default function ModelingStudio() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [hasLock, setHasLock] = useState(false);
     const [conflictData, setConflictData] = useState<MDLContent | null>(null);
+    const [activePanel, setActivePanel] = useState<'properties' | 'suggestions'>('properties');
 
-    // Get auth token
     const authHeaders = async (json = false): Promise<HeadersInit> => {
         const token = await getAuthToken();
         if (!token) {
             throw new ApiError('Not authenticated. Please sign in again.', 401);
         }
         return json
-            ? {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            }
-            : {
-                Authorization: `Bearer ${token}`,
-            };
+            ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+            : { Authorization: `Bearer ${token}` };
     };
 
-    // Fetch MDL
     const fetchMDL = useCallback(async () => {
         try {
             const response = await fetch(`${API_BASE}/semantic/mdl`, {
@@ -88,7 +79,6 @@ export default function ModelingStudio() {
         }
     }, []);
 
-    // Fetch suggestions
     const fetchSuggestions = useCallback(async () => {
         try {
             const response = await fetch(`${API_BASE}/semantic/relationships/suggestions?status_filter=pending`, {
@@ -108,7 +98,6 @@ export default function ModelingStudio() {
         fetchSuggestions();
     }, [fetchMDL, fetchSuggestions]);
 
-    // Acquire lock
     const acquireLock = async () => {
         try {
             const response = await fetch(`${API_BASE}/semantic/mdl/lock`, {
@@ -121,11 +110,7 @@ export default function ModelingStudio() {
                 if (data.acquired) {
                     toast({ title: 'Lock acquired', description: 'You can now edit the model.' });
                 } else {
-                    toast({
-                        title: 'Lock unavailable',
-                        description: `Locked by ${data.locked_by}`,
-                        variant: 'destructive',
-                    });
+                    toast({ title: 'Lock unavailable', description: `Locked by ${data.locked_by}`, variant: 'destructive' });
                 }
             }
         } catch (error) {
@@ -133,7 +118,6 @@ export default function ModelingStudio() {
         }
     };
 
-    // Release lock
     const releaseLock = async () => {
         try {
             await fetch(`${API_BASE}/semantic/mdl/lock`, {
@@ -147,13 +131,10 @@ export default function ModelingStudio() {
         }
     };
 
-    // Save MDL
     const saveMDL = async (forceOverwrite = false) => {
         if (!mdl || !hasLock) return;
 
-        // If overwriting, use the conflict version as base to trick the strict check
         const baseVersion = forceOverwrite && conflictData ? conflictData.version : mdl.version;
-
         setIsSaving(true);
         setConflictData(null);
 
@@ -175,11 +156,7 @@ export default function ModelingStudio() {
             } else if (response.status === 409) {
                 const errorData = await response.json();
                 setConflictData(errorData.latest);
-                toast({
-                    title: 'Conflict detected',
-                    description: 'Model was modified by another user.',
-                    variant: 'destructive',
-                });
+                toast({ title: 'Conflict detected', description: 'Model was modified by another user.', variant: 'destructive' });
             }
         } catch (error) {
             console.error('Failed to save MDL:', error);
@@ -188,7 +165,6 @@ export default function ModelingStudio() {
         }
     };
 
-    // Generate suggestions
     const generateSuggestions = async () => {
         setIsGenerating(true);
         try {
@@ -199,10 +175,7 @@ export default function ModelingStudio() {
 
             if (response.ok) {
                 const data = await response.json();
-                toast({
-                    title: 'Suggestions generated',
-                    description: `Found ${data.suggestions?.length || 0} potential relationships`,
-                });
+                toast({ title: 'Suggestions generated', description: `Found ${data.suggestions?.length || 0} potential relationships` });
                 fetchSuggestions();
             }
         } catch (error) {
@@ -212,7 +185,6 @@ export default function ModelingStudio() {
         }
     };
 
-    // Confirm/reject suggestion
     const handleSuggestionAction = async (id: string, action: 'confirm' | 'reject') => {
         try {
             const response = await fetch(`${API_BASE}/semantic/relationships/confirm`, {
@@ -239,135 +211,106 @@ export default function ModelingStudio() {
             setConflictData(null);
             toast({ title: 'Reloaded latest version', description: 'Your local changes were discarded.' });
         } else {
-            // Overwrite: Try saving again with the latest version number
             saveMDL(true);
         }
     };
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center h-screen bg-obsidian-surface">
+                <Icon name="progress_activity" size="lg" className="text-obsidian-primary animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="h-screen flex flex-col bg-background relative">
-            {/* Conflict Resolution Dialog */}
+        <div className="h-screen flex flex-col bg-obsidian-surface relative">
+            {/* Conflict Resolution Overlay */}
             {conflictData && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <Card className="w-full max-w-md bg-slate-900 border-red-500 shadow-2xl">
-                        <CardHeader>
-                            <CardTitle className="text-red-500 flex items-center gap-2">
-                                <Lock className="h-5 w-5" />
-                                Conflict Detected
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <p className="text-slate-300">
+                    <div className="w-full max-w-md bg-obsidian-surface-mid border border-red-500/30 rounded-lg shadow-2xl overflow-hidden">
+                        <div className="px-6 py-4 border-b border-obsidian-outline-variant/10 flex items-center gap-2">
+                            <Icon name="error" size="md" className="text-red-400" />
+                            <h3 className="text-sm font-bold text-red-400">Conflict Detected</h3>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-obsidian-on-surface-variant">
                                 Another user (Version {conflictData.version}) has modified this model while you were editing (Version {mdl?.version}).
                             </p>
-                            <div className="p-3 bg-slate-800 rounded border border-slate-700 text-sm font-mono text-slate-400">
-                                Latest change: {conflictData.created_by ? `User ${conflictData.created_by}` : 'Unknown'}
-                            </div>
                             <div className="flex gap-3 pt-2">
-                                <Button
-                                    variant="secondary"
-                                    className="flex-1"
+                                <button
+                                    className="flex-1 h-9 rounded-lg bg-obsidian-surface-high text-obsidian-on-surface text-xs font-bold hover:bg-obsidian-surface-highest transition-colors"
                                     onClick={() => resolveConflict('reload')}
                                 >
-                                    Discard My Changes (Reload)
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    className="flex-1 bg-red-600 hover:bg-red-700"
+                                    Discard & Reload
+                                </button>
+                                <button
+                                    className="flex-1 h-9 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
                                     onClick={() => resolveConflict('overwrite')}
                                 >
                                     Force Overwrite
-                                </Button>
+                                </button>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {/* Header */}
-            <header className="border-b border-border bg-card/80 backdrop-blur-xl px-6 py-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                            <GitBranch className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-foreground">Modeling Studio</h1>
-                            <p className="text-sm text-muted-foreground">
-                                Version {mdl?.version || 0} •
-                                {mdl?.content?.models?.length || 0} models •
-                                {mdl?.content?.relationships?.length || 0} relationships
-                            </p>
-                        </div>
+            <header className="flex items-center justify-between px-6 h-12 bg-obsidian-surface-low border-b border-obsidian-outline-variant/10">
+                <div className="flex items-center gap-3">
+                    <Icon name="schema" size="md" className="text-obsidian-primary" />
+                    <div>
+                        <h1 className="text-sm font-bold text-obsidian-on-surface">Modeling Studio</h1>
+                        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-obsidian-on-surface-variant">
+                            v{mdl?.version || 0} · {mdl?.content?.models?.length || 0} models · {mdl?.content?.relationships?.length || 0} relationships
+                        </p>
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-3">
-                        {suggestions.length > 0 && (
-                            <Badge variant="secondary" className="bg-amber-500/20 text-amber-400">
-                                {suggestions.length} pending suggestions
-                            </Badge>
-                        )}
+                <div className="flex items-center gap-2">
+                    {suggestions.length > 0 && (
+                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[10px] font-label font-bold rounded border border-amber-500/20">
+                            {suggestions.length} pending
+                        </span>
+                    )}
 
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={generateSuggestions}
-                            disabled={isGenerating}
-                            className="border-slate-600 hover:bg-slate-800"
-                        >
-                            {isGenerating ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                                <Sparkles className="h-4 w-4 mr-2" />
-                            )}
-                            Suggest Relationships
-                        </Button>
+                    <button
+                        onClick={generateSuggestions}
+                        disabled={isGenerating}
+                        className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-obsidian-surface-mid text-obsidian-on-surface-variant text-xs font-medium hover:bg-obsidian-surface-high transition-colors disabled:opacity-50"
+                    >
+                        <Icon name={isGenerating ? "progress_activity" : "auto_awesome"} size="sm" className={isGenerating ? "animate-spin" : ""} />
+                        <span className="hidden sm:inline">Suggest</span>
+                    </button>
 
-                        {hasLock ? (
-                            <>
-                                <Button
-                                    size="sm"
-                                    onClick={() => saveMDL(false)}
-                                    disabled={isSaving}
-                                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-                                >
-                                    {isSaving ? (
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    ) : (
-                                        <Save className="h-4 w-4 mr-2" />
-                                    )}
-                                    Save
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={releaseLock}
-                                    className="text-slate-400 hover:text-white"
-                                >
-                                    <Unlock className="h-4 w-4 mr-2" />
-                                    Release Lock
-                                </Button>
-                            </>
-                        ) : (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={acquireLock}
-                                className="border-slate-600 hover:bg-slate-800"
+                    {hasLock ? (
+                        <>
+                            <button
+                                onClick={() => saveMDL(false)}
+                                disabled={isSaving}
+                                className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-obsidian-primary-container text-obsidian-surface text-xs font-bold hover:bg-obsidian-primary transition-colors disabled:opacity-50"
                             >
-                                <Lock className="h-4 w-4 mr-2" />
-                                {mdl?.is_locked ? `Locked by ${mdl.locked_by}` : 'Edit Model'}
-                            </Button>
-                        )}
-                    </div>
+                                <Icon name={isSaving ? "progress_activity" : "save"} size="sm" className={isSaving ? "animate-spin" : ""} />
+                                Save
+                            </button>
+                            <button
+                                onClick={releaseLock}
+                                className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-obsidian-on-surface-variant text-xs hover:bg-obsidian-surface-mid transition-colors"
+                            >
+                                <Icon name="lock_open" size="sm" />
+                                <span className="hidden sm:inline">Unlock</span>
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={acquireLock}
+                            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-obsidian-surface-mid text-obsidian-on-surface-variant text-xs font-medium hover:bg-obsidian-surface-high transition-colors"
+                        >
+                            <Icon name="lock" size="sm" />
+                            {mdl?.is_locked ? `Locked by ${mdl.locked_by}` : 'Edit Model'}
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -376,44 +319,53 @@ export default function ModelingStudio() {
                 <ResizablePanelGroup direction="horizontal">
                     {/* Left: Schema Graph */}
                     <ResizablePanel defaultSize={65} minSize={40}>
-                        <div className="h-full p-4">
-                            <Card className="h-full bg-card/50 border-border backdrop-blur-sm">
-                                <CardHeader className="py-3 border-b border-border">
-                                    <CardTitle className="text-sm font-medium text-foreground">
-                                        Schema Graph
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="h-[calc(100%-60px)] p-0">
-                                    <SchemaGraph
-                                        models={mdl?.content?.models || []}
-                                        relationships={mdl?.content?.relationships || []}
-                                        onNodeSelect={setSelectedNode}
-                                        selectedNode={selectedNode}
-                                    />
-                                </CardContent>
-                            </Card>
+                        <div className="h-full">
+                            <SchemaGraph
+                                models={mdl?.content?.models || []}
+                                relationships={mdl?.content?.relationships || []}
+                                onNodeSelect={setSelectedNode}
+                                selectedNode={selectedNode}
+                            />
                         </div>
                     </ResizablePanel>
 
-                    <ResizableHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
+                    <ResizableHandle className="w-px bg-obsidian-outline-variant/15 hover:bg-obsidian-primary/50 transition-colors" />
 
-                    {/* Right: Property Sheet + Suggestions */}
+                    {/* Right: Properties + Suggestions */}
                     <ResizablePanel defaultSize={35} minSize={25}>
-                        <div className="h-full p-4 overflow-y-auto">
-                            <Tabs defaultValue="properties" className="h-full">
-                                <TabsList className="w-full bg-muted border border-border">
-                                    <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
-                                    <TabsTrigger value="suggestions" className="flex-1">
-                                        Suggestions
-                                        {suggestions.length > 0 && (
-                                            <Badge variant="secondary" className="ml-2 bg-amber-500/20 text-amber-500 text-xs">
-                                                {suggestions.length}
-                                            </Badge>
-                                        )}
-                                    </TabsTrigger>
-                                </TabsList>
+                        <div className="h-full flex flex-col bg-obsidian-surface-low">
+                            {/* Panel Tabs */}
+                            <div className="flex border-b border-obsidian-outline-variant/10">
+                                <button
+                                    className={`flex-1 h-10 text-xs font-label uppercase tracking-wider font-bold transition-colors ${
+                                        activePanel === 'properties'
+                                            ? 'text-obsidian-primary border-b-2 border-obsidian-primary'
+                                            : 'text-obsidian-on-surface-variant hover:text-obsidian-on-surface'
+                                    }`}
+                                    onClick={() => setActivePanel('properties')}
+                                >
+                                    Properties
+                                </button>
+                                <button
+                                    className={`flex-1 h-10 text-xs font-label uppercase tracking-wider font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                                        activePanel === 'suggestions'
+                                            ? 'text-obsidian-secondary-purple border-b-2 border-obsidian-secondary-purple'
+                                            : 'text-obsidian-on-surface-variant hover:text-obsidian-on-surface'
+                                    }`}
+                                    onClick={() => setActivePanel('suggestions')}
+                                >
+                                    AI Suggestions
+                                    {suggestions.length > 0 && (
+                                        <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 text-[9px] rounded font-bold">
+                                            {suggestions.length}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
 
-                                <TabsContent value="properties" className="mt-4">
+                            {/* Panel Content */}
+                            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+                                {activePanel === 'properties' ? (
                                     <PropertySheet
                                         models={mdl?.content?.models || []}
                                         selectedNode={selectedNode}
@@ -427,65 +379,59 @@ export default function ModelingStudio() {
                                             }
                                         }}
                                     />
-                                </TabsContent>
-
-                                <TabsContent value="suggestions" className="mt-4 space-y-3">
-                                    {suggestions.length === 0 ? (
-                                        <div className="text-center py-8 text-muted-foreground">
-                                            <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                            <p>No pending suggestions</p>
-                                            <p className="text-sm mt-1">Click "Suggest Relationships" to analyze schema</p>
-                                        </div>
-                                    ) : (
-                                        suggestions.map((suggestion) => (
-                                            <Card key={suggestion.id} className="bg-card border-border">
-                                                <CardContent className="p-4">
+                                ) : (
+                                    <div className="space-y-3">
+                                        {suggestions.length === 0 ? (
+                                            <div className="text-center py-12">
+                                                <Icon name="auto_awesome" size="lg" className="text-obsidian-outline mx-auto mb-3" />
+                                                <p className="text-sm text-obsidian-on-surface-variant">No pending suggestions</p>
+                                                <p className="text-xs text-obsidian-outline mt-1">Click "Suggest" to analyze schema</p>
+                                            </div>
+                                        ) : (
+                                            suggestions.map((suggestion) => (
+                                                <div key={suggestion.id} className="bg-obsidian-surface-mid rounded-lg border border-obsidian-outline-variant/10 p-4">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className={
+                                                        <span
+                                                            className={`px-1.5 py-0.5 text-[9px] font-label font-bold rounded ${
                                                                 suggestion.confidence >= 0.7
-                                                                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                                                    ? 'bg-obsidian-primary/10 text-obsidian-primary'
                                                                     : suggestion.confidence >= 0.5
-                                                                        ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-                                                                        : 'bg-muted text-muted-foreground'
-                                                            }
+                                                                        ? 'bg-amber-500/10 text-amber-400'
+                                                                        : 'bg-obsidian-surface-high text-obsidian-outline'
+                                                            }`}
                                                         >
-                                                            {Math.round(suggestion.confidence * 100)}% confidence
-                                                        </Badge>
+                                                            {Math.round(suggestion.confidence * 100)}% match
+                                                        </span>
                                                     </div>
-                                                    <p className="text-sm text-foreground mb-3">
-                                                        <code className="bg-muted px-1 rounded">
+                                                    <p className="text-xs text-obsidian-on-surface-variant mb-3 leading-relaxed">
+                                                        <code className="bg-obsidian-surface-high px-1 rounded text-obsidian-secondary-purple font-label text-[11px]">
                                                             {suggestion.from_table}.{suggestion.from_column}
                                                         </code>
-                                                        <span className="mx-2 text-muted-foreground">→</span>
-                                                        <code className="bg-muted px-1 rounded">
+                                                        <span className="mx-1.5 text-obsidian-outline">→</span>
+                                                        <code className="bg-obsidian-surface-high px-1 rounded text-obsidian-secondary-purple font-label text-[11px]">
                                                             {suggestion.to_table}.{suggestion.to_column}
                                                         </code>
                                                     </p>
                                                     <div className="flex gap-2">
-                                                        <Button
-                                                            size="sm"
+                                                        <button
                                                             onClick={() => handleSuggestionAction(suggestion.id, 'confirm')}
-                                                            className="flex-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                                                            className="flex-1 h-7 rounded bg-obsidian-primary/15 text-obsidian-primary text-[10px] font-label font-bold uppercase tracking-wider hover:bg-obsidian-primary/25 transition-colors"
                                                         >
                                                             Confirm
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleSuggestionAction(suggestion.id, 'reject')}
-                                                            className="flex-1 text-muted-foreground hover:text-destructive"
+                                                            className="flex-1 h-7 rounded bg-obsidian-surface-high text-obsidian-on-surface-variant text-[10px] font-label font-bold uppercase tracking-wider hover:text-red-400 transition-colors"
                                                         >
                                                             Reject
-                                                        </Button>
+                                                        </button>
                                                     </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))
-                                    )}
-                                </TabsContent>
-                            </Tabs>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </ResizablePanel>
                 </ResizablePanelGroup>

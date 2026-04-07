@@ -9,36 +9,15 @@ import type { DashboardConfig, DashboardPlan, WidgetConfig, LayoutItem, Dashboar
 import { createWidgetFromPlan, generateDefaultLayout } from "@/lib/dashboard";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
-import {
-  BarChart, Table as TableIcon, Plus, Sparkles, LayoutTemplate,
-  PanelLeftClose, PanelLeft, TrendingUp, Activity, Target,
-  FileText, Image, Gauge, ChevronDown, Palette,
-  Map, Filter, GitBranch, Square, ArrowRight, Clock,
-  List, Calendar, Hash, Timer, Zap, MousePointer, Type,
-  LayoutGrid, Layers, Heading, Minus, Bell, CheckCircle, PieChart, Play, Loader,
-  Layout
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/Icon";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useGlobalState } from "@/context/GlobalStateContext";
 import { executeSql } from "@/lib/chat";
 import { ComponentLibrary } from "@/components/dashboard/ComponentLibrary";
 import { saveDashboard } from "@/lib/dashboard";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-} from "@/components/ui/dropdown-menu";
 import { TemplateStore } from "@/components/dashboard/TemplateStore";
 import { DashboardHistory } from "@/components/dashboard/DashboardHistory";
 import { DashboardSplitView } from "@/components/dashboard/DashboardSplitView";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const COLOR_SCHEMES: { id: ColorScheme; name: string; colors: string[] }[] = [
@@ -65,79 +44,6 @@ const COLOR_SCHEMES: { id: ColorScheme; name: string; colors: string[] }[] = [
   { id: "crimson", name: "Crimson", colors: ["#be123c", "#e11d48", "#9f1239", "#fb7185"] },
   { id: "arctic", name: "Arctic", colors: ["#0ea5e9", "#38bdf8", "#0284c7", "#7dd3fc"] },
 ];
-
-// Widget categories for organized selection
-const WIDGET_CATEGORIES = {
-  charts: {
-    label: "Charts",
-    icon: BarChart,
-    widgets: [
-      { type: "quickStats", label: "Quick Stats", icon: Activity, description: "Multi-metric + sparklines" },
-      { type: "area", label: "Area Chart", icon: Activity, description: "Smooth area visualization" },
-      { type: "line", label: "Line Chart", icon: TrendingUp, description: "Trend line chart" },
-      { type: "bar", label: "Bar Chart", icon: BarChart, description: "Vertical bars" },
-      { type: "donut", label: "Donut Chart", icon: LayoutGrid, description: "Pie/donut chart" },
-      { type: "funnel", label: "Funnel", icon: GitBranch, description: "Conversion funnel" },
-      { type: "heatmap", label: "Heatmap", icon: LayoutGrid, description: "Heat intensity grid" },
-      { type: "radar", label: "Radar", icon: Target, description: "Multi-metric radar" },
-    ]
-  },
-  metrics: {
-    label: "Metrics",
-    icon: Hash,
-    widgets: [
-      { type: "metric", label: "Metric Card", icon: TrendingUp, description: "Single KPI display" },
-      { type: "kpi", label: "KPI", icon: Zap, description: "Key performance indicator" },
-      { type: "number", label: "Big Number", icon: Hash, description: "Large number display" },
-      { type: "stat", label: "Stat Card", icon: Activity, description: "Stat with icon" },
-      { type: "comparison", label: "Comparison", icon: ArrowRight, description: "Compare values" },
-      { type: "progressRing", label: "Goal Ring", icon: Target, description: "Circular goal tracker" },
-      { type: "progress", label: "Progress", icon: Target, description: "Goal tracker" },
-      { type: "gauge", label: "Gauge", icon: Gauge, description: "Percentage dial" },
-      { type: "sparkline", label: "Sparkline", icon: Activity, description: "Mini trend chart" },
-    ]
-  },
-  data: {
-    label: "Data",
-    icon: TableIcon,
-    widgets: [
-      { type: "activityFeed", label: "Activity Feed", icon: Bell, description: "Live events & notifications" },
-      { type: "table", label: "Table", icon: TableIcon, description: "Data table view" },
-      { type: "leaderboard", label: "Leaderboard", icon: List, description: "Ranked list" },
-      { type: "list", label: "List", icon: List, description: "Simple list view" },
-      { type: "ticker", label: "Ticker", icon: ArrowRight, description: "Scrolling ticker" },
-      { type: "calendar", label: "Calendar", icon: Calendar, description: "Calendar heatmap" },
-    ]
-  },
-  geo: {
-    label: "Geographic",
-    icon: Map,
-    widgets: [
-      { type: "map", label: "Map", icon: Map, description: "Geographic data" },
-    ]
-  },
-  layout: {
-    label: "Layout",
-    icon: Layers,
-    widgets: [
-      { type: "colorBlock", label: "Color Block", icon: Square, description: "Background color" },
-      { type: "divider", label: "Divider", icon: Minus, description: "Section divider" },
-      { type: "header", label: "Header", icon: Heading, description: "Section header" },
-      { type: "text", label: "Text Block", icon: FileText, description: "Rich text content" },
-      { type: "image", label: "Image", icon: Image, description: "Image display" },
-    ]
-  },
-  interactive: {
-    label: "Interactive",
-    icon: MousePointer,
-    widgets: [
-      { type: "button", label: "Button", icon: MousePointer, description: "Action button" },
-      { type: "stopwatch", label: "Stopwatch", icon: Timer, description: "Precision timer" },
-      { type: "countdown", label: "Countdown", icon: Clock, description: "Timer countdown" },
-      { type: "timeline", label: "Timeline", icon: List, description: "Event timeline" },
-    ]
-  },
-};
 
 export default function DashboardBuilder() {
   const navigate = useNavigate();
@@ -182,8 +88,12 @@ export default function DashboardBuilder() {
         body: JSON.stringify({ plan: currentPlan, connection_ids: connectionIds }),
         auth: true
       });
+      const widgetStatus = Array.isArray(response.widget_status)
+        ? response.widget_status
+        : [];
+
       const statusByWidget = new Map(
-        (response.widget_status || []).map((s) => [s.widget_id, s]),
+        widgetStatus.map((s) => [s.widget_id, s]),
       );
 
       const newWidgets: WidgetConfig[] = response.config.widgets.map(w => ({
@@ -219,7 +129,7 @@ export default function DashboardBuilder() {
         updatedAt: response.updated_at
       });
 
-      const failed = (response.widget_status || []).filter((w) => w.status === "error");
+      const failed = widgetStatus.filter((w) => w.status === "error");
       if (failed.length > 0) {
         toast({
           title: "Partial dashboard generated",
@@ -272,7 +182,6 @@ export default function DashboardBuilder() {
 
   const handleUpdateDashboard = useCallback(async (updated: DashboardConfig) => {
     setDashboard({ ...updated, updatedAt: new Date().toISOString() });
-    // Proactively save to backend if it's an existing dashboard
     if (updated.id && !updated.id.startsWith("dashboard-")) {
       try {
         await saveDashboard(updated);
@@ -334,13 +243,12 @@ export default function DashboardBuilder() {
     }
 
     const widgetDefaults: Record<string, Partial<WidgetConfig>> = {
-      // Charts
       chart: { chartType: 'area' as ChartType },
       area: { chartType: 'area' as ChartType },
       line: { chartType: 'line' as ChartType },
       bar: { chartType: 'bar' as ChartType },
       donut: { chartType: 'donut' as ChartType },
-      quickStats: { chartType: 'quickStats' as ChartType }, // Using default demo data
+      quickStats: { chartType: 'quickStats' as ChartType },
       funnel: {
         chartType: 'funnel' as ChartType, funnelStages: [
           { name: "Visitors", value: 10000 },
@@ -350,7 +258,6 @@ export default function DashboardBuilder() {
       },
       heatmap: { chartType: 'heatmap' as ChartType },
       radar: { chartType: 'radar' as ChartType },
-      // Metrics
       metric: { chartType: 'metric' as ChartType, value: 12500, trend: 12.5, prefix: '$' },
       kpi: { chartType: 'kpi' as ChartType, value: 8547, trend: -3.2 },
       number: { chartType: 'number' as ChartType, value: 42000, prefix: '$' },
@@ -360,8 +267,7 @@ export default function DashboardBuilder() {
       progressRing: { chartType: 'progressRing' as ChartType, value: 65, target: 100, title: 'Weekly Goal' },
       gauge: { chartType: 'gauge' as ChartType, value: 72, target: 100 },
       sparkline: { chartType: 'sparkline' as ChartType, sparklineData: [10, 25, 15, 30, 45, 35, 50] },
-      activityFeed: { chartType: 'activityFeed' as ChartType }, // Using default demo data
-      // Data
+      activityFeed: { chartType: 'activityFeed' as ChartType },
       table: { chartType: 'table' as ChartType },
       leaderboard: {
         chartType: 'leaderboard' as ChartType, listItems: [
@@ -385,20 +291,17 @@ export default function DashboardBuilder() {
       },
       calendar: { chartType: 'calendar' as ChartType },
       container: { chartType: 'container' as ChartType, showBorder: true, showBackground: false, textContent: "Container" },
-      // Geo
       map: {
         chartType: 'map' as ChartType, mapData: [
           { region: "New York", value: 5000, lat: 40.7128, lng: -74.0060 },
           { region: "Los Angeles", value: 3500, lat: 34.0522, lng: -118.2437 },
         ]
       },
-      // Layout
       colorBlock: { chartType: 'colorBlock' as ChartType, backgroundColor: "hsl(var(--primary) / 0.2)" },
       divider: { chartType: 'divider' as ChartType },
       header: { chartType: 'header' as ChartType, textContent: 'Section Title', headerLevel: 2 },
       text: { chartType: 'text' as ChartType, textContent: 'Add your notes or descriptions here...' },
       image: { chartType: 'image' as ChartType, imageUrl: '' },
-      // Interactive
       button: { chartType: 'button' as ChartType, buttonLabel: 'Click Me', buttonVariant: 'primary' },
       stopwatch: { chartType: 'stopwatch' as ChartType },
       countdown: { chartType: 'countdown' as ChartType, countdownTarget: new Date(Date.now() + 86400000 * 7).toISOString() },
@@ -430,7 +333,6 @@ export default function DashboardBuilder() {
 
     const maxY = dashboard.layout.reduce((max, item) => Math.max(max, item.y + item.h), 0);
 
-    // Sizing based on widget type
     const smallWidgets = ['metric', 'sparkline', 'gauge', 'stat', 'number', 'button', 'countdown', 'stopwatch', 'progressRing'];
     const mediumWidgets = ['progress', 'comparison', 'kpi', 'text', 'header', 'divider', 'quickStats', 'activityFeed'];
     const wideWidgets = ['ticker', 'timeline', 'leaderboard', 'map'];
@@ -489,13 +391,11 @@ export default function DashboardBuilder() {
     toast({ title: "Dashboard loaded", description: config.title });
   };
 
-  // Calculate top offset for component palette based on toolbar visibility
   const hasWidgets = dashboard.widgets.length > 0;
-  const paletteTopOffset = hasWidgets ? "top-20" : "top-4";
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen w-full overflow-hidden bg-background font-sans">
+      <div className="flex h-screen w-full overflow-hidden bg-obsidian-surface font-body">
         {/* Sidebar */}
         <AppSidebar
           collapsed={sidebarCollapsed}
@@ -517,10 +417,10 @@ export default function DashboardBuilder() {
             {!chatCollapsed && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: sidebarCollapsed ? 360 : 340, opacity: 1 }}
+                animate={{ width: sidebarCollapsed ? 340 : 320, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="border-r border-border z-20 bg-background/80 backdrop-blur-xl overflow-hidden flex flex-col"
+                className="z-20 bg-obsidian-surface overflow-hidden flex flex-col"
               >
                 <DashboardChat
                   currentPlan={currentPlan}
@@ -537,26 +437,27 @@ export default function DashboardBuilder() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="flex-1 flex overflow-hidden relative bg-slate-50 dark:bg-slate-950/50"
+            className="flex-1 flex overflow-hidden relative bg-obsidian-surface"
           >
-            {/* Dynamic Canvas Background Pattern */}
+            {/* Canvas Background Pattern */}
             <div
-              className="absolute inset-0 z-0 opacity-[0.4] pointer-events-none canvas-dots"
-              id="canvas-background"
+              className="absolute inset-0 z-0 opacity-[0.3] pointer-events-none"
+              style={{
+                backgroundImage: `radial-gradient(circle, rgba(133,148,139,0.15) 1px, transparent 1px)`,
+                backgroundSize: "24px 24px",
+              }}
             />
 
-            {/* Chat Toggle Button - Fixed position that doesn't overlap toolbar */}
-            <Button
-              variant="outline"
-              size="icon"
+            {/* Chat Toggle Button */}
+            <button
               onClick={() => setChatCollapsed(!chatCollapsed)}
               className={cn(
-                "absolute left-4 z-40 h-9 w-9 bg-background/80 backdrop-blur-sm border-border/50 shadow-lg transition-all duration-200",
-                hasWidgets ? "top-20" : "top-4"
+                "absolute left-4 z-40 h-8 w-8 rounded-lg bg-obsidian-surface-mid/90 backdrop-blur-sm flex items-center justify-center hover:bg-obsidian-surface-high transition-all duration-200 border border-obsidian-outline-variant/10",
+                hasWidgets ? "top-16" : "top-4"
               )}
             >
-              {chatCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-            </Button>
+              <Icon name={chatCollapsed ? "left_panel_open" : "left_panel_close"} size="sm" className="text-obsidian-on-surface-variant" />
+            </button>
 
             {dashboard.widgets.length === 0 ? (
               <DashboardSplitView />
@@ -580,16 +481,15 @@ export default function DashboardBuilder() {
 
             {/* Color Scheme Modal */}
             <Dialog open={showColorPicker} onOpenChange={setShowColorPicker}>
-              <DialogContent className="max-w-xs">
+              <DialogContent className="max-w-xs bg-obsidian-surface-mid border-obsidian-outline-variant/20">
                 <DialogHeader>
-                  <DialogTitle>Color Schemes</DialogTitle>
+                  <DialogTitle className="text-obsidian-on-surface">Color Schemes</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-2 py-4">
+                <div className="grid gap-1.5 py-4 max-h-[400px] overflow-y-auto scrollbar-thin">
                   {COLOR_SCHEMES.map((scheme) => (
-                    <Button
+                    <button
                       key={scheme.id}
-                      variant="ghost"
-                      className="w-full justify-start gap-3 h-12"
+                      className="w-full flex items-center gap-3 h-10 px-3 rounded-lg hover:bg-obsidian-surface-high transition-colors text-left"
                       onClick={() => {
                         handleColorSchemeChange(scheme.id);
                         setShowColorPicker(false);
@@ -600,8 +500,8 @@ export default function DashboardBuilder() {
                           <div key={i} className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
                         ))}
                       </div>
-                      <span className="font-medium">{scheme.name}</span>
-                    </Button>
+                      <span className="text-sm font-medium text-obsidian-on-surface">{scheme.name}</span>
+                    </button>
                   ))}
                 </div>
               </DialogContent>

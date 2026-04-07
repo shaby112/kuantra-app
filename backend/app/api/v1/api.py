@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_current_user
-from app.api.v1.endpoints import chat, connections, conversations, dashboards, semantic, sync, blog
+from app.api.v1.endpoints import chat, connections, conversations, dashboards, semantic, sync, blog, llm_runtime
 from app.db.models import User
 
 api_router = APIRouter()
@@ -12,6 +12,7 @@ api_router.include_router(dashboards.router, prefix="/dashboards", tags=["dashbo
 api_router.include_router(sync.router, prefix="/sync", tags=["sync"])
 api_router.include_router(semantic.router, prefix="/semantic", tags=["semantic"])
 api_router.include_router(blog.router, prefix="/blog", tags=["blog"])
+api_router.include_router(llm_runtime.router, prefix="/llm", tags=["llm"])
 
 
 @api_router.get("/me", tags=["authentication"])
@@ -20,5 +21,5 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "id": str(current_user.id),
         "email": current_user.email,
         "username": current_user.username,
-        "clerk_id": current_user.clerk_id,
+        "subject_id": current_user.subject_id,
     }

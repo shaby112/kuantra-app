@@ -76,6 +76,11 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         self.api_key = settings.LOCAL_LLM_API_KEY
 
     async def generate(self, prompt: str, config: Optional[Dict[str, Any]] = None) -> str:
+        if settings.LOCAL_LLM_AUTO_PULL:
+            from app.services.local_llm_runtime_service import local_llm_runtime_service
+
+            await local_llm_runtime_service.ensure_model(self.model)
+
         payload = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],

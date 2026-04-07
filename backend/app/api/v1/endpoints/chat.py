@@ -17,6 +17,7 @@ from app.core.logging import logger
 from app.core.config import settings
 from app.db.models import User, Conversation, ChatMessage, DbConnection
 from app.services.connection_service import connection_service, QueryTimeoutError
+from app.core.rate_limit import limiter
 
 router = APIRouter()
 
@@ -36,11 +37,14 @@ class ExecuteResponse(BaseModel):
 
 
 @router.post("/execute", response_model=ExecuteResponse)
+@limiter.limit(settings.RATE_LIMIT_QUERY_EXECUTE)
 async def execute_query_endpoint(
+    http_request: Request,
     request: ExecuteRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Execute a SQL query."""
+    _ = http_request
     try:
         if not connection_service.is_safe_query(request.sql):
             raise HTTPException(
@@ -95,7 +99,9 @@ async def execute_query_endpoint(
 
 
 @router.get("/stream")
+@limiter.limit(settings.RATE_LIMIT_CHAT_STREAM)
 async def chat_stream(
+    request: Request,
     query: str,
     conversation_id: Optional[UUID] = None,
     connection_id: Optional[UUID] = None,
@@ -130,7 +136,7 @@ async def chat_stream(
                     await db.refresh(conv)
                     logger.info(f"Created new conversation {conv.id}")
                     # Yield the conversation ID to the frontend
-                    yield f"data: {json.dumps({'type': 'conversation', 'conversation_id': conv.id})}\n\n"
+                    yield f"data: {json.dumps({'type': 'conversation', 'conversation_id': str(conv.id)})}\n\n"
                     
                     # For new conversation, history is empty
                     history = []
@@ -155,13 +161,23 @@ async def chat_stream(
             full_response = ""
             sql_generated = None
 
-            # Orchestrate response using ADK Agents
-            from app.agents.orchestrator import process_user_message
-            import asyncio
-            
-            # Run ADK agent logic
-            # Since ADK might be sync, run in executor to keep event loop responsive
-            full_response = await process_user_message(query)
+            # Orchestrate response using ADK Agents when available; fallback to configured LLM provider.
+            try:
+                from app.agents.orchestrator import process_user_message
+                full_response = await process_user_message(query)
+            except Exception as agent_exc:
+                logger.warning(f"ADK orchestrator unavailable, using provider fallback: {agent_exc}")
+                from app.services.llm_provider_service import llm_provider_registry
+
+                provider = llm_provider_registry.get_provider()
+                try:
+                    full_response = await provider.generate(query)
+                except Exception as llm_exc:
+                    logger.error(f"LLM provider failed: {llm_exc}")
+                    full_response = (
+                        "AI is temporarily unavailable. Please configure a valid AI key in Settings "
+                        "or switch to Local AI and download the model."
+                    )
             
             # Simulate streaming or just yield result
             # For production grade, we'd enable native streaming in ADK, but for now we yield the result.
