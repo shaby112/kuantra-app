@@ -9,6 +9,7 @@ import { SettingsView } from "@/components/SettingsView";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useGlobalState } from "@/context/GlobalStateContext";
+import { Icon } from "@/components/Icon";
 
 export default function Dashboard() {
   const {
@@ -24,20 +25,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Sync activeTab with URL
   useEffect(() => {
     if (location.pathname.includes("/dashboard/modeling")) {
       setActiveTab("modeling");
       return;
     }
-
     if (location.pathname.includes("/dashboard/builder")) {
       setActiveTab("dashboards");
       return;
     }
-
-    // Keep current tab on /dashboard to avoid one-click reset bugs (e.g. settings/reports -> connections).
-    // Only coerce if we came from a route-backed tab that no longer matches current path.
     if (location.pathname === "/dashboard" && ["modeling", "dashboards"].includes(activeTab)) {
       setActiveTab("connections");
     }
@@ -74,12 +70,11 @@ export default function Dashboard() {
     });
   };
 
-  // Check if we are in a nested active route (e.g. /dashboard/modeling)
   const isNestedRoute = location.pathname !== "/dashboard";
   const appVersion = (import.meta as any)?.env?.VITE_APP_VERSION || "0.0.0";
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-screen w-full overflow-hidden bg-obsidian-surface">
       {/* Sidebar */}
       <AppSidebar
         collapsed={sidebarCollapsed}
@@ -100,11 +95,36 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Top Header Bar */}
+        <header className="flex justify-between items-center w-full px-6 h-14 border-b border-obsidian-outline-variant/15 bg-obsidian-surface shrink-0">
+          <div className="flex items-center gap-8">
+            <div className="relative flex items-center bg-obsidian-surface-lowest border border-obsidian-outline-variant/20 px-3 py-1.5 rounded-lg">
+              <Icon name="search" className="text-zinc-500" size="sm" />
+              <input
+                className="bg-transparent border-none text-xs focus:ring-0 focus:outline-none text-obsidian-on-surface placeholder:text-zinc-600 w-48 ml-2"
+                placeholder="Search insights..."
+                type="text"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="text-zinc-400 hover:text-primary transition-colors">
+              <Icon name="notifications" />
+            </button>
+            <button className="text-zinc-400 hover:text-primary transition-colors">
+              <Icon name="help_outline" />
+            </button>
+            <div className="h-8 w-8 rounded-full bg-obsidian-surface-highest overflow-hidden border border-obsidian-outline-variant/30 flex items-center justify-center">
+              <Icon name="person" className="text-zinc-500" size="sm" />
+            </div>
+          </div>
+        </header>
+
         {isNestedRoute ? (
           <Outlet />
         ) : (
           <>
-            {/* Connections Tab (Mounted but potentially hidden) */}
+            {/* Connections Tab */}
             <div className={activeTab === "connections" ? "contents" : "hidden"}>
               <ConnectionsView />
             </div>
@@ -114,20 +134,17 @@ export default function Dashboard() {
               <SettingsView />
             </div>
 
-            {/* Other Tabs (Chat/Workspace) */}
+            {/* AI Assistant / Chat Tab */}
             <div className={cn(
               "flex-1 flex flex-col md:flex-row overflow-hidden",
               (activeTab !== "connections" && activeTab !== "settings") ? "flex" : "hidden"
             )}>
-              {/* Chat Panel */}
-              <div className="flex-1 min-w-0 border-r border-border">
+              <div className="flex-1 min-w-0 border-r border-obsidian-outline-variant/10">
                 <ChatPanel
                   onDataUpdate={setActiveWorkspaceData}
                   onOpenDangerModal={handleOpenDangerModal}
                 />
               </div>
-
-              {/* Data Workspace */}
               <div className="flex-1 min-w-0">
                 <DataWorkspace data={activeWorkspaceData} />
               </div>
@@ -136,9 +153,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Dev testing watermark */}
-      <div className="pointer-events-none fixed bottom-3 left-3 z-50 rounded border border-primary/25 bg-background/80 px-2 py-1 text-[11px] font-mono text-muted-foreground backdrop-blur-sm">
-        DEV TESTING • v{appVersion}
+      {/* Dev watermark */}
+      <div className="pointer-events-none fixed bottom-3 left-3 z-50 rounded border border-primary/25 bg-obsidian-surface/80 px-2 py-1 text-[11px] font-label text-zinc-500 backdrop-blur-sm">
+        DEV TESTING v{appVersion}
       </div>
 
       {/* Danger Modal */}

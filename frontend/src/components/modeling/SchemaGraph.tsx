@@ -30,46 +30,51 @@ interface SchemaGraphProps {
     selectedNode: string | null;
 }
 
-// Custom node component for tables
 function TableNode({ data, selected }: { data: any; selected: boolean }) {
     return (
         <div
             className={`
-        min-w-[200px] rounded-lg border-2 shadow-xl backdrop-blur-sm
-        ${selected
-                    ? 'border-violet-500 bg-violet-900/50 shadow-violet-500/20'
-                    : 'border-slate-600 bg-slate-800/90 hover:border-slate-500'
+                min-w-[220px] rounded-lg overflow-hidden transition-all duration-200
+                ${selected
+                    ? 'border-l-[3px] border-obsidian-primary shadow-lg shadow-obsidian-primary/10'
+                    : 'border-l-[3px] border-obsidian-outline-variant/40 hover:border-obsidian-secondary-purple/60'
                 }
-        transition-all duration-200
-      `}
+                bg-obsidian-surface-mid border border-obsidian-outline-variant/15
+            `}
         >
             {/* Table Header */}
             <div className={`
-        px-3 py-2 rounded-t-lg font-semibold text-sm
-        ${selected ? 'bg-violet-500/30 text-violet-200' : 'bg-slate-700/50 text-slate-200'}
-      `}>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs opacity-70">📊</span>
+                px-4 py-2.5 flex items-center justify-between
+                ${selected ? 'bg-obsidian-surface-high' : 'bg-obsidian-surface-high/50'}
+                border-b border-obsidian-outline-variant/10
+            `}>
+                <span className={`font-label font-bold text-xs tracking-wider ${selected ? 'text-obsidian-primary' : 'text-obsidian-on-surface'}`}>
                     {data.label}
-                </div>
+                </span>
+                <span className="material-symbols-outlined text-obsidian-outline" style={{ fontSize: '14px' }}>more_vert</span>
             </div>
 
             {/* Columns */}
-            <div className="px-2 py-2 max-h-[200px] overflow-y-auto">
+            <div className="max-h-[200px] overflow-y-auto">
                 {data.columns?.slice(0, 8).map((col: any, index: number) => (
                     <div
                         key={index}
-                        className="flex items-center justify-between px-2 py-1 text-xs rounded hover:bg-slate-700/30"
+                        className="flex items-center justify-between px-4 py-1.5 hover:bg-obsidian-surface-high/30 transition-colors"
                     >
-                        <span className="text-slate-300 truncate max-w-[120px]">{col.name}</span>
-                        <span className="text-slate-500 font-mono text-[10px]">
+                        <div className="flex items-center gap-1.5">
+                            {index === 0 && (
+                                <span className="material-symbols-outlined text-obsidian-primary" style={{ fontSize: '10px', fontVariationSettings: "'FILL' 1" }}>key</span>
+                            )}
+                            <span className="text-xs font-label text-obsidian-on-surface">{col.name}</span>
+                        </div>
+                        <span className="text-[10px] font-label text-obsidian-outline">
                             {col.type?.split('(')[0]?.substring(0, 10)}
                         </span>
                     </div>
                 ))}
                 {data.columns?.length > 8 && (
-                    <div className="text-xs text-slate-500 px-2 py-1 italic">
-                        +{data.columns.length - 8} more columns
+                    <div className="text-[10px] text-obsidian-outline px-4 py-1.5 font-label">
+                        +{data.columns.length - 8} more
                     </div>
                 )}
             </div>
@@ -87,10 +92,8 @@ export default function SchemaGraph({
     onNodeSelect,
     selectedNode,
 }: SchemaGraphProps) {
-    // Convert models to nodes
     const initialNodes: Node[] = useMemo(() => {
         return models.map((model, index) => {
-            // Auto-layout in a grid
             const col = index % 4;
             const row = Math.floor(index / 4);
 
@@ -99,7 +102,7 @@ export default function SchemaGraph({
                 type: 'tableNode',
                 position: { x: col * 280 + 50, y: row * 350 + 50 },
                 data: {
-                    label: model.name.split('.').pop(), // Remove schema prefix for display
+                    label: model.name.split('.').pop(),
                     columns: model.columns,
                 },
                 selected: model.name === selectedNode,
@@ -107,7 +110,6 @@ export default function SchemaGraph({
         });
     }, [models, selectedNode]);
 
-    // Convert relationships to edges
     const initialEdges: Edge[] = useMemo(() => {
         return relationships.map((rel) => ({
             id: rel.name,
@@ -121,15 +123,14 @@ export default function SchemaGraph({
                 color: '#8b5cf6',
             },
             label: rel.name.length < 20 ? rel.name : '',
-            labelStyle: { fill: '#94a3b8', fontSize: 10 },
-            labelBgStyle: { fill: '#1e293b', fillOpacity: 0.8 },
+            labelStyle: { fill: '#85948B', fontSize: 10, fontFamily: 'Space Grotesk' },
+            labelBgStyle: { fill: '#201F1F', fillOpacity: 0.9 },
         }));
     }, [relationships]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-    // Handle node click
     const onNodeClick = useCallback(
         (_: React.MouseEvent, node: Node) => {
             onNodeSelect(node.id);
@@ -137,7 +138,6 @@ export default function SchemaGraph({
         [onNodeSelect]
     );
 
-    // Handle pane click (deselect)
     const onPaneClick = useCallback(() => {
         onNodeSelect(null);
     }, [onNodeSelect]);
@@ -155,14 +155,14 @@ export default function SchemaGraph({
                 fitView
                 fitViewOptions={{ padding: 0.2 }}
                 proOptions={{ hideAttribution: true }}
-                className="bg-slate-900"
+                className="bg-obsidian-surface"
             >
-                <Background color="#334155" gap={20} size={1} />
-                <Controls className="!bg-slate-800 !border-slate-700 !text-slate-300 [&>button]:!bg-slate-800 [&>button]:!border-slate-700 [&>button:hover]:!bg-slate-700" />
+                <Background color="#3C4A42" gap={24} size={1} />
+                <Controls className="!bg-obsidian-surface-mid !border-obsidian-outline-variant/20 !rounded-lg [&>button]:!bg-obsidian-surface-mid [&>button]:!border-obsidian-outline-variant/15 [&>button]:!text-obsidian-on-surface-variant [&>button:hover]:!bg-obsidian-surface-high" />
                 <MiniMap
-                    className="!bg-slate-800/80 !border-slate-700"
-                    nodeColor={(node) => (node.selected ? '#8b5cf6' : '#475569')}
-                    maskColor="rgba(15, 23, 42, 0.8)"
+                    className="!bg-obsidian-surface-low/80 !border-obsidian-outline-variant/15 !rounded-lg"
+                    nodeColor={(node) => (node.selected ? '#5AF0B3' : '#3C4A42')}
+                    maskColor="rgba(19, 19, 19, 0.8)"
                 />
             </ReactFlow>
         </div>

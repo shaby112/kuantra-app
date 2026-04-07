@@ -1,21 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Database, Search, Loader2, RefreshCw, Eye, Trash2, Edit2, AlertTriangle, Link2, Terminal, CloudDownload, Check, X, Clock } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { getConnections, deleteConnection, testConnection, ConnectionResponse, uploadFile, triggerSync, syncAllConnections, getSyncStatus, getAllSyncStatuses, SyncStatusResponse } from "@/lib/connections";
+import { Icon } from "@/components/Icon";
+import { getConnections, deleteConnection, testConnection, ConnectionResponse, uploadFile, triggerSync, syncAllConnections, getAllSyncStatuses } from "@/lib/connections";
 import { ConnectionModal } from "./ConnectionModal";
 import { SchemaViewerModal } from "./SchemaViewerModal";
 import { SyncProgressDialog } from "./SyncProgressDialog";
 import { formatDistanceToNow } from "date-fns";
 import { QueryExplorer } from "./QueryExplorer";
 import { useToast } from "@/hooks/use-toast";
-import { useRef } from "react";
-import { FileUp, FileType } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -26,12 +20,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export function ConnectionsView() {
     const [modalOpen, setModalOpen] = useState(false);
@@ -85,10 +73,7 @@ export function ConnectionsView() {
             setIsUploading(false);
         },
         onError: (e: any) => {
-            const description =
-                e?.status === 413
-                    ? "File is too large. Maximum upload size is 200 MB."
-                    : e?.message || "Failed to upload file";
+            const description = e?.status === 413 ? "File is too large. Maximum upload size is 200 MB." : e?.message || "Failed to upload file";
             toast({ title: "Upload Failed", description, variant: "destructive" });
             setIsUploading(false);
         }
@@ -102,7 +87,6 @@ export function ConnectionsView() {
                 description: data.status === "already_running" ? "Sync already in progress" : "Data sync started successfully"
             });
             setSyncingId(null);
-            // Refetch sync status after a delay
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["syncStatus"] }), 2000);
         },
         onError: (e: any) => {
@@ -115,10 +99,7 @@ export function ConnectionsView() {
         mutationFn: () => syncAllConnections(),
         onSuccess: (data) => {
             const started = data.filter(r => r.status === "started").length;
-            toast({
-                title: "Sync All Started",
-                description: `Started sync for ${started} connections`
-            });
+            toast({ title: "Sync All Started", description: `Started sync for ${started} connections` });
             setSyncingAll(false);
             setTimeout(() => queryClient.invalidateQueries({ queryKey: ["syncStatus"] }), 2000);
         },
@@ -140,7 +121,6 @@ export function ConnectionsView() {
         setTestingId(conn.id);
         const result = await testConnection(conn.id);
         setTestingId(null);
-
         toast({
             title: result.success ? "Connection Successful" : "Connection Failed",
             description: result.message,
@@ -196,250 +176,288 @@ export function ConnectionsView() {
         (c.host?.toLowerCase().includes(search.toLowerCase()))
     );
 
+    const activeCount = connections?.length || 0;
+
     return (
-        <div className="h-full flex flex-col p-6 space-y-6 overflow-hidden bg-background/50">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Connections</h1>
-                    <p className="text-muted-foreground">Manage your database sources.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="secondary"
-                        onClick={handleSyncAll}
-                        disabled={syncingAll || !connections?.length}
-                        className="gap-2"
-                    >
-                        {syncingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <CloudDownload className="w-4 h-4" />}
-                        Sync All
-                    </Button>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept=".csv,.xlsx,.xls,.parquet,.tar.gz"
-                        onChange={handleFileSelect}
-                    />
-                    <Button
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
-                        className="gap-2 border-dashed"
-                    >
-                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-                        Upload Dataset
-                    </Button>
-                    <Button onClick={() => { setConnectionToEdit(null); setModalOpen(true); }} className="gap-2">
-                        <Plus className="w-4 h-4" />
-                        Add Connection
-                    </Button>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-                <div className="flex-1 flex items-center px-4 py-2 bg-card border border-border rounded-lg max-w-sm focus-within:ring-1 ring-primary/20 transition-all">
-                    <Search className="w-4 h-4 text-muted-foreground mr-2" />
-                    <Input
-                        placeholder="Search connections..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border-none shadow-none focus-visible:ring-0 bg-transparent h-auto p-0"
-                    />
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => refetch()} title="Refresh List">
-                    <RefreshCw className="w-4 h-4" />
-                </Button>
-            </div>
-
-            {isLoading ? (
-                <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        <p className="text-sm">Loading connections...</p>
+        <div className="h-full flex flex-col overflow-hidden bg-obsidian-surface">
+            <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full scrollbar-thin">
+                {/* Page Header */}
+                <div className="flex justify-between items-end mb-10">
+                    <div>
+                        <h2 className="text-3xl font-extrabold tracking-tighter text-white">Data Connections</h2>
+                        <p className="text-obsidian-on-surface-variant mt-2 max-w-md">
+                            Orchestrate your data pipeline through direct database syncs and file uploads.
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.xlsx,.xls,.parquet,.tar.gz" onChange={handleFileSelect} />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="flex items-center gap-2 px-4 py-2 bg-obsidian-surface-high border border-obsidian-outline-variant/20 text-obsidian-on-surface font-label text-xs uppercase tracking-widest hover:bg-obsidian-surface-highest transition-all disabled:opacity-50"
+                        >
+                            <Icon name={isUploading ? "hourglass_empty" : "upload_file"} size="sm" />
+                            {isUploading ? "Uploading..." : "Upload Dataset"}
+                        </button>
+                        <button
+                            onClick={() => { setConnectionToEdit(null); setModalOpen(true); }}
+                            className="flex items-center gap-2 px-6 py-2 bg-obsidian-primary-container text-obsidian-surface font-label text-xs font-bold uppercase tracking-widest hover:bg-obsidian-primary transition-all rounded-lg"
+                        >
+                            <Icon name="add_link" size="sm" />
+                            Connect
+                        </button>
                     </div>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pt-2 pb-6">
-                    {filteredConnections?.length === 0 ? (
-                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground border border-dashed border-border rounded-xl bg-card/30">
-                            <Database className="w-12 h-12 mb-4 opacity-10" />
-                            <p className="text-lg font-medium">No results found</p>
-                            <p className="text-sm">Try a different search or add a new connection.</p>
+
+                {/* Stats Bar */}
+                <div className="grid grid-cols-4 gap-0 mb-12 border border-obsidian-outline-variant/15 rounded-xl overflow-hidden">
+                    <div className="bg-obsidian-surface-low p-6 border-r border-obsidian-outline-variant/15">
+                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Active Sources</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-white">{activeCount}</span>
+                            <span className="text-obsidian-primary text-xs font-bold font-label">Connected</span>
                         </div>
-                    ) : (
+                    </div>
+                    <div className="bg-obsidian-surface-low p-6 border-r border-obsidian-outline-variant/15">
+                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Data Types</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-white">
+                                {new Set(connections?.map(c => c.connection_type || "postgres")).size || 0}
+                            </span>
+                            <span className="text-zinc-500 text-xs font-label">Unique Types</span>
+                        </div>
+                    </div>
+                    <div className="bg-obsidian-surface-low p-6 border-r border-obsidian-outline-variant/15">
+                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Sync Status</p>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-white">
+                                {syncStatuses?.filter(s => s.status === "success").length || 0}
+                            </span>
+                            <span className="text-obsidian-primary text-xs font-label">Healthy</span>
+                        </div>
+                    </div>
+                    <div className="bg-obsidian-surface-low p-6">
+                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Global Sync</p>
+                        <button
+                            onClick={handleSyncAll}
+                            disabled={syncingAll || !connections?.length}
+                            className="flex items-center gap-2 text-obsidian-primary hover:text-obsidian-primary-dim transition-colors disabled:opacity-50"
+                        >
+                            <Icon name={syncingAll ? "hourglass_empty" : "sync"} size="sm" className={syncingAll ? "animate-spin" : ""} />
+                            <span className="text-sm font-bold">{syncingAll ? "Syncing..." : "Sync All"}</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Search */}
+                <div className="mb-8 flex items-center gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <Icon name="search" size="sm" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        <input
+                            className="w-full bg-obsidian-surface-lowest border border-obsidian-outline-variant/20 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-obsidian-primary focus:border-obsidian-primary transition-all text-obsidian-on-surface placeholder:text-zinc-600"
+                            placeholder="Search connections..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <button onClick={() => refetch()} className="text-zinc-400 hover:text-obsidian-primary transition-colors p-2">
+                        <Icon name="refresh" />
+                    </button>
+                </div>
+
+                {/* Connection Grid */}
+                {isLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="flex flex-col items-center gap-3">
+                            <Icon name="hourglass_empty" className="text-obsidian-primary animate-spin text-3xl" />
+                            <p className="text-sm text-zinc-500 font-label uppercase tracking-widest">Loading connections...</p>
+                        </div>
+                    </div>
+                ) : filteredConnections?.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 border border-obsidian-outline-variant/10 rounded-xl bg-obsidian-surface-low">
+                        <Icon name="database" className="text-zinc-600 text-5xl mb-4" />
+                        <p className="text-lg font-bold text-white">No connections found</p>
+                        <p className="text-sm text-zinc-500 mt-1">Try a different search or add a new connection.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-12 gap-6">
                         <AnimatePresence mode="popLayout">
-                            {filteredConnections?.map((conn) => (
-                                <motion.div
-                                    key={conn.id}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    whileHover={{ y: -4 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="overflow-visible"
-                                >
-                                    <Card className="hover:border-primary/50 transition-all group flex flex-col h-full shadow-sm hover:shadow-md bg-card/50 backdrop-blur-sm relative overflow-hidden">
-                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleEdit(conn)}>
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setConnectionToDelete(conn)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                            {filteredConnections?.map((conn, idx) => {
+                                const status = getStatusForConn(conn.id);
+                                const isFirstAndBig = idx === 0 && filteredConnections.length > 1;
+                                const isPrimary = isFirstAndBig;
 
-                                        <CardHeader className="pb-3">
-                                            <CardTitle className="flex items-center gap-2 pr-12">
-                                                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                                    {conn.connection_type === "file" ? <FileType className="w-4 h-4" /> : (conn.connection_uri ? <Link2 className="w-4 h-4" /> : <Database className="w-4 h-4" />)}
-                                                </div>
-                                                <span className="truncate">{conn.name}</span>
-                                            </CardTitle>
-                                            <CardDescription className="truncate">
-                                                {conn.connection_type === "file" ? "Local File Store" : (conn.connection_uri ? "String Connection" : `${conn.host}:${conn.port}`)}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex-1">
-                                            <div className="text-sm text-muted-foreground space-y-2">
-                                                <div className="flex justify-between py-1 border-b border-border/30">
-                                                    <span>Type</span>
-                                                    <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-4">
-                                                        {conn.connection_type || "postgres"}
-                                                    </Badge>
-                                                </div>
-                                                <div className="flex justify-between py-1 border-b border-border/30">
-                                                    <span>Database</span>
-                                                    <span className="font-medium text-foreground truncate ml-4">{conn.database_name || "N/A"}</span>
-                                                </div>
-                                                <div className="flex justify-between py-1">
-                                                    <span>User</span>
-                                                    <span className="font-medium text-foreground truncate ml-4">{conn.username || "Local"}</span>
-                                                </div>
+                                return (
+                                    <motion.div
+                                        key={conn.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.2, delay: idx * 0.05 }}
+                                        className={isPrimary ? "col-span-12 lg:col-span-8" : "col-span-12 md:col-span-6 lg:col-span-4"}
+                                    >
+                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-xl p-6 relative overflow-hidden group hover:border-obsidian-outline-variant/30 transition-all">
+                                            {isPrimary && (
+                                                <div className="absolute top-0 right-0 w-64 h-64 bg-obsidian-primary/5 rounded-full -mr-20 -mt-20 blur-3xl" />
+                                            )}
 
-                                                {/* Sync Status Badge */}
-                                                <div className="flex justify-between py-1 border-t border-border/30 mt-2 pt-2">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <RefreshCw className="w-3 h-3 text-muted-foreground" />
-                                                        Last Synced
-                                                    </span>
-                                                    {(() => {
-                                                        const status = getStatusForConn(conn.id);
-                                                        return (
-                                                            <div
-                                                                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-                                                                onClick={() => handleViewProgress(conn.id)}
-                                                            >
-                                                                {status?.status === "running" && (
-                                                                    <Badge variant="outline" className="border-blue-500 text-blue-500 gap-1 h-5 px-1.5 bg-blue-500/10">
-                                                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                                                        Syncing
-                                                                    </Badge>
-                                                                )}
-                                                                {status?.status === "failed" && (
-                                                                    <TooltipProvider>
-                                                                        <Tooltip>
-                                                                            <TooltipTrigger>
-                                                                                <Badge variant="destructive" className="h-5 px-1.5 gap-1">
-                                                                                    <AlertTriangle className="w-3 h-3" />
-                                                                                    Failed
-                                                                                </Badge>
-                                                                            </TooltipTrigger>
-                                                                            <TooltipContent>
-                                                                                <p>{status.error || "Sync failed"}</p>
-                                                                            </TooltipContent>
-                                                                        </Tooltip>
-                                                                    </TooltipProvider>
-                                                                )}
-                                                                {status?.status === "success" && (
-                                                                    <Badge variant="outline" className="border-green-500 text-green-500 gap-1 h-5 px-1.5 bg-green-500/10">
-                                                                        <Check className="w-3 h-3" />
-                                                                        Synced
-                                                                    </Badge>
-                                                                )}
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {status?.last_sync_at
-                                                                        ? formatDistanceToNow(new Date(status.last_sync_at.endsWith("Z") ? status.last_sync_at : status.last_sync_at + "Z"), { addSuffix: true })
-                                                                        : "Never"}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })()}
+                                            <div className="flex justify-between items-start relative z-10">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-obsidian-primary/10 border border-obsidian-primary/20 rounded-lg flex items-center justify-center">
+                                                        <Icon
+                                                            name={conn.connection_type === "file" ? "description" : "database"}
+                                                            className="text-obsidian-primary"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className={`font-bold text-white ${isPrimary ? "text-xl" : "text-base"}`}>{conn.name}</h3>
+                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500">
+                                                            {conn.connection_type || "PostgreSQL"} {conn.connection_type !== "file" && conn.host ? `• ${conn.host}` : ""}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 items-center">
+                                                    {/* Status badge */}
+                                                    {status?.status === "running" && (
+                                                        <span className="px-3 py-1 bg-blue-500/10 text-blue-400 font-label text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-1 border border-blue-500/20">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                                            Syncing
+                                                        </span>
+                                                    )}
+                                                    {status?.status === "success" && (
+                                                        <span className="px-3 py-1 bg-obsidian-primary/10 text-obsidian-primary font-label text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-1 border border-obsidian-primary/20">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-obsidian-primary" />
+                                                            Connected
+                                                        </span>
+                                                    )}
+                                                    {status?.status === "failed" && (
+                                                        <span className="px-3 py-1 bg-obsidian-error-container/20 text-obsidian-error font-label text-[10px] font-bold uppercase tracking-widest rounded-full border border-obsidian-error/20">
+                                                            Action Required
+                                                        </span>
+                                                    )}
+                                                    {!status && (
+                                                        <span className="px-3 py-1 bg-zinc-500/10 text-zinc-400 font-label text-[10px] font-bold uppercase tracking-widest rounded-full border border-zinc-500/20">
+                                                            Idle
+                                                        </span>
+                                                    )}
+
+                                                    {/* Action buttons */}
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleEdit(conn)} className="p-1.5 text-zinc-500 hover:text-obsidian-primary transition-colors">
+                                                            <Icon name="edit" size="sm" />
+                                                        </button>
+                                                        <button onClick={() => setConnectionToDelete(conn)} className="p-1.5 text-zinc-500 hover:text-obsidian-error transition-colors">
+                                                            <Icon name="delete" size="sm" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </CardContent>
-                                        <CardFooter className="pt-2 gap-2 bg-muted/20 border-t border-border/10">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1 gap-2 border-transparent hover:border-border h-9"
-                                                onClick={() => handleSync(conn)}
-                                                disabled={syncingId === conn.id}
-                                            >
-                                                {syncingId === conn.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                                                Sync
-                                            </Button>
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                className="flex-1 gap-1 h-9 px-2"
-                                                onClick={() => handleViewSchema(conn)}
-                                            >
-                                                <Eye className="w-3 h-3" />
-                                                Schema
-                                            </Button>
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="flex-1 gap-1 h-9 px-2 bg-primary/90 hover:bg-primary shadow-sm"
-                                                onClick={() => handleExplore(conn)}
-                                            >
-                                                <Terminal className="w-3 h-3" />
-                                                Explore
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    )}
-                </div>
-            )}
 
+                                            {/* Connection details */}
+                                            {isPrimary && (
+                                                <div className="mt-8 grid grid-cols-3 gap-8 border-t border-obsidian-outline-variant/10 pt-6 relative z-10">
+                                                    <div>
+                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Database</p>
+                                                        <p className="text-white font-medium">{conn.database_name || "N/A"}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2">User</p>
+                                                        <p className="text-white font-medium font-label">{conn.username || "Local"}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Last Sync</p>
+                                                        <p className="text-white font-medium">
+                                                            {status?.last_sync_at
+                                                                ? formatDistanceToNow(new Date(status.last_sync_at.endsWith("Z") ? status.last_sync_at : status.last_sync_at + "Z"), { addSuffix: true })
+                                                                : "Never"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {!isPrimary && (
+                                                <div className="mt-4 space-y-2">
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-zinc-500">Database</span>
+                                                        <span className="text-white font-label">{conn.database_name || "N/A"}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-zinc-500">Last Sync</span>
+                                                        <span className="text-white">
+                                                            {status?.last_sync_at
+                                                                ? formatDistanceToNow(new Date(status.last_sync_at.endsWith("Z") ? status.last_sync_at : status.last_sync_at + "Z"), { addSuffix: true })
+                                                                : "Never"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Action Buttons */}
+                                            <div className="mt-6 flex gap-3 relative z-10">
+                                                <button
+                                                    onClick={() => handleViewSchema(conn)}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-widest hover:bg-obsidian-primary/20 hover:text-obsidian-primary transition-all border border-obsidian-outline-variant/20"
+                                                >
+                                                    <Icon name="database" size="sm" />
+                                                    Schema
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSync(conn)}
+                                                    disabled={syncingId === conn.id}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-widest hover:bg-obsidian-secondary-purple/20 hover:text-obsidian-secondary transition-all border border-obsidian-outline-variant/20 disabled:opacity-50"
+                                                >
+                                                    <Icon name="sync" size="sm" className={syncingId === conn.id ? "animate-spin" : ""} />
+                                                    Sync
+                                                </button>
+                                                <button
+                                                    onClick={() => handleExplore(conn)}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-primary-container text-obsidian-surface font-label text-xs font-bold uppercase tracking-widest hover:bg-obsidian-primary transition-all rounded-lg"
+                                                >
+                                                    <Icon name="terminal" size="sm" />
+                                                    Explore
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+                )}
+            </div>
+
+            {/* Modals */}
             <ConnectionModal
                 open={modalOpen}
                 onOpenChange={(open) => { setModalOpen(open); if (!open) setConnectionToEdit(null); }}
                 editingConnection={connectionToEdit}
             />
-
             <SchemaViewerModal
                 open={schemaModalOpen}
                 onOpenChange={setSchemaModalOpen}
                 connectionId={selectedConnection?.id || null}
                 connectionName={selectedConnection?.name || ""}
             />
-
             <SyncProgressDialog
                 open={progressOpen}
                 onOpenChange={setProgressOpen}
                 connectionId={progressConnectionId}
             />
-
             <AlertDialog open={!!connectionToDelete} onOpenChange={(o) => !o && setConnectionToDelete(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent className="bg-obsidian-surface-mid border-obsidian-outline-variant/20">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-destructive" /> Are you absolutely sure?
+                        <AlertDialogTitle className="flex items-center gap-2 text-white">
+                            <Icon name="warning" className="text-obsidian-error" /> Are you absolutely sure?
                         </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete the connection <span className="font-semibold text-foreground">"{connectionToDelete?.name}"</span>.
-                            You will not be able to query this data source until you re-add it.
+                        <AlertDialogDescription className="text-obsidian-on-surface-variant">
+                            This will permanently delete the connection <span className="font-semibold text-white">"{connectionToDelete?.name}"</span>.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="bg-obsidian-surface-highest border-obsidian-outline-variant/20 text-white hover:bg-obsidian-surface-high">Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-destructive hover:bg-destructive/90"
+                            className="bg-obsidian-error-container text-obsidian-error hover:bg-obsidian-error-container/80"
                             onClick={() => connectionToDelete && deleteMutation.mutate(connectionToDelete.id)}
                         >
                             Delete Source

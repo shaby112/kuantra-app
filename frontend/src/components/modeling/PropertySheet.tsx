@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Icon } from '@/components/Icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, Columns, Type, FileText } from 'lucide-react';
 
 interface Column {
     name: string;
@@ -39,7 +34,6 @@ export default function PropertySheet({
             const model = models.find((m) => m.name === selectedNode);
             setSelectedModel(model || null);
 
-            // Initialize descriptions
             if (model) {
                 const descs: Record<string, string> = {};
                 model.columns.forEach((col) => {
@@ -58,7 +52,6 @@ export default function PropertySheet({
 
         setEditedDescriptions((prev) => ({ ...prev, [columnName]: description }));
 
-        // Update models
         const updatedModels = models.map((model) => {
             if (model.name !== selectedNode) return model;
 
@@ -76,97 +69,85 @@ export default function PropertySheet({
 
     if (!selectedNode || !selectedModel) {
         return (
-            <Card className="bg-muted/30 border-border h-full flex flex-col items-center justify-center p-6 text-center">
-                <div className="bg-primary/10 p-4 rounded-full mb-4">
-                    <Table className="h-8 w-8 text-primary" />
+            <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-14 h-14 rounded-xl bg-obsidian-surface-mid flex items-center justify-center mb-4 border border-obsidian-outline-variant/15">
+                    <Icon name="table_chart" size="lg" className="text-obsidian-outline" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">No Table Selected</h3>
-                <p className="text-muted-foreground text-sm max-w-[200px]">
+                <h3 className="text-sm font-bold text-obsidian-on-surface mb-1">No Table Selected</h3>
+                <p className="text-xs text-obsidian-on-surface-variant max-w-[200px]">
                     Click on any table node in the Schema Graph to view and edit its properties.
                 </p>
-            </Card>
+            </div>
         );
     }
 
     return (
         <div className="space-y-4">
             {/* Model Header */}
-            <Card className="bg-card border-border">
-                <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                            <Table className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-lg text-foreground">
-                                {selectedModel.name.split('.').pop()}
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground">{selectedModel.name}</p>
-                        </div>
+            <div className="bg-obsidian-surface-mid rounded-lg border border-obsidian-outline-variant/10 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                    <Icon name="table_chart" size="sm" className="text-obsidian-primary" />
+                    <div>
+                        <h3 className="text-sm font-bold text-obsidian-on-surface">
+                            {selectedModel.name.split('.').pop()}
+                        </h3>
+                        <p className="font-label text-[10px] text-obsidian-on-surface-variant tracking-wider">{selectedModel.name}</p>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex gap-2">
-                        <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                            <Columns className="h-3 w-3 mr-1" />
-                            {selectedModel.columns.length} columns
-                        </Badge>
-                        {!isEditable && (
-                            <Badge variant="secondary" className="bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                                Read-only
-                            </Badge>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+                </div>
+                <div className="flex gap-2">
+                    <span className="px-2 py-0.5 bg-obsidian-surface-high text-[10px] font-label font-bold text-obsidian-on-surface-variant rounded">
+                        {selectedModel.columns.length} columns
+                    </span>
+                    {!isEditable && (
+                        <span className="px-2 py-0.5 bg-amber-500/10 text-[10px] font-label font-bold text-amber-400 rounded">
+                            Read-only
+                        </span>
+                    )}
+                </div>
+            </div>
 
             {/* Columns List */}
-            <Card className="bg-card border-border">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-foreground">Columns</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <ScrollArea className="h-[400px]">
-                        <div className="space-y-1 p-4">
-                            {selectedModel.columns.map((column) => (
-                                <div
-                                    key={column.name}
-                                    className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-foreground">{column.name}</span>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs border-border text-muted-foreground">
-                                            <Type className="h-3 w-3 mr-1" />
-                                            {column.type?.split('(')[0]}
-                                        </Badge>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                                            <FileText className="h-3 w-3" />
-                                            Description
-                                        </Label>
-                                        {isEditable ? (
-                                            <Textarea
-                                                value={editedDescriptions[column.name] || ''}
-                                                onChange={(e) => handleDescriptionChange(column.name, e.target.value)}
-                                                placeholder="Add a business description..."
-                                                className="min-h-[60px] bg-background border-input text-foreground placeholder:text-muted-foreground text-sm"
-                                            />
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground italic">
-                                                {column.description || 'No description'}
-                                            </p>
-                                        )}
-                                    </div>
+            <div className="bg-obsidian-surface-mid rounded-lg border border-obsidian-outline-variant/10 overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-obsidian-outline-variant/10">
+                    <span className="font-label text-[10px] uppercase tracking-[0.15em] font-bold text-obsidian-on-surface-variant">Columns</span>
+                </div>
+                <ScrollArea className="h-[400px]">
+                    <div className="space-y-px p-2">
+                        {selectedModel.columns.map((column) => (
+                            <div
+                                key={column.name}
+                                className="p-3 rounded-lg hover:bg-obsidian-surface-high/50 transition-colors"
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-obsidian-on-surface">{column.name}</span>
+                                    <span className="px-1.5 py-0.5 bg-obsidian-surface-high rounded text-[10px] font-label text-obsidian-outline">
+                                        {column.type?.split('(')[0]}
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
+
+                                <div className="space-y-1.5">
+                                    <label className="font-label text-[9px] uppercase tracking-[0.15em] text-obsidian-outline flex items-center gap-1">
+                                        <Icon name="description" size="sm" className="text-obsidian-outline" />
+                                        Description
+                                    </label>
+                                    {isEditable ? (
+                                        <textarea
+                                            value={editedDescriptions[column.name] || ''}
+                                            onChange={(e) => handleDescriptionChange(column.name, e.target.value)}
+                                            placeholder="Add a business description..."
+                                            className="w-full min-h-[56px] bg-obsidian-surface-lowest border border-obsidian-outline-variant/20 rounded-lg px-3 py-2 text-xs text-obsidian-on-surface placeholder:text-obsidian-outline/40 focus:outline-none focus:border-obsidian-primary transition-colors resize-none"
+                                        />
+                                    ) : (
+                                        <p className="text-xs text-obsidian-on-surface-variant italic">
+                                            {column.description || 'No description'}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
         </div>
     );
 }

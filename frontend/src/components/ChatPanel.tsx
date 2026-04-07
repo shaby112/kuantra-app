@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Database, Search, MessageSquare, Plus, ChevronLeft, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/Icon";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { SQLPreviewCard } from "@/components/SQLPreviewCard";
 import { cn } from "@/lib/utils";
@@ -43,8 +42,6 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
   const [connections, setConnections] = useState<any[]>([]);
   const [showAtMenu, setShowAtMenu] = useState(false);
   const [focusedConnIndex, setFocusedConnIndex] = useState(0);
-
-  // Conversation History State
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -83,8 +80,6 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
         content: msg.content,
         sql: msg.sql_query,
       }));
-
-      // Add welcome message at the start if no messages
       if (loadedMessages.length === 0) {
         loadedMessages.unshift({
           id: "1",
@@ -92,7 +87,6 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
           content: "Hello! I'm your AI Database Analyst. Ask me anything about your data.",
         });
       }
-
       setMessages(loadedMessages);
       setCurrentConversationId(conversationId);
       setShowHistory(false);
@@ -106,7 +100,7 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
       {
         id: "1",
         role: "assistant",
-        content: "Hello! I'm your AI Database Analyst. Ask me anything about your data – I can query, analyze, and even help you make changes safely.",
+        content: "Hello! I'm your AI Database Analyst. Ask me anything about your data \u2013 I can query, analyze, and even help you make changes safely.",
       },
     ]);
     setCurrentConversationId(null);
@@ -116,14 +110,9 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
   const deleteConversation = async (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await apiFetch(`/api/v1/conversations/${conversationId}`, {
-        method: "DELETE",
-        auth: true
-      });
+      await apiFetch(`/api/v1/conversations/${conversationId}`, { method: "DELETE", auth: true });
       setConversations(prev => prev.filter(c => c.id !== conversationId));
-      if (currentConversationId === conversationId) {
-        startNewConversation();
-      }
+      if (currentConversationId === conversationId) startNewConversation();
       toast({ title: "Deleted", description: "Conversation removed" });
     } catch (e) {
       toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
@@ -140,57 +129,35 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
 
   const handleSend = async () => {
     if (!input.trim() || isThinking) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-    };
-
+    const userMessage: Message = { id: Date.now().toString(), role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
     const currentInput = input;
     setInput("");
     setShowAtMenu(false);
     setIsThinking(true);
-
     const aiMessageId = (Date.now() + 1).toString();
 
     try {
       const token = await getAuthToken();
-      if (!token) {
-        throw new Error("Missing authentication token");
-      }
-      // CRITICAL FIX: Ensure we use the latest conversation ID from state
+      if (!token) throw new Error("Missing authentication token");
       const conversationParam = currentConversationId ? `&conversation_id=${encodeURIComponent(currentConversationId)}` : "";
-
       const response = await fetch(
         `${API_BASE_URL}/api/v1/chat/stream?query=${encodeURIComponent(currentInput)}${conversationParam}`,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        }
+        { headers: { "Authorization": `Bearer ${token}` } }
       );
-
       if (!response.body) throw new Error("No response body");
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";
-
-      // Temporary buffer to hold partial JSON chunks
       let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         const chunk = decoder.decode(value, { stream: true });
         buffer += chunk;
-
-        // Split by double newline which typically separates SSE events
         const lines = buffer.split("\n\n");
-        buffer = lines.pop() || ""; // Keep the incomplete part in buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           const trimmedLine = line.trim();
@@ -200,56 +167,31 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
               if (!dataStr) continue;
               const data = JSON.parse(dataStr);
 
-              // Handle conversation ID from backend
               if (data.type === "conversation") {
-                console.log("Conversation established:", data.conversation_id);
                 setCurrentConversationId(String(data.conversation_id));
-                // Refresh list silently
-                apiFetch<Conversation[]>("/api/v1/conversations/", { auth: true })
-                  .then(setConversations)
-                  .catch(console.error);
+                apiFetch<Conversation[]>("/api/v1/conversations/", { auth: true }).then(setConversations).catch(console.error);
               } else if (data.type === "text") {
                 let content = data.content || "";
-                // Filter out tool_outputs and internal messages if any leaked
-                if (content.includes("```tool_outputs") ||
-                  content.includes("execute_sql_tool_response") ||
-                  content.includes("Connection ID")) {
-                  continue;
-                }
-
+                if (content.includes("```tool_outputs") || content.includes("execute_sql_tool_response") || content.includes("Connection ID")) continue;
                 assistantContent += content;
                 setMessages((prev) => {
                   const existing = prev.find(m => m.id === aiMessageId);
-                  if (existing) {
-                    return prev.map(m => m.id === aiMessageId ? { ...m, content: assistantContent } : m);
-                  } else {
-                    return [...prev, { id: aiMessageId, role: "assistant", content: assistantContent }];
-                  }
+                  if (existing) return prev.map(m => m.id === aiMessageId ? { ...m, content: assistantContent } : m);
+                  return [...prev, { id: aiMessageId, role: "assistant", content: assistantContent }];
                 });
-              } else if (data.type === "status") {
-                // For status messages, we can maybe show a small toast or indicator, but avoid cluttering logic
-                if (data.sql) {
-                  setMessages((prev) => {
-                    const existing = prev.find(m => m.id === aiMessageId);
-                    if (existing) {
-                      return prev.map(m => m.id === aiMessageId ? { ...m, sql: data.sql } : m);
-                    } else {
-                      return [...prev, { id: aiMessageId, role: "assistant", content: "", sql: data.sql }];
-                    }
-                  });
-                }
-              } else if (data.type === "error") {
-                // Suppress connection ID errors
-                if (!data.content.includes("Connection ID")) {
-                  assistantContent += "\n\n*I encountered a slight issue processing that request.*";
-                  setMessages((prev) => {
-                    const existing = prev.find(m => m.id === aiMessageId);
-                    if (existing) {
-                      return prev.map(m => m.id === aiMessageId ? { ...m, content: assistantContent } : m);
-                    }
-                    return [...prev, { id: aiMessageId, role: "assistant", content: assistantContent }];
-                  });
-                }
+              } else if (data.type === "status" && data.sql) {
+                setMessages((prev) => {
+                  const existing = prev.find(m => m.id === aiMessageId);
+                  if (existing) return prev.map(m => m.id === aiMessageId ? { ...m, sql: data.sql } : m);
+                  return [...prev, { id: aiMessageId, role: "assistant", content: "", sql: data.sql }];
+                });
+              } else if (data.type === "error" && !data.content.includes("Connection ID")) {
+                assistantContent += "\n\n*I encountered a slight issue processing that request.*";
+                setMessages((prev) => {
+                  const existing = prev.find(m => m.id === aiMessageId);
+                  if (existing) return prev.map(m => m.id === aiMessageId ? { ...m, content: assistantContent } : m);
+                  return [...prev, { id: aiMessageId, role: "assistant", content: assistantContent }];
+                });
               }
             } catch (e) {
               console.error("Error parsing SSE chunk", e);
@@ -258,9 +200,7 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
         }
       }
     } catch (e: any) {
-      setMessages((prev) =>
-        prev.map(m => m.id === aiMessageId ? { ...m, content: e?.message || "Connection lost" } : m)
-      );
+      setMessages((prev) => prev.map(m => m.id === aiMessageId ? { ...m, content: e?.message || "Connection lost" } : m));
     } finally {
       setIsThinking(false);
     }
@@ -278,27 +218,18 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
 
   const renderContent = (content: string, isUser: boolean = false) => {
     if (!content) return null;
-    let cleanContent = content
-      .replace(/```tool_outputs[\s\S]*?```/g, '')
-      .replace(/\{"execute_sql_tool_response"[\s\S]*?\}/g, '')
-      .trim();
+    let cleanContent = content.replace(/```tool_outputs[\s\S]*?```/g, '').replace(/\{"execute_sql_tool_response"[\s\S]*?\}/g, '').trim();
     if (!cleanContent) return null;
-
     const parts = cleanContent.split(/(@\[[^\]]+\])/g);
     return parts.map((part, i) => {
       if (part.startsWith("@[") && part.endsWith("]")) {
         const dbName = part.slice(2, -1);
         return (
-          <span
-            key={i}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-bold text-xs transform translate-y-[-1px]",
-              isUser
-                ? "bg-white/20 text-white border border-white/30"
-                : "bg-primary/10 text-primary border border-primary/20"
-            )}
-          >
-            <Database className="w-3 h-3" />
+          <span key={i} className={cn(
+            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-bold text-xs",
+            isUser ? "bg-white/20 text-white border border-white/30" : "bg-obsidian-primary/10 text-obsidian-primary border border-obsidian-primary/20"
+          )}>
+            <Icon name="database" size="sm" />
             {dbName}
           </span>
         );
@@ -308,25 +239,19 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
   };
 
   function handleSelectDatabase(name: string) {
-    // Insert safely at cursor position or append logic
     const inputEl = inputRef.current;
     if (!inputEl) return;
-
     const cursorPs = inputEl.selectionStart || 0;
     const textBefore = input.slice(0, cursorPs);
     const textAfter = input.slice(cursorPs);
-
-    // Find the last '@' before cursor
     const lastAtPos = textBefore.lastIndexOf('@');
     if (lastAtPos !== -1) {
       const newText = textBefore.slice(0, lastAtPos) + `@[${name}] ` + textAfter;
       setInput(newText);
-
-      // Restore focus and cursor (approximate end of insertion)
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          const newCursorPos = lastAtPos + name.length + 4; // @ [ name ] space
+          const newCursorPos = lastAtPos + name.length + 4;
           inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
         }
       }, 0);
@@ -335,57 +260,45 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background/50 backdrop-blur-sm">
+    <div className="flex flex-col h-full bg-obsidian-surface-low">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-white/5 bg-white/5 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-obsidian-outline-variant/15 bg-obsidian-surface-mid">
+        <div className="flex items-center gap-3">
           {showHistory ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowHistory(false)}
-              className="h-8 w-8 hover:bg-white/10"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
+            <button onClick={() => setShowHistory(false)} className="text-obsidian-on-surface-variant hover:text-white transition-colors">
+              <Icon name="arrow_back" />
+            </button>
           ) : (
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 ring-1 ring-primary/30">
-              <Bot className="w-4 h-4 text-primary" />
+            <div className="p-2 bg-obsidian-primary/10 rounded-lg">
+              <Icon name="smart_toy" className="text-obsidian-primary" />
             </div>
           )}
           <div>
-            <h2 className="text-sm font-semibold text-foreground tracking-tight">
-              {showHistory ? "Chat History" : "AI Analyst"}
-            </h2>
-            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-              {showHistory ? `${conversations.length} SAVED` : "ONLINE"}
-            </span>
+            <h4 className="font-headline font-bold text-obsidian-on-surface">
+              {showHistory ? "Chat History" : "Kuantra AI"}
+            </h4>
+            <p className="text-[10px] font-label text-obsidian-primary uppercase tracking-widest">
+              {showHistory ? `${conversations.length} Saved` : "Online"}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {!showHistory && (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  fetchConversations();
-                  setShowHistory(true);
-                }}
-                className="h-8 w-8 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+              <button
+                onClick={() => { fetchConversations(); setShowHistory(true); }}
+                className="p-2 text-obsidian-on-surface-variant hover:text-white transition-colors"
                 title="Chat History"
               >
-                <MessageSquare className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+                <Icon name="history" size="sm" />
+              </button>
+              <button
                 onClick={startNewConversation}
-                className="h-8 w-8 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 text-obsidian-on-surface-variant hover:text-white transition-colors"
                 title="New Chat"
               >
-                <Plus className="w-4 h-4" />
-              </Button>
+                <Icon name="add" size="sm" />
+              </button>
             </>
           )}
         </div>
@@ -393,21 +306,17 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
 
       {/* History Panel */}
       {showHistory ? (
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-none">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin">
           {conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4">
-              <div className="p-4 rounded-full bg-muted/50">
-                <MessageSquare className="w-8 h-8 opacity-50" />
-              </div>
+            <div className="flex flex-col items-center justify-center h-full text-zinc-500 space-y-4">
+              <Icon name="chat_bubble_outline" className="text-4xl opacity-30" />
               <p className="text-sm">No conversations yet</p>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={startNewConversation}
-                className="hover:bg-primary/10 hover:text-primary transition-colors border-dashed"
+                className="px-4 py-2 bg-obsidian-surface-highest border border-obsidian-outline-variant/20 text-obsidian-on-surface font-label text-xs uppercase tracking-widest hover:bg-obsidian-primary/10 hover:text-obsidian-primary transition-all rounded-lg"
               >
                 Start a new chat
-              </Button>
+              </button>
             </div>
           ) : (
             conversations.map((conv) => (
@@ -415,37 +324,27 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
                 key={conv.id}
                 onClick={() => loadConversation(conv.id)}
                 className={cn(
-                  "group w-full flex items-center justify-between p-3 rounded-lg text-left transition-all cursor-pointer border border-transparent",
+                  "group flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all",
                   currentConversationId === conv.id
-                    ? "bg-primary/10 border-primary/20 dark:bg-primary/20"
-                    : "hover:bg-muted/50 hover:border-white/5"
+                    ? "bg-obsidian-primary/10 border-l-2 border-obsidian-primary"
+                    : "hover:bg-obsidian-surface-highest/50"
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-colors",
-                    currentConversationId === conv.id ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
-                  )}>
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
+                  <Icon name="chat_bubble" size="sm" className={currentConversationId === conv.id ? "text-obsidian-primary" : "text-zinc-500"} />
                   <div className="min-w-0 flex-1">
-                    <p className={cn(
-                      "text-sm font-medium truncate transition-colors",
-                      currentConversationId === conv.id ? "text-primary" : "text-foreground group-hover:text-primary/80"
-                    )}>{conv.title}</p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className={cn("text-sm font-medium truncate", currentConversationId === conv.id ? "text-obsidian-primary" : "text-white")}>{conv.title}</p>
+                    <p className="text-[10px] text-zinc-500 font-label">
                       {new Date(conv.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
                   onClick={(e) => deleteConversation(conv.id, e)}
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-all text-muted-foreground hover:text-destructive hover:bg-destructive/10 -mr-1"
+                  className="p-1.5 opacity-0 group-hover:opacity-100 transition-all text-zinc-500 hover:text-obsidian-error"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
+                  <Icon name="delete" size="sm" />
+                </button>
               </div>
             ))
           )}
@@ -453,34 +352,38 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
       ) : (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+            {/* Session marker */}
+            <div className="flex justify-center">
+              <span className="font-label text-[9px] uppercase tracking-[0.2em] text-zinc-600 bg-obsidian-surface-lowest px-2 py-0.5 rounded">
+                Current Session
+              </span>
+            </div>
+
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                  message.role === "user" ? "justify-end" : "justify-start"
-                )}
-              >
+              <div key={message.id} className={cn("flex gap-4", message.role === "user" ? "justify-end" : "justify-start")}>
                 {message.role === "assistant" && (
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 shrink-0 mt-1 shadow-sm">
-                    <Bot className="w-4 h-4 text-primary" />
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-obsidian-primary-container flex items-center justify-center">
+                    <Icon name="analytics" filled className="text-obsidian-surface" size="sm" />
                   </div>
                 )}
-                <div className={cn(
-                  "max-w-[85%] space-y-2",
-                  message.role === "user" ? "items-end flex flex-col" : "items-start"
-                )}>
+                <div className={cn("max-w-[85%] space-y-2", message.role === "user" ? "items-end flex flex-col" : "items-start")}>
+                  {message.role === "assistant" && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-label text-[10px] uppercase tracking-widest text-obsidian-primary font-bold">Kuantra AI</span>
+                      <span className="font-label text-[9px] text-zinc-600">Just Now</span>
+                    </div>
+                  )}
                   <div className={cn(
-                    "px-4 py-3 text-sm leading-relaxed shadow-sm backdrop-blur-sm",
+                    "px-4 py-3 text-sm leading-relaxed",
                     message.role === "assistant"
-                      ? "rounded-2xl rounded-tl-sm bg-card/80 border border-white/5 text-foreground dark:bg-white/5 dark:border-white/10"
-                      : "rounded-2xl rounded-tr-sm bg-primary text-primary-foreground shadow-primary/20"
+                      ? "chat-bubble-ai"
+                      : "chat-bubble-user"
                   )}>
                     {renderContent(message.content, message.role === "user")}
                   </div>
                   {message.sql && (
-                    <div className="w-full max-w-md transform transition-all hover:translate-y-[-2px]">
+                    <div className="w-full max-w-md">
                       <SQLPreviewCard
                         sql={message.sql}
                         isDangerous={message.isDangerous}
@@ -490,16 +393,11 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
                     </div>
                   )}
                 </div>
-                {message.role === "user" && (
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary shrink-0 mt-1">
-                    <User className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                )}
               </div>
             ))}
             {isThinking && !messages.some(m => m.role === 'assistant' && m.id !== '1' && (m.content || m.sql)) && (
-              <div className="flex gap-4 px-1 animate-in fade-in duration-500">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0 mt-1">
+              <div className="flex gap-4">
+                <div className="h-9 w-9 shrink-0 rounded-lg bg-obsidian-primary/10 flex items-center justify-center">
                   <ThinkingIndicator />
                 </div>
               </div>
@@ -507,19 +405,34 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Suggestion Chips */}
+          {messages.length <= 1 && (
+            <div className="flex flex-wrap gap-2 px-6 pb-2">
+              <button
+                onClick={() => { setInput("Show me active users"); handleSend(); }}
+                className="px-3 py-1.5 bg-obsidian-surface-highest border border-obsidian-outline-variant/20 rounded-full text-[11px] font-label text-zinc-400 hover:text-obsidian-primary transition-colors flex items-center gap-2"
+              >
+                <Icon name="query_stats" size="sm" />
+                Show active users
+              </button>
+              <button
+                onClick={() => { setInput("Monthly revenue growth"); handleSend(); }}
+                className="px-3 py-1.5 bg-obsidian-surface-highest border border-obsidian-outline-variant/20 rounded-full text-[11px] font-label text-zinc-400 hover:text-obsidian-primary transition-colors flex items-center gap-2"
+              >
+                <Icon name="payments" size="sm" />
+                Monthly revenue growth
+              </button>
+            </div>
+          )}
+
           {/* Input */}
-          <div className="p-4 border-t border-white/5 bg-background/30 backdrop-blur-md relative z-10">
+          <div className="p-6 bg-obsidian-surface-lowest border-t border-obsidian-outline-variant/15 relative">
             {/* @ Mention Menu */}
             {showAtMenu && connections.length > 0 && (
-              <div
-                className="absolute bottom-full left-4 mb-2 w-72 bg-popover/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20 animate-in zoom-in-95 duration-200"
-              >
-                <div className="px-3 py-2 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Select Database</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">Use arrow keys</span>
+              <div className="absolute bottom-full left-6 mb-2 w-72 glass-panel border border-obsidian-primary/20 rounded-lg shadow-2xl overflow-hidden z-20">
+                <div className="px-3 py-2 border-b border-obsidian-outline-variant/15 flex items-center gap-2">
+                  <Icon name="database" size="sm" className="text-obsidian-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-label">Select Database</span>
                 </div>
                 <div className="max-h-56 overflow-y-auto scrollbar-thin">
                   {connections.map((conn, idx) => (
@@ -530,19 +443,14 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all",
                         focusedConnIndex === idx
-                          ? "bg-primary/10 text-primary border-l-2 border-primary pl-[10px]"
-                          : "hover:bg-white/5 text-foreground border-l-2 border-transparent"
+                          ? "bg-obsidian-primary/10 text-obsidian-primary border-l-2 border-obsidian-primary"
+                          : "hover:bg-obsidian-surface-highest/50 text-white"
                       )}
                     >
-                      <div className={cn(
-                        "w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-colors",
-                        focusedConnIndex === idx ? "bg-primary text-primary-foreground" : "bg-muted/50"
-                      )}>
-                        <Database className="w-3.5 h-3.5" />
-                      </div>
+                      <Icon name="database" size="sm" className={focusedConnIndex === idx ? "text-obsidian-primary" : "text-zinc-500"} />
                       <div className="truncate min-w-0 flex-1">
-                        <p className="text-sm font-medium leading-none mb-1">{conn.name}</p>
-                        <p className="text-[10px] text-muted-foreground truncate opacity-70">{conn.host || 'Direct URI'}</p>
+                        <p className="text-sm font-medium leading-none mb-0.5">{conn.name}</p>
+                        <p className="text-[10px] text-zinc-500 truncate font-label">{conn.host || 'Direct URI'}</p>
                       </div>
                     </button>
                   ))}
@@ -550,101 +458,56 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
               </div>
             )}
 
-            <div className="relative group bg-secondary/50 rounded-xl border border-white/5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all shadow-inner">
-              {/* Highlight Overlay (Underlay) */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 px-3 py-3 text-sm font-sans pointer-events-none whitespace-pre-wrap break-words z-0 overflow-hidden"
-                style={{ minHeight: '44px' }}
+            <div className="relative flex items-center bg-obsidian-surface-mid px-4 py-3 rounded-lg border border-obsidian-outline-variant/40 group hover:border-obsidian-primary/50 focus-within:border-obsidian-primary transition-all">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setInput(val);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+                  const cursor = e.target.selectionStart || 0;
+                  const textBefore = val.slice(0, cursor);
+                  const lastWord = textBefore.split(/[\s\n]+/).pop() || "";
+                  if (lastWord.startsWith('@') && !lastWord.includes(']')) {
+                    setShowAtMenu(true);
+                    setFocusedConnIndex(0);
+                  } else {
+                    setShowAtMenu(false);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (showAtMenu) {
+                    if (e.key === "ArrowDown") { e.preventDefault(); setFocusedConnIndex((p) => (p + 1) % connections.length); }
+                    else if (e.key === "ArrowUp") { e.preventDefault(); setFocusedConnIndex((p) => (p - 1 + connections.length) % connections.length); }
+                    else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); handleSelectDatabase(connections[focusedConnIndex].name); }
+                    else if (e.key === "Escape") setShowAtMenu(false);
+                  } else if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                className="flex-1 bg-transparent border-none text-sm focus:ring-0 focus:outline-none text-obsidian-on-surface placeholder:text-zinc-600 resize-none min-h-[24px] max-h-[200px]"
+                placeholder="Ask Kuantra AI..."
+                rows={1}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isThinking}
+                className="text-obsidian-primary disabled:text-zinc-600 transition-colors ml-2 shrink-0"
               >
-                {input ? (
-                  input.split(/(@\[[^\]]+\])/g).map((part, i) => {
-                    if (part.startsWith("@[") && part.endsWith("]")) {
-                      const dbName = part.slice(2, -1);
-                      return (
-                        <span
-                          key={i}
-                          className="inline-flex items-center px-1.5 py-0.5 -my-0.5 mx-0.5 rounded bg-primary/20 text-primary text-xs font-bold border border-primary/30 align-middle"
-                        >
-                          <Database className="w-3 h-3 mr-1" />
-                          {dbName}
-                        </span>
-                      );
-                    }
-                    return <span key={i} className="text-foreground">{part}</span>;
-                  })
-                ) : (
-                  <span className="text-muted-foreground/60">Ask insight... type @ to tag a database</span>
-                )}
-                {/* Invisible character to maintain height if empty or trailing newline */}
-                <span className="invisible">&#8203;</span>
-              </div>
-
-              {/* Transparent Textarea (Input) */}
-              <div className="flex items-end gap-2 p-1">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setInput(val);
-
-                    // Auto-resize
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
-
-                    // Smarter trigger detection
-                    const cursor = e.target.selectionStart || 0;
-                    const textBefore = val.slice(0, cursor);
-                    const lastWord = textBefore.split(/[\s\n]+/).pop() || "";
-
-                    if (lastWord.startsWith('@') && !lastWord.includes(']')) {
-                      setShowAtMenu(true);
-                      setFocusedConnIndex(0);
-                    } else {
-                      setShowAtMenu(false);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (showAtMenu) {
-                      if (e.key === "ArrowDown") {
-                        e.preventDefault();
-                        setFocusedConnIndex((prev) => (prev + 1) % connections.length);
-                      } else if (e.key === "ArrowUp") {
-                        e.preventDefault();
-                        setFocusedConnIndex((prev) => (prev - 1 + connections.length) % connections.length);
-                      } else if (e.key === "Enter" || e.key === "Tab") {
-                        e.preventDefault();
-                        handleSelectDatabase(connections[focusedConnIndex].name);
-                      } else if (e.key === "Escape") {
-                        setShowAtMenu(false);
-                      }
-                    } else if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  className="w-full min-h-[44px] max-h-[200px] px-3 py-2 text-sm bg-transparent text-transparent caret-foreground resize-none focus:outline-none z-10 font-sans leading-relaxed selection:bg-primary/20 overflow-hidden"
-                  spellCheck={false}
-                  rows={1}
-                  style={{ lineHeight: 'inherit' }}
-                />
-
-                <Button
-                  size="icon"
-                  onClick={handleSend}
-                  disabled={!input.trim() || isThinking}
-                  className={cn(
-                    "h-8 w-8 mb-1 shrink-0 transition-all duration-300 z-20",
-                    input.trim()
-                      ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 scale-100"
-                      : "bg-muted text-muted-foreground scale-90 opacity-70"
-                  )}
-                >
-                  <div className={cn("transition-all", isThinking ? "animate-spin" : "")}>
-                    {isThinking ? <Search className="w-4 h-4" /> : <Send className="w-4 h-4 ml-0.5" />}
-                  </div>
-                </Button>
+                <Icon name={isThinking ? "hourglass_empty" : "send"} className={isThinking ? "animate-spin" : ""} />
+              </button>
+            </div>
+            <div className="mt-3 flex justify-between items-center">
+              <span className="text-[10px] font-label text-zinc-600 flex items-center gap-1">
+                <Icon name="security" size="sm" />
+                Read-only mode enabled
+              </span>
+              <div className="flex gap-2 items-center">
+                <span className="w-2 h-2 rounded-full bg-obsidian-primary animate-pulse" />
+                <span className="text-[10px] font-label text-obsidian-primary uppercase tracking-widest font-bold">Live Link</span>
               </div>
             </div>
           </div>

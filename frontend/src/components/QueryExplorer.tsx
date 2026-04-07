@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     Play, Loader2, Table as TableIcon, AlertCircle, Save, Database,
@@ -37,7 +37,7 @@ export function QueryExplorer({ connectionId, connectionName, onBack }: QueryExp
     const [activeTab, setActiveTab] = useState<ExplorerTab>("browser");
     const [selectedTable, setSelectedTable] = useState<string | null>(null);
     const [searchTable, setSearchTable] = useState("");
-    const [sql, setSql] = useState("SELECT * FROM public.users LIMIT 10;");
+    const [sql, setSql] = useState("SELECT 1;");
     const [bypassSafety, setBypassSafety] = useState(false);
     const [queryResults, setQueryResults] = useState<ExecuteResponse | null>(null);
 
@@ -81,15 +81,44 @@ export function QueryExplorer({ connectionId, connectionName, onBack }: QueryExp
         },
     });
 
+    const normalizeSqlForExecution = (rawSql: string): string => {
+        let q = rawSql.trim();
+
+        // Common user typo: LIMIT before WHERE.
+        q = q.replace(/^(\s*select[\s\S]*?\sfrom\s+[\w.\"`]+)\s+limit\s+(\d+)\s+where\s+([\s\S]*?);?$/i, "$1 WHERE $3 LIMIT $2;");
+
+        // Common typo in DuckDB/Postgres string literals: = "VC" -> = 'VC'
+        // Only rewrite when preceded by a comparison operator to avoid
+        // mangling double-quoted identifiers (e.g. "My Table").
+        q = q.replace(/((?:=|!=|<>|<=?|>=?)\s*)"([^"]*)"/g, "$1'$2'");
+
+        return q;
+    };
+
     const handleRunQuery = () => {
         if (!sql.trim()) return;
-        executeMutation.mutate(sql);
+        const normalized = normalizeSqlForExecution(sql);
+        if (normalized !== sql) {
+            setSql(normalized);
+        }
+        executeMutation.mutate(normalized);
     };
 
     const filteredSchema = useMemo(() => {
         if (!schema) return [];
         return schema.filter(t => t.table.toLowerCase().includes(searchTable.toLowerCase()));
     }, [schema, searchTable]);
+
+    useEffect(() => {
+        if (!schema || schema.length === 0) return;
+        if (selectedTable) return;
+
+        const firstTable = schema[0]?.table;
+        if (!firstTable) return;
+
+        setSelectedTable(firstTable);
+        setSql(`SELECT * FROM "${firstTable}" LIMIT 10;`);
+    }, [schema, selectedTable]);
 
     // Helpers to create TanStack columns
     const generateColumns = (data: any[]): ColumnDef<any>[] => {
@@ -195,7 +224,7 @@ export function QueryExplorer({ connectionId, connectionName, onBack }: QueryExp
                                         onClick={() => {
                                             setSelectedTable(t.table);
                                             if (activeTab === "console") {
-                                                setSql(`SELECT * FROM ${t.table} LIMIT 10;`);
+                                                setSql(`SELECT * FROM "${t.table}" LIMIT 10;`);
                                             } else {
                                                 setActiveTab("browser");
                                             }
