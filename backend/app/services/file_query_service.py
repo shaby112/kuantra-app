@@ -115,7 +115,7 @@ class FileQueryService:
                 try:
                     for sheet in workbook.sheetnames:
                         s_name = sanitize_table_name(sheet)
-                        df = pl.read_excel(file_path, sheet_name=sheet, n_rows=0)
+                        df = pl.read_excel(file_path, sheet_name=sheet).head(0)
                         con.register(s_name, df)
                         tables_to_return.append(s_name)
                 finally:
@@ -127,8 +127,7 @@ class FileQueryService:
             final_schema = []
             for t in tables_to_return:
                 schema_info = con.execute(f"DESCRIBE {t}").fetchall()
-                cols = [{"column_name": row[0], "column_type": row[1]} for row in schema_info]
-                # Map column_type to standard naming for consistency if needed, but for now just pass as is
+                cols = [{"name": row[0], "type": row[1]} for row in schema_info]
                 final_schema.append({
                     "table": t,
                     "columns": cols

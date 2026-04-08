@@ -129,10 +129,14 @@ class DuckDBManager:
             cursor.close()
     
     def get_tables(self) -> List[str]:
-        """Get list of all tables in the warehouse."""
+        """Get list of all tables in the warehouse (across all schemas)."""
         cursor = self.get_cursor()
         try:
-            result = cursor.execute("SHOW TABLES").fetchall()
+            result = cursor.execute(
+                "SELECT table_schema || '.' || table_name "
+                "FROM information_schema.tables "
+                "WHERE table_schema NOT IN ('information_schema', 'pg_catalog')"
+            ).fetchall()
             return [row[0] for row in result]
         finally:
             cursor.close()

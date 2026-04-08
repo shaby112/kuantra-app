@@ -41,7 +41,7 @@ class LocalLLMRuntimeService:
         return base
 
     async def health(self) -> Dict[str, Any]:
-        if settings.AI_PROVIDER.lower() != "local":
+        if settings.AI_PROVIDER.lower() not in ("local", "ollama"):
             return {"status": "disabled", "provider": settings.AI_PROVIDER}
 
         try:
@@ -50,7 +50,11 @@ class LocalLLMRuntimeService:
                 tags_resp.raise_for_status()
                 tags = tags_resp.json().get("models", [])
                 model_names = [m.get("name", "") for m in tags]
-                model_present = any(n == settings.LOCAL_LLM_MODEL for n in model_names)
+                target = settings.LOCAL_LLM_MODEL
+                model_present = any(
+                    n == target or n == f"{target}:latest" or n.split(":")[0] == target
+                    for n in model_names
+                )
                 return {
                     "status": "healthy",
                     "provider": "local",

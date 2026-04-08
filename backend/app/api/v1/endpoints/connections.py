@@ -425,6 +425,7 @@ async def get_connection_schema(
                 SELECT table_name, column_name, data_type
                 FROM information_schema.columns
                 WHERE table_schema = ?
+                AND table_name NOT LIKE '_dlt_%'
                 ORDER BY table_name, ordinal_position
                 """,
                 (connection_schema_name(id),),
@@ -472,8 +473,42 @@ async def execute_query(
     status = "success"
     err_msg = None
     row_count = 0
-    
+
     try:
+        # Route through DuckDB cache for synced connections — the Explore
+        # sidebar shows DuckDB table names so SQL must run against DuckDB.
+        if conn.sync_config and conn.sync_config.last_sync_status == "success":
+            schema_name = connection_schema_name(id)
+            # Rewrite unqualified table names to schema-qualified ones
+            sql = request.sql
+            try:
+                cached_tables = duckdb_manager.execute(
+                    "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name NOT LIKE '_dlt_%'",
+                    (schema_name,),
+                )
+                for t in cached_tables:
+                    tname = t["table_name"]
+                    # Replace "table" with "schema"."table" (case-insensitive, word boundary)
+                    import re
+                    sql = re.sub(
+                        rf'(?<!["\w.])\b{re.escape(tname)}\b(?!["\w.])',
+                        f'"{schema_name}"."{tname}"',
+                        sql,
+                        flags=re.IGNORECASE,
+                    )
+                    # Also handle quoted version: "table" -> "schema"."table"
+                    sql = sql.replace(f'"{tname}"', f'"{schema_name}"."{tname}"')
+            except Exception as rewrite_err:
+                logger.warning(f"Table name rewrite failed: {rewrite_err}")
+
+            results = duckdb_manager.execute(sql)
+            row_count = len(results)
+            return {
+                "sql_executed": sql,
+                "row_count": row_count,
+                "results": results,
+            }
+
         if conn.connection_type == "file":
              results = FileQueryService.query_file(conn.file_path, request.sql)
              row_count = len(results)
@@ -538,6 +573,7 @@ async def get_table_data(
 ):
     """
     Quickly fetch data from a specific table.
+    Routes to DuckDB cache when sync data is available.
     """
     conn = (
         db.query(DbConnection)
@@ -547,16 +583,34 @@ async def get_table_data(
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
 
-    sql = f"SELECT * FROM {table_name}"
     try:
+        # Try DuckDB cache first (handles both DB and file connections with synced data)
+        if conn.sync_config and conn.sync_config.last_sync_status == "success":
+            schema_name = connection_schema_name(id)
+            duckdb_sql = f'SELECT * FROM "{schema_name}"."{table_name}" LIMIT 1000'
+            try:
+                results = duckdb_manager.execute(duckdb_sql)
+                return {
+                    "sql_executed": duckdb_sql,
+                    "row_count": len(results),
+                    "results": results,
+                    "source": "duckdb_cache",
+                }
+            except Exception as cache_err:
+                logger.warning(f"DuckDB cache query failed for {schema_name}.{table_name}: {cache_err}")
+
+        # Fallback: file-based query
         if conn.connection_type == "file":
+            sql = f"SELECT * FROM {table_name}"
             results = FileQueryService.query_file(conn.file_path, sql)
             return {
                 "sql_executed": sql,
                 "row_count": len(results),
-                "results": results
+                "results": results,
             }
 
+        # Fallback: external database query
+        sql = f"SELECT * FROM {table_name}"
         result = await connection_service.execute_external_query(conn, sql, bypass_safety=False)
         return result
     except Exception as e:

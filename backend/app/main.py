@@ -152,7 +152,7 @@ async def health_duckdb():
 @app.get("/health/llm")
 async def health_llm():
     """LLM provider health check."""
-    if settings.AI_PROVIDER.lower() != "local":
+    if settings.AI_PROVIDER.lower() not in ("local", "ollama"):
         return {"status": "disabled", "provider": settings.AI_PROVIDER}
 
     from app.services.local_llm_runtime_service import local_llm_runtime_service

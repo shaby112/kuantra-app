@@ -110,20 +110,21 @@ class ConnectionService:
                 
                 dataset_name = connection_schema_name(conn_model.id)
                 query = """
-                    SELECT 
-                        table_name, 
-                        column_name, 
+                    SELECT
+                        table_name,
+                        column_name,
                         data_type
-                    FROM 
+                    FROM
                         information_schema.columns
-                    WHERE 
+                    WHERE
                         table_schema = ?
                         AND table_name NOT LIKE '_dlt_%'
-                    ORDER BY 
+                        AND column_name NOT LIKE '_dlt_%'
+                    ORDER BY
                         table_name, ordinal_position;
                 """
                 rows = duckdb_manager.execute(query, (dataset_name,))
-                
+
                 schema = {}
                 for row in rows:
                     table = row["table_name"]

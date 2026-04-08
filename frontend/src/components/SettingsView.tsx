@@ -13,12 +13,14 @@ export function SettingsView() {
     const [activeLicenseKey, setActiveLicenseKey] = useState("");
     const [modelTier, setModelTier] = useState<"Basic" | "Pro">("Pro");
     const [llmProvider, setLlmProvider] = useState<string>("gemini");
+    const [configuredModel, setConfiguredModel] = useState<string>("");
     const [downloadState, setDownloadState] = useState<string>("idle");
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
     const [isDownloadingModel, setIsDownloadingModel] = useState(false);
     const [downloadStartedAt, setDownloadStartedAt] = useState<number>(0);
     const [progressPollFailures, setProgressPollFailures] = useState(0);
     const [downloadError, setDownloadError] = useState<string>("");
+    const [initialLoading, setInitialLoading] = useState(true);
 
     const enterpriseDomains = ["acme.com", "globex.com", "kuantra.ai", "enterprise.io"];
     const emailDomain = useMemo(() => authEmail.split("@")[1]?.toLowerCase() ?? "", [authEmail]);
@@ -67,56 +69,75 @@ export function SettingsView() {
 
     useEffect(() => {
         let cancelled = false;
-        async function detectTier() {
-            try {
-                const payload = await apiFetch<any>("/health/llm");
-                const provider = payload?.provider || "gemini";
-                const tier = provider === "local" ? "Basic" : "Pro";
-                if (!cancelled) { setLlmProvider(provider); setModelTier(tier); }
-            } catch {
-                if (!cancelled) { setLlmProvider("gemini"); setModelTier("Pro"); }
-            }
-        }
-        detectTier();
         (async () => {
             try {
-                const [progress, health] = await Promise.all([
-                    apiFetch<any>("/api/v1/llm/download/progress", { auth: true }),
+                const [tierPayload, progress, health] = await Promise.all([
+                    apiFetch<any>("/health/llm").catch(() => null),
+                    apiFetch<any>("/api/v1/llm/download/progress", { auth: true }).catch(() => null),
                     apiFetch<any>("/api/v1/llm/health", { auth: true }).catch(() => null),
                 ]);
                 if (cancelled) return;
-                const status = progress?.status || "idle";
-                const pct = Number(progress?.progress_percent || 0);
-                const running = Boolean(progress?.running);
-                const modelPresent = Boolean(health?.model_present);
-                if (modelPresent && !running && (status === "idle" || status === "completed")) {
-                    setDownloadState("completed"); setDownloadProgress(100); setIsDownloadingModel(false); setDownloadError("");
-                } else {
-                    setDownloadState(status); setDownloadProgress(pct); setIsDownloadingModel(running); setDownloadError(progress?.error || "");
-                    if (running) setDownloadStartedAt(Date.now());
+
+                // Tier detection
+                const provider = tierPayload?.provider || "gemini";
+                const isLocal = provider === "local" || provider === "ollama";
+                setLlmProvider(provider);
+                setModelTier(isLocal ? "Basic" : "Pro");
+                if (tierPayload?.model) setConfiguredModel(tierPayload.model);
+
+                // Download state detection
+                if (progress) {
+                    const status = progress?.status || "idle";
+                    const pct = Number(progress?.progress_percent || 0);
+                    const running = Boolean(progress?.running);
+                    const modelPresent = Boolean(health?.model_present);
+                    if (modelPresent && !running && (status === "idle" || status === "completed")) {
+                        setDownloadState("completed"); setDownloadProgress(100); setIsDownloadingModel(false); setDownloadError("");
+                    } else {
+                        setDownloadState(status); setDownloadProgress(pct); setIsDownloadingModel(running); setDownloadError(progress?.error || "");
+                        if (running) setDownloadStartedAt(Date.now());
+                    }
                 }
             } catch { /* ignore */ }
+            finally {
+                if (!cancelled) setInitialLoading(false);
+            }
         })();
         return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
-        if (llmProvider !== "local" && !isDownloadingModel) return;
+        if (llmProvider !== "local" && llmProvider !== "ollama") return;
+        // Stop polling entirely once model is confirmed present and no download is active
+        if (downloadState === "completed" && !isDownloadingModel) return;
+        if (!isDownloadingModel && downloadState !== "completed") {
+            // Do one-time check: if model is already present, just set completed and stop
+            (async () => {
+                try {
+                    const health = await apiFetch<any>("/api/v1/llm/health", { auth: true });
+                    if (health?.model_present) { setDownloadState("completed"); setDownloadProgress(100); setDownloadError(""); setIsDownloadingModel(false); }
+                } catch { /* ignore */ }
+            })();
+            return;
+        }
         const id = window.setInterval(async () => {
             try {
                 const progress = await apiFetch<any>("/api/v1/llm/download/progress", { auth: true });
                 const status = progress?.status || "idle";
                 const pct = Number(progress?.progress_percent || 0);
                 const running = Boolean(progress?.running);
-                setProgressPollFailures(0); setDownloadState(status); setDownloadProgress(pct); setIsDownloadingModel(running); setDownloadError(progress?.error || "");
-                const withinGrace = Date.now() - downloadStartedAt < 6000;
-                if (!running && ["completed", "failed"].includes(status)) setIsDownloadingModel(false);
-                if (!running && status === "idle" && !withinGrace) {
+                setProgressPollFailures(0); setDownloadProgress(pct); setIsDownloadingModel(running); setDownloadError(progress?.error || "");
+                if (!running && ["completed", "failed"].includes(status)) {
+                    setIsDownloadingModel(false);
+                    setDownloadState(status);
+                } else if (!running && status === "idle") {
                     try {
                         const health = await apiFetch<any>("/api/v1/llm/health", { auth: true });
-                        if (health?.model_present) { setDownloadState("completed"); setDownloadProgress(100); setDownloadError(""); }
-                        else setIsDownloadingModel(false);
-                    } catch { setIsDownloadingModel(false); }
+                        if (health?.model_present) { setDownloadState("completed"); setDownloadProgress(100); setDownloadError(""); setIsDownloadingModel(false); }
+                        else { setDownloadState("idle"); setIsDownloadingModel(false); }
+                    } catch { setIsDownloadingModel(false); setDownloadState("idle"); }
+                } else {
+                    setDownloadState(status);
                 }
             } catch {
                 setProgressPollFailures((prev) => {
@@ -125,26 +146,37 @@ export function SettingsView() {
                     return next;
                 });
             }
-        }, 1500);
+        }, 2000);
         return () => window.clearInterval(id);
-    }, [llmProvider, isDownloadingModel, downloadStartedAt]);
+    }, [llmProvider, isDownloadingModel, downloadState]);
 
     const handleDownloadStarterModel = async () => {
         try {
             setIsDownloadingModel(true); setDownloadStartedAt(Date.now()); setProgressPollFailures(0); setDownloadError(""); setDownloadState("starting");
-            const res = await apiFetch<any>("/api/v1/llm/download", { method: "POST", auth: true, body: JSON.stringify({ model: "qwen3.5:4b" }) });
+            const res = await apiFetch<any>("/api/v1/llm/download", { method: "POST", auth: true, body: JSON.stringify({ model: configuredModel || undefined }) });
             if (res?.started === false && res?.reason === "pull_already_running") {
                 setDownloadState(res?.state?.status || "running"); setDownloadProgress(Number(res?.state?.progress_percent || 0)); setIsDownloadingModel(Boolean(res?.state?.running ?? true));
                 toast({ title: "Download already running", description: "Continuing existing model download job." });
                 return;
             }
             setDownloadState("starting"); setDownloadProgress(0);
-            toast({ title: "Model download started", description: "Qwen3.5-4B is downloading in the background." });
+            toast({ title: "Model download started", description: `${configuredModel || "Model"} is downloading in the background.` });
         } catch (e: any) {
             setIsDownloadingModel(false); setDownloadState("failed"); setDownloadError(e?.message || "Could not start model download.");
             toast({ title: "Download failed", description: e?.message || "Could not start model download." });
         }
     };
+
+    if (initialLoading) {
+        return (
+            <div className="h-full flex items-center justify-center bg-obsidian-surface">
+                <div className="flex flex-col items-center gap-3">
+                    <Icon name="hourglass_empty" className="text-obsidian-primary animate-spin text-3xl" />
+                    <p className="text-sm text-zinc-500 font-label uppercase tracking-widest">Loading settings...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-full flex flex-col overflow-y-auto bg-obsidian-surface scrollbar-thin">
@@ -239,7 +271,7 @@ export function SettingsView() {
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <div className="flex justify-between items-center bg-obsidian-surface px-3 py-2 rounded border border-obsidian-outline-variant/10">
-                                        <span className="text-sm font-label">Qwen3.5-4B</span>
+                                        <span className="text-sm font-label">{configuredModel || "Local Model"}</span>
                                         <span className={`text-[10px] px-2 py-0.5 rounded font-label ${downloadState === "completed" ? "bg-obsidian-primary-container/20 text-obsidian-primary" : downloadState === "failed" ? "bg-obsidian-error-container/20 text-obsidian-error" : "bg-zinc-500/20 text-zinc-400"}`}>
                                             {downloadState.toUpperCase()}
                                         </span>
@@ -260,7 +292,7 @@ export function SettingsView() {
                                     >
                                         {isDownloadingModel ? "Downloading..." : "Download Model"}
                                     </button>
-                                    {llmProvider !== "local" && (
+                                    {llmProvider !== "local" && llmProvider !== "ollama" && (
                                         <p className="text-xs text-amber-500 mt-1">Model can be pre-downloaded; runtime will use it once provider is switched to Local.</p>
                                     )}
                                 </div>

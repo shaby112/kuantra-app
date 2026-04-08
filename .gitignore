@@ -27,3 +27,20 @@ backend/uploads/
 backend/ssh_keys/
 backend/*.db
 backend/*.duckdb
+
+# Local virtual envs
+backend/.venv/
+
+# Local ops/scratch artifacts
+cto_bonsai_report.md
+session-state.md
+fix.py
+fix2.py
+fix_all.py
+fix_all2.py
+patch2.py
+heartbeat.sh
+install_ollama.sh
+backend/patch_exec.py
+backend/patch_wren.py
+backend/app/semantic/wren_client.py.patch

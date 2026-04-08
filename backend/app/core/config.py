@@ -87,7 +87,7 @@ class Settings(BaseSettings):
 
     # Query safety/timeouts
     EXTERNAL_QUERY_TIMEOUT_SECONDS: int = 30
-    ANALYTICAL_QUERY_TIMEOUT_SECONDS: int = 30
+    ANALYTICAL_QUERY_TIMEOUT_SECONDS: int = 120
 
     # LLM provider selection
     AI_PROVIDER: str = "gemini"  # gemini | local
@@ -152,8 +152,8 @@ class Settings(BaseSettings):
 
         provider = (self.AI_PROVIDER or "gemini").lower()
 
-        if provider not in {"gemini", "local"}:
-            raise ValueError("AI_PROVIDER must be either 'gemini' or 'local'.")
+        if provider not in {"gemini", "local", "ollama"}:
+            raise ValueError("AI_PROVIDER must be 'gemini', 'ollama', or 'local'.")
 
         if not self.ALLOW_CLOUD_LLM and provider == "gemini":
             raise ValueError(

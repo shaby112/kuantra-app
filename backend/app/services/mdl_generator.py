@@ -377,20 +377,22 @@ class MDLGenerator:
             )
         
         tables_query = f"""
-        SELECT table_schema, table_name 
-        FROM information_schema.tables 
-        WHERE table_type = 'BASE TABLE'
+        SELECT table_schema, table_name, table_type
+        FROM information_schema.tables
+        WHERE table_type IN ('BASE TABLE', 'VIEW')
         {schema_filter}
         AND table_name NOT LIKE '_dlt_%'
         AND table_name NOT LIKE '%_staging'
         """
-        
+
         try:
             tables = duckdb_manager.execute(tables_query)
+            logger.info(f"MDL discovery query: {tables_query}")
+            logger.info(f"MDL discovery found {len(tables)} tables: {[(t['table_schema'], t['table_name'], t.get('table_type','?')) for t in tables]}")
         except Exception as e:
             logger.error(f"Schema discovery failed: {e}")
             return {"models": [], "data_sources": {}}
-        
+
         models = []
         data_sources = {}
         skipped_internal = 0

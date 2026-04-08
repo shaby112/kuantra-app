@@ -27,7 +27,13 @@ def resolve_google_api_key() -> str:
 
 class LLMProvider(ABC):
     @abstractmethod
-    async def generate(self, prompt: str, config: Optional[Dict[str, Any]] = None) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        config: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
+    ) -> str:
         """Generate a single text response."""
 
     @abstractmethod
@@ -49,12 +55,21 @@ class GeminiProvider(LLMProvider):
             self._clients[api_key] = client
         return client
 
-    async def generate(self, prompt: str, config: Optional[Dict[str, Any]] = None) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        config: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
+    ) -> str:
         def _call() -> str:
+            cfg = dict(config or {})
+            if system_prompt:
+                cfg["system_instruction"] = system_prompt
             response = self._get_client().models.generate_content(
                 model=settings.LLM_MODEL,
                 contents=prompt,
-                config=genai_types.GenerateContentConfig(**(config or {})),
+                config=genai_types.GenerateContentConfig(**cfg),
             )
             return (response.text or "").strip()
 
@@ -75,23 +90,36 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         self.model = settings.LOCAL_LLM_MODEL
         self.api_key = settings.LOCAL_LLM_API_KEY
 
-    async def generate(self, prompt: str, config: Optional[Dict[str, Any]] = None) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        config: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
+    ) -> str:
         if settings.LOCAL_LLM_AUTO_PULL:
             from app.services.local_llm_runtime_service import local_llm_runtime_service
 
             await local_llm_runtime_service.ensure_model(self.model)
 
+        messages: List[Dict[str, str]] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": prompt})
+
         payload = {
             "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
             "temperature": (config or {}).get("temperature", 0.1),
         }
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        timeout = (config or {}).get("timeout", settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 300))
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=30.0)) as client:
             response = await client.post(
                 f"{self.base_url}/v1/chat/completions",
                 json=payload,
@@ -125,7 +153,7 @@ class LLMProviderRegistry:
         provider_name = settings.AI_PROVIDER.lower()
         if provider_name == "gemini":
             self._provider = GeminiProvider()
-        elif provider_name == "local":
+        elif provider_name in ("local", "ollama"):
             self._provider = OpenAICompatibleLocalProvider()
         else:
             raise ValueError(f"Unsupported AI provider: {settings.AI_PROVIDER}")

@@ -17,6 +17,7 @@ psycopg2-binary
 # Data Processing
 polars>=1.0.0
 openpyxl
+fastexcel
 duckdb>=1.0.0
 
 # SSH Tunneling
@@ -41,3 +42,9 @@ pyarrow
 prql-python
 slowapi
 limits
+
+# Local LLM
+ollama>=0.3.0
+
+# Google ADK agents (optional)
+google-adk>=0.3.0

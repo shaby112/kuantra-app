@@ -104,7 +104,7 @@ def _get_materialized_tables(connection_id: UUID) -> List[str]:
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = ?
-              AND table_type = 'BASE TABLE'
+              AND table_type IN ('BASE TABLE', 'VIEW')
             ORDER BY table_name
             """,
             (schema_name,),
@@ -129,7 +129,7 @@ def _build_effective_status(
         last_sync_at = sync_config.last_sync_at
         rows_cached = sync_config.rows_cached
         tables_cached = sync_config.tables_cached or []
-        error = sync_config.last_error
+        error = sync_config.last_error if status != "success" else None
     else:
         status = "never"
         last_sync_at = None

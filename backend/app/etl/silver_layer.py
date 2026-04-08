@@ -162,15 +162,17 @@ class SilverLayerManager:
         # Ensure cleanup of any existing object (Table or View)
         duckdb_manager.execute(f"DROP TABLE IF EXISTS {full_table_name}")
         duckdb_manager.execute(f"DROP VIEW IF EXISTS {full_table_name}")
-        
+
+        # Use absolute path so DuckDB can resolve it regardless of working directory
+        abs_path = str(parquet_path.resolve())
         sql = f"""
-            CREATE OR REPLACE VIEW {full_table_name} AS 
-            SELECT * FROM read_parquet('{parquet_path}')
+            CREATE OR REPLACE VIEW {full_table_name} AS
+            SELECT * FROM read_parquet('{abs_path}')
         """
         duckdb_manager.execute(sql)
-        
+
         return {"type": "view", "storage_bytes": 0}
-    
+
     def _materialize_full(
         self,
         full_table_name: str,
@@ -180,10 +182,12 @@ class SilverLayerManager:
         # Ensure cleanup of any existing object (Table or View)
         duckdb_manager.execute(f"DROP VIEW IF EXISTS {full_table_name}")
         duckdb_manager.execute(f"DROP TABLE IF EXISTS {full_table_name}")
-        
+
+        # Use absolute path so DuckDB can resolve it regardless of working directory
+        abs_path = str(parquet_path.resolve())
         sql = f"""
-            CREATE OR REPLACE TABLE {full_table_name} AS 
-            SELECT * FROM read_parquet('{parquet_path}')
+            CREATE OR REPLACE TABLE {full_table_name} AS
+            SELECT * FROM read_parquet('{abs_path}')
         """
         duckdb_manager.execute(sql)
         
@@ -226,9 +230,10 @@ class SilverLayerManager:
             return self._materialize_full(full_table_name, parquet_path)
         
         # Insert only new rows
+        abs_path = str(parquet_path.resolve())
         sql = f"""
             INSERT INTO {full_table_name}
-            SELECT * FROM read_parquet('{parquet_path}')
+            SELECT * FROM read_parquet('{abs_path}')
             WHERE {incremental_column} > '{max_value}'
         """
         duckdb_manager.execute(sql)

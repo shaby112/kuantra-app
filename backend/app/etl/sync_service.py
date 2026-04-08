@@ -198,8 +198,8 @@ class SyncService:
             elif connection.connection_type == "mysql":
                 shared_source = MySQLSource(connection)
             elif connection.connection_type == "file":
-                await self._sync_file_connection(connection, job)
-                return # File sync handled separately for now
+                await self._sync_file_connection(connection, job, db, history)
+                return
             else:
                 raise ValueError(f"Unsupported connection type: {connection.connection_type}")
 
@@ -481,20 +481,21 @@ class SyncService:
                 sync_config.last_sync_at = datetime.now(timezone.utc)
                 sync_config.rows_cached = job.rows_synced
                 sync_config.tables_cached = job.tables_completed
-            
+                sync_config.last_error = None
+
             history.status = "success"
             history.completed_at = datetime.now(timezone.utc)
             history.rows_synced = job.rows_synced
             history.tables_synced = job.tables_completed
-            
+
             # Duration calculation
             start_time = history.started_at
             if start_time and start_time.tzinfo is None:
                 start_time = start_time.replace(tzinfo=timezone.utc)
             history.duration_seconds = (history.completed_at - start_time).total_seconds() if start_time else 0
-            
+
             db.commit()
-            
+
         except Exception as e:
             logger.error(f"Sync failed for connection {connection_id}: {e}", exc_info=True)
             job.status = "failed"
@@ -526,24 +527,70 @@ class SyncService:
             if connection_id in self._running_syncs:
                 del self._running_syncs[connection_id]
     
-    async def _sync_file_connection(self, connection: DbConnection, job: SyncJob):
-        """Sync a file-based connection."""
+    async def _sync_file_connection(self, connection: DbConnection, job: SyncJob, db, history):
+        """Sync a file-based connection with proper status updates."""
         from app.etl.sources.files import FileSource
-        
+        from app.etl.silver_layer import silver_manager
+        from app.services.schema_service import schema_service
+
+        connection_id = str(connection.id)
+
         source = FileSource(connection.file_path)
         tables_data = source.extract()
-        
+
         job.tables_pending = list(tables_data.keys())
-        
+
         pipeline = ETLPipeline(connection.id, connection.name)
         result = pipeline.run_sync(tables_data, incremental=False)
-        
+
         if result["status"] == "success":
             job.tables_completed = result["tables_synced"]
             job.rows_synced = result["rows_synced"]
             job.progress = 100
         else:
             raise Exception(result.get("error", "Unknown error"))
+
+        # Silver layer
+        try:
+            silver_manager.materialize_connection(connection_id)
+        except Exception as e:
+            logger.warning(f"Silver layer materialization warning: {e}")
+
+        # Status update — must happen BEFORE MDL refresh so this connection
+        # is included in _get_synced_connection_ids() query
+        job.status = "success"
+        job.completed_at = datetime.now(timezone.utc)
+
+        sync_config = db.query(SyncConfig).filter(SyncConfig.connection_id == connection.id).first()
+        if sync_config:
+            sync_config.last_sync_status = "success"
+            sync_config.last_sync_at = datetime.now(timezone.utc)
+            sync_config.rows_cached = job.rows_synced
+            sync_config.tables_cached = job.tables_completed
+            sync_config.last_error = None
+
+        history.status = "success"
+        history.completed_at = datetime.now(timezone.utc)
+        history.rows_synced = job.rows_synced
+        history.tables_synced = job.tables_completed
+
+        start_time = history.started_at
+        if start_time and start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        history.duration_seconds = (history.completed_at - start_time).total_seconds() if start_time else 0
+
+        db.commit()
+
+        # MDL refresh — runs after status commit so all synced connections are visible
+        try:
+            schema_service.refresh_mdl(db)
+        except Exception as e:
+            logger.warning(f"MDL refresh warning: {e}")
+
+        logger.info(
+            f"File sync completed for connection {connection_id}: "
+            f"{job.rows_synced} rows, {len(job.tables_completed)} tables"
+        )
     
     async def _sync_database_connection(
         self,
