@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardChat } from "@/components/dashboard/DashboardChat";
 import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 import { useToast } from "@/hooks/use-toast";
@@ -65,13 +64,6 @@ export default function DashboardBuilder() {
     activeTab,
     setActiveTab
   } = useGlobalState();
-
-  const handleLogout = async () => {
-    localStorage.removeItem("license_key");
-    localStorage.removeItem("access_token");
-    toast({ title: "Signed out", description: "License session cleared." });
-    navigate("/license");
-  };
 
   const handlePlanReady = (plan: DashboardPlan) => {
     setCurrentPlan(plan);
@@ -395,22 +387,8 @@ export default function DashboardBuilder() {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen w-full overflow-hidden bg-obsidian-surface font-body">
-        {/* Sidebar */}
-        <AppSidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            if (tab !== "dashboards") {
-              navigate("/dashboard");
-            }
-          }}
-          onLogout={handleLogout}
-        />
-
-        {/* Main Content */}
+      <div className="flex flex-1 h-full w-full overflow-hidden bg-obsidian-surface font-body">
+        {/* Main Content — sidebar is rendered by parent Dashboard.tsx */}
         <div className="flex-1 flex overflow-hidden relative">
           {/* Left: Chat Panel (Collapsible) */}
           <AnimatePresence initial={false}>

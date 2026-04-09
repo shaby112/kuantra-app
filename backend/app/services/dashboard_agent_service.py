@@ -1,10 +1,11 @@
 import json
+import re
 from typing import List, Dict, Any, Optional
 import sqlglot
 from sqlglot import exp
 from app.core.config import settings
 from app.core.logging import logger
-from app.schemas.dashboard import PlanningResponse, DashboardPlan
+from app.schemas.dashboard import PlanningResponse, DashboardPlan, DashboardMetric, DashboardVisualization
 from app.agents.tools import get_semantic_model, execute_analytical_query
 
 # Google ADK imports (optional for deployments that disable ADK/local-only mode)
@@ -19,22 +20,130 @@ except ImportError:
     FunctionTool = None  # type: ignore[assignment]
     ADK_AVAILABLE = False
 
+
+def _build_schema_context() -> str:
+    """Build compact schema description from DuckDB for LLM prompts."""
+    from app.services.duckdb_manager import duckdb_manager
+
+    try:
+        tables = duckdb_manager.execute(
+            "SELECT table_schema, table_name "
+            "FROM information_schema.tables "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'main') "
+            "AND table_name NOT LIKE '_dlt_%' "
+            "ORDER BY table_schema, table_name"
+        )
+        if not tables:
+            return "No synced data sources are available yet."
+
+        columns = duckdb_manager.execute(
+            "SELECT table_schema, table_name, column_name, data_type "
+            "FROM information_schema.columns "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'main') "
+            "AND table_name NOT LIKE '_dlt_%' "
+            "ORDER BY table_schema, table_name, ordinal_position"
+        )
+
+        col_map: Dict[str, List[str]] = {}
+        for c in columns:
+            key = f'{c["table_schema"]}.{c["table_name"]}'
+            col_map.setdefault(key, []).append(f'{c["column_name"]} ({c["data_type"]})')
+
+        lines = []
+        for t in tables:
+            schema = t["table_schema"]
+            tname = t["table_name"]
+            fqn = f'"{schema}"."{tname}"'
+            cols = col_map.get(f"{schema}.{tname}", [])
+            lines.append(f"Table {fqn}: {', '.join(cols)}")
+
+        return "\n".join(lines)
+    except Exception as e:
+        logger.error(f"Failed to build schema context: {e}")
+        return "Schema context unavailable."
+
+
+PLANNING_PROMPT = """You are an expert dashboard planning assistant for a DuckDB-based BI tool.
+You build rich, comprehensive dashboards that impress users with depth and insight.
+
+## Available Data
+{schema_context}
+
+## User Request
+{query}
+
+## Instructions
+Analyze ALL available data sources and the user's request. Automatically discover every relevant table and column — do NOT require the user to specify data sources manually.
+
+Respond with a JSON object (no markdown, just raw JSON) with this exact structure:
+
+{{
+  "title": "Dashboard title",
+  "metrics": [
+    {{"name": "Metric Name", "aggregation": "sum|avg|count|min|max|none", "sql_column": "column_name"}}
+  ],
+  "dimensions": ["column1", "column2"],
+  "time_range": "All time",
+  "visualizations": [
+    {{"type": "bar|line|area|number|table|donut", "metrics": ["Metric Name"], "breakdown": "dimension_or_null"}}
+  ]
+}}
+
+## Rules
+- Use ONLY tables and columns from the available data above.
+- Scan ALL tables for relevant data — pull metrics from every relevant source.
+- Create **6-12 visualizations** for a comprehensive dashboard. More is better for complex requests.
+- Mix visualization types for variety:
+  * "number" for headline KPIs (revenue, total count, averages) — use 3-5 of these
+  * "donut" for breakdowns/proportions (category splits, status distributions)
+  * "bar" for comparisons across categories
+  * "line" or "area" for trends over time
+  * "table" for detailed data views
+- Each metric should appear in exactly ONE visualization.
+- For KPI/number widgets, use a SINGLE metric per visualization.
+- For chart widgets, you may combine 1-3 related metrics.
+- If the request mentions "KPIs" or "lots of metrics", generate at least 4-5 number-type widgets.
+- If the request is too vague AND no data is available, respond with: {{"clarify": "Your question here"}}
+- If data IS available, always try to build a dashboard — be proactive, not conservative.
+"""
+
+
+WIDGET_SQL_PROMPT = """You are a DuckDB SQL expert. Generate a read-only SQL query for a dashboard widget.
+
+## Available Data
+{schema_context}
+
+## Widget Requirements
+- Type: {viz_type}
+- Metrics: {metrics}
+- Breakdown: {breakdown}
+- Aggregations: {aggregations}
+
+## Rules
+1. ALWAYS use fully schema-qualified table names with double quotes: "schema"."table"
+2. Use DuckDB SQL syntax
+3. Return ONLY the raw SQL query, no markdown, no explanation
+4. Use LIMIT 50
+5. For "number" widgets, return a single aggregated value
+6. For chart widgets, GROUP BY the breakdown dimension
+"""
+
+
 class DashboardAgentService:
     def __init__(self):
         self.adk_enabled = settings.AI_PROVIDER == "gemini" and ADK_AVAILABLE
         self.model = None
         self.sql_model = None
         if self.adk_enabled:
-            # Gemini model with low temperature for deterministic planning
             self.model = Gemini(model=settings.LLM_MODEL, temperature=0.2)
             self.sql_model = Gemini(model=settings.LLM_MODEL, temperature=0.1)
         else:
             if settings.AI_PROVIDER == "gemini" and not ADK_AVAILABLE:
                 logger.warning(
                     "google.adk is not installed. Dashboard ADK path is disabled; "
-                    "falling back to non-ADK behavior."
+                    "falling back to direct provider."
                 )
-            logger.info("DashboardAgentService running with local provider fallback (ADK disabled).")
+            logger.info("DashboardAgentService running with direct provider fallback.")
 
     @staticmethod
     def _is_read_only_sql(sql: str) -> bool:
@@ -43,13 +152,8 @@ class DashboardAgentService:
             if not parsed:
                 return False
             dangerous = (
-                exp.Delete,
-                exp.Update,
-                exp.Drop,
-                exp.TruncateTable,
-                exp.Insert,
-                exp.Alter,
-                exp.Create,
+                exp.Delete, exp.Update, exp.Drop, exp.TruncateTable,
+                exp.Insert, exp.Alter, exp.Create,
             )
             for statement in parsed:
                 if isinstance(statement, dangerous):
@@ -67,33 +171,53 @@ class DashboardAgentService:
                 for keyword in ["DELETE ", "DROP ", "UPDATE ", "INSERT ", "TRUNCATE ", "ALTER ", "CREATE "]
             )
 
+    async def _local_plan_dashboard(self, query: str, history: List[Dict[str, str]], connection_ids: Optional[List[str]] = None) -> PlanningResponse:
+        """Plan a dashboard using the local/ollama LLM provider."""
+        from app.services.llm_provider_service import llm_provider_registry
+
+        schema_context = _build_schema_context()
+        prompt = PLANNING_PROMPT.format(schema_context=schema_context, query=query)
+
+        provider = llm_provider_registry.get_provider()
+        raw = await provider.generate(prompt=prompt, config={"temperature": 0.2})
+
+        # Extract JSON from response
+        raw = raw.strip()
+        json_match = re.search(r"```(?:json)?\s*\n?([\s\S]*?)```", raw)
+        if json_match:
+            raw = json_match.group(1).strip()
+
+        try:
+            plan_data = json.loads(raw)
+        except json.JSONDecodeError:
+            logger.warning(f"Dashboard planning: could not parse JSON from LLM response: {raw[:200]}")
+            return PlanningResponse(
+                status="clarifying",
+                question="I couldn't generate a valid plan. Could you be more specific about what metrics and visualizations you want?",
+            )
+
+        if "clarify" in plan_data:
+            return PlanningResponse(status="clarifying", question=plan_data["clarify"])
+
+        try:
+            plan = DashboardPlan(**plan_data)
+            return PlanningResponse(status="ready", plan=plan)
+        except Exception as e:
+            logger.warning(f"Dashboard plan validation failed: {e}")
+            return PlanningResponse(
+                status="clarifying",
+                question=f"I generated a plan but it had structural issues. Could you be more specific? Error: {e}",
+            )
+
     async def plan_dashboard(self, query: str, history: List[Dict[str, str]], user_id: str, connection_ids: Optional[List[str]] = None) -> PlanningResponse:
-        """
-        Interactively plans a dashboard using ADK Agent.
-        """
+        """Plan a dashboard using ADK or direct provider fallback."""
         try:
             if not self.adk_enabled:
-                return PlanningResponse(
-                    status="clarifying",
-                    question=(
-                        "Dashboard planning in local provider mode currently requires explicit metrics and breakdowns. "
-                        "Please provide metrics, dimensions, and preferred widget types."
-                    ),
-                )
+                return await self._local_plan_dashboard(query, history, connection_ids)
 
-            # specialized tool to capture the plan structure
             plan_capturer = {"result": None}
-            
+
             def submit_dashboard_plan(status: str, question: str, plan: Dict[str, Any] = None):
-                """
-                Submit the final dashboard plan or a clarifying question.
-                
-                Args:
-                    status: "ready" if plan is complete, "clarifying" if more info needed.
-                    question: Clarifying question for the user (if status="clarifying").
-                    plan: The dashboard plan object (if status="ready"). 
-                          Must include 'title', 'metrics' (list), 'visualizations' (list), 'time_range'.
-                """
                 plan_capturer["result"] = PlanningResponse(
                     status=status,
                     question=question,
@@ -104,50 +228,59 @@ class DashboardAgentService:
             def get_scoped_semantic_model():
                 return get_semantic_model(connection_ids=connection_ids)
 
-            # Setup Agent with tools
             tools = [
                 FunctionTool(get_scoped_semantic_model),
                 FunctionTool(submit_dashboard_plan)
             ]
-            
+
             agent = Agent(
                 name="DashboardPlanner",
                 model=self.model,
                 tools=tools,
                 instruction="""
                 You are an expert Dashboard Planning Agent for Kuantra.
-                Your goal is to create a structured dashboard plan based on the user's request and database schema.
-                
-                WORKFLOW:
                 1. Call `get_scoped_semantic_model()` to inspect the available data.
                 2. If the user's request is vague, call `submit_dashboard_plan(status='clarifying', question=...)`.
-                3. If request is clear, design a dashboard with 3-6 widgets.
-                   - Choose appropriate visualizations (line, bar, number, table).
-                   - Select metrics and dimensions from the schema.
-                   - Layout the widgets on a 12-column grid (x, y, w, h).
-                4. Call `submit_dashboard_plan(status='ready', plan=...)` to finalize.
+                3. If request is clear, design a dashboard with 3-6 widgets and call `submit_dashboard_plan(status='ready', plan=...)`.
                 """
             )
-            
-            # Construct conversation history
-            # basic concatenation for now as ADK handles history internally in session
-            # For a stateless service call, we just prompt with history context
+
             context_prompt = f"History: {json.dumps(history)}\nUser Request: {query}"
-            
-            # Run agent asynchronously
             async for _ in agent.run_async(context_prompt):
-                pass # Consume stream to let tools execute
-            
+                pass
+
             if plan_capturer["result"]:
                 return plan_capturer["result"]
-            
-            # Fallback if tool wasn't called
+
             return PlanningResponse(status="clarifying", question="I couldn't generate a valid plan. Could you be more specific?")
 
         except Exception as e:
             logger.error(f"Dashboard planning failed: {e}")
             return PlanningResponse(status="clarifying", question=f"Error planning dashboard: {str(e)}")
 
+    async def _local_generate_widget_sql(self, viz: Any, aggregations: Optional[Dict[str, str]] = None) -> str:
+        """Generate SQL for a widget using local/ollama provider."""
+        from app.services.llm_provider_service import llm_provider_registry
+
+        schema_context = _build_schema_context()
+        prompt = WIDGET_SQL_PROMPT.format(
+            schema_context=schema_context,
+            viz_type=viz.type,
+            metrics=", ".join(viz.metrics),
+            breakdown=viz.breakdown or "none",
+            aggregations=json.dumps(aggregations or {}),
+        )
+
+        provider = llm_provider_registry.get_provider()
+        raw = await provider.generate(prompt=prompt, config={"temperature": 0.1})
+
+        raw = raw.strip()
+        sql_match = re.search(r"```(?:sql)?\s*\n?([\s\S]*?)```", raw)
+        if sql_match:
+            return sql_match.group(1).strip()
+        if raw.upper().lstrip().startswith(("SELECT ", "WITH ")):
+            return raw
+        return raw
 
     async def generate_widget_data(
         self,
@@ -156,93 +289,69 @@ class DashboardAgentService:
         aggregations: Optional[Dict[str, str]] = None,
         connection_ids: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        """
-        Generates SQL for a single visualization using ADK Agent and executes it.
-        """
+        """Generate SQL for a visualization and execute it."""
         try:
             if not self.adk_enabled:
-                return {
-                    "data": [],
-                    "index": "error",
-                    "categories": [],
-                    "sql": "",
-                    "error": "Dashboard SQL generation via ADK is unavailable in local provider mode.",
-                }
+                sql_query = await self._local_generate_widget_sql(viz, aggregations)
+            else:
+                sql_capturer = {"sql": None}
 
-            # Specialized agent for SQL generation
-            sql_capturer = {"sql": None}
-            
-            def submit_sql_query(sql: str, connection_id: Optional[str] = None):
-                """Submit the generated SQL query for execution."""
-                sql_capturer["sql"] = sql
-                # return data for agent to see? 
-                # For this specific method, we return the data to frontend, so we just capture SQL.
-                return "SQL captured."
+                def submit_sql_query(sql: str, connection_id: Optional[str] = None):
+                    sql_capturer["sql"] = sql
+                    return "SQL captured."
 
-            def get_scoped_semantic_model():
-                return get_semantic_model(connection_ids=connection_ids)
+                def get_scoped_semantic_model():
+                    return get_semantic_model(connection_ids=connection_ids)
 
-            agent = Agent(
-                name="SQLGenerator",
-                model=self.sql_model,
-                tools=[
-                    FunctionTool(get_scoped_semantic_model),
-                    FunctionTool(submit_sql_query)
-                ],
-                instruction="""
-                You are a DuckDB SQL expert. Generate a read-only SQL query for a dashboard widget.
-                
-                1. Check `get_scoped_semantic_model` to find tables and columns.
-                2. Write a SQL query matching the widget requirements.
-                3. Use schema-qualified table names (`conn_<id>.<table>`) when connection_ids are provided.
-                4. Return SELECT/WITH query only (no DML/DDL).
-                5. Call `submit_sql_query` with the SQL.
+                agent = Agent(
+                    name="SQLGenerator",
+                    model=self.sql_model,
+                    tools=[
+                        FunctionTool(get_scoped_semantic_model),
+                        FunctionTool(submit_sql_query)
+                    ],
+                    instruction="""
+                    You are a DuckDB SQL expert. Generate a read-only SQL query for a dashboard widget.
+                    1. Check `get_scoped_semantic_model` to find tables and columns.
+                    2. Write a SQL query matching the widget requirements.
+                    3. Use schema-qualified table names.
+                    4. Return SELECT/WITH query only.
+                    5. Call `submit_sql_query` with the SQL.
+                    """
+                )
+
+                prompt = f"""
+                Widget: metrics={viz.metrics}, type={viz.type}, breakdown={viz.breakdown},
+                aggregations={aggregations}, connection_ids={connection_ids}.
+                Generate DuckDB SQL. Limit 50 rows.
                 """
-            )
-            
-            prompt = f"""
-            Widget Config:
-            - Metrics: {viz.metrics}
-            - Type: {viz.type}
-            - Breakdown: {viz.breakdown}
-            - Aggregations: {aggregations}
-            - Connection IDs: {connection_ids}
-            
-            Goal: Generate DuckDB SQL to retrieve this data. Limit 50 rows.
-            """
-            
-            async for _ in agent.run_async(prompt):
-                 pass
-            
-            if not sql_capturer["sql"]:
-                return {"data": [], "index": "error", "categories": [], "sql": "-- No SQL generated", "error": "No SQL generated"}
-                
-            sql_query = sql_capturer["sql"]
+
+                async for _ in agent.run_async(prompt):
+                    pass
+
+                if not sql_capturer["sql"]:
+                    return {"data": [], "index": "error", "categories": [], "sql": "-- No SQL generated", "error": "No SQL generated"}
+
+                sql_query = sql_capturer["sql"]
+
+            if not sql_query or not sql_query.strip():
+                return {"data": [], "index": "error", "categories": [], "sql": "", "error": "No SQL generated"}
+
             if not self._is_read_only_sql(sql_query):
                 return {
-                    "data": [],
-                    "index": "error",
-                    "categories": [],
-                    "sql": sql_query,
-                    "error": "Generated SQL was not read-only and was blocked.",
+                    "data": [], "index": "error", "categories": [],
+                    "sql": sql_query, "error": "Generated SQL was not read-only and was blocked.",
                 }
-            
-            # Execute SQL
-            # We use the tool directly here or existing service
-            # Finding connection_id is implicit in execute_analytical_query if we passed it connection list
-            # But execute_analytical_query uses duckdb_manager which queries the 'loaded' duckdb.
-            # Assuming DuckDB has all connections synced.
-            
+
             results = execute_analytical_query(
                 sql_query,
                 connection_ids=connection_ids,
                 timeout_s=settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS,
             )
-            
-            if isinstance(results, str): # Error message
-                 return {"data": [], "index": "error", "categories": [], "sql": sql_query, "error": results}
-                 
-            # Basic transformation
+
+            if isinstance(results, str):
+                return {"data": [], "index": "error", "categories": [], "sql": sql_query, "error": results}
+
             if results:
                 keys = list(results[0].keys())
                 index_key = keys[0]
@@ -252,7 +361,7 @@ class DashboardAgentService:
                     "categories": [k for k in keys if k != index_key],
                     "sql": sql_query
                 }
-            
+
             return {"data": [], "index": "x", "categories": [], "sql": sql_query}
 
         except Exception as e:

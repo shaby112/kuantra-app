@@ -71,37 +71,40 @@ async def generate_dashboard(
     """
     widgets = []
     widget_status: List[WidgetExecutionStatus] = []
-    
-    # Simple Grid Logic: 2 columns
-    col_width = 6
-    row_height = 4
-    cols = 2 
-    
+
+    # Smart layout: KPI/number widgets are small (3-wide), charts are larger (6-wide)
+    kpi_types = {"number", "metric", "kpi", "stat", "gauge", "sparkline"}
+
     for i, viz in enumerate(request.plan.visualizations):
-        # Find aggregations for all metrics in this visualization
         aggs = {}
         for m_name in viz.metrics:
             metric_conf = next((m for m in request.plan.metrics if m.name == m_name), None)
             if metric_conf:
                 aggs[m_name] = metric_conf.aggregation
-        
-        # Generate Data & Config
+
         result = await dashboard_agent_service.generate_widget_data(
             viz,
             current_user.id,
             aggregations=aggs,
             connection_ids=request.connection_ids,
         )
-        
-        # Calculate Position
-        x = (i % cols) * col_width
-        y = (i // cols) * row_height
-        
+
         title = f"{', '.join(viz.metrics)}"
         if viz.breakdown:
             title += f" by {viz.breakdown}"
 
         widget_id = str(uuid.uuid4())
+
+        # Determine widget size based on type
+        if viz.type in kpi_types:
+            w, h = 3, 2
+        elif viz.type == "table":
+            w, h = 6, 4
+        elif viz.type == "donut":
+            w, h = 4, 4
+        else:
+            w, h = 6, 4
+
         widget = WidgetConfig(
             id=widget_id,
             type=viz.type,
@@ -109,7 +112,7 @@ async def generate_dashboard(
             data=result.get("data", []),
             index=result.get("index", "name"),
             categories=result.get("categories", ["value"]),
-            gridPosition=GridPosition(x=x, y=y, w=col_width, h=row_height),
+            gridPosition=GridPosition(x=0, y=0, w=w, h=h),
             colors=None,
             valueFormatter=None,
             sql_query=result.get("sql")
@@ -125,7 +128,20 @@ async def generate_dashboard(
                 sql=result.get("sql"),
             )
         )
-        
+
+    # Auto-layout: pack widgets into a 12-column grid row by row
+    cur_x, cur_y, row_max_h = 0, 0, 0
+    for widget in widgets:
+        gp = widget.gridPosition
+        if cur_x + gp.w > 12:
+            cur_x = 0
+            cur_y += row_max_h
+            row_max_h = 0
+        gp.x = cur_x
+        gp.y = cur_y
+        cur_x += gp.w
+        row_max_h = max(row_max_h, gp.h)
+
     dashboard_config = DashboardConfig(widgets=widgets)
     
     # Save to Database

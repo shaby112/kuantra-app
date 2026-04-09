@@ -45,8 +45,15 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
     }, [messages]);
 
     useEffect(() => {
+        // Fetch available connections and auto-select all for AI context
         apiFetch<{ id: string, name: string }[]>("/api/v1/connections/", { auth: true })
-            .then(data => setConnections(data))
+            .then(data => {
+                setConnections(data);
+                // Auto-select all so the AI can immediately use all available data
+                if (data.length > 0 && selectedConnectionIds.length === 0) {
+                    setSelectedConnectionIds(data.map(c => c.id));
+                }
+            })
             .catch(err => console.error("Failed to fetch connections", err));
     }, []);
 
