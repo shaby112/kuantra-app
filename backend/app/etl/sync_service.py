@@ -189,6 +189,76 @@ class SyncService:
         db.add(new_mdl)
         db.commit()
         return appended
+
+    def _apply_inferred_relationships_to_mdl(
+        self,
+        db: Session,
+        inferred_relationships: List[Dict[str, Any]],
+        change_summary: str,
+        min_confidence: float = 0.6,
+    ) -> int:
+        """Append inferred relationships into latest MDL as a new version."""
+        if not inferred_relationships:
+            return 0
+
+        current_mdl = db.query(MDLVersion).order_by(MDLVersion.version.desc()).first()
+        if not current_mdl or not isinstance(current_mdl.content, dict):
+            return 0
+
+        content = dict(current_mdl.content)
+        relationships = list(content.get("relationships", []))
+
+        existing_keys = {
+            (r.get("from"), r.get("from_column"), r.get("to"), r.get("to_column"))
+            for r in relationships
+        }
+
+        appended = 0
+        for rel in inferred_relationships:
+            confidence = float(rel.get("confidence") or 0.0)
+            if confidence < min_confidence:
+                continue
+
+            # suggest_relationships uses from=fk side, to=pk side; MDL graph prefers pk->fk for one_to_many
+            pk_model = rel.get("to_table")
+            pk_col = rel.get("to_column")
+            fk_model = rel.get("from_table")
+            fk_col = rel.get("from_column")
+            if not pk_model or not pk_col or not fk_model or not fk_col:
+                continue
+
+            key = (pk_model, pk_col, fk_model, fk_col)
+            if key in existing_keys:
+                continue
+
+            relationships.append({
+                "name": f"{fk_model}_{fk_col}__{pk_model}_{pk_col}_inferred",
+                "from": pk_model,
+                "from_column": pk_col,
+                "to": fk_model,
+                "to_column": fk_col,
+                "join_type": "one_to_many",
+                "condition": f"{pk_model}.{pk_col} = {fk_model}.{fk_col}",
+                "confidence": confidence,
+                "method": "inferred_constraint",
+            })
+            existing_keys.add(key)
+            appended += 1
+
+        if appended == 0:
+            return 0
+
+        content["relationships"] = relationships
+        new_mdl = MDLVersion(
+            version=current_mdl.version + 1,
+            content=content,
+            user_overrides=current_mdl.user_overrides or {},
+            created_by=None,
+            change_summary=change_summary,
+        )
+        db.add(new_mdl)
+        db.commit()
+        return appended
     
     def get_job(self, job_id: str) -> Optional[SyncJob]:
         """Get a sync job by ID."""
@@ -616,6 +686,26 @@ class SyncService:
                     change_summary=f"Import source FK constraints for connection {connection_id}",
                 )
                 logger.info(f"Applied {appended} source FK relationships to MDL for connection {connection_id}")
+
+            # Fallback when source DB has no physical FK constraints: infer from schema and materialize to MDL
+            if not source_fk_relationships and connection.connection_type == "postgres":
+                from app.services.relationship_suggestor import relationship_suggestor
+
+                inferred = relationship_suggestor.suggest_relationships(
+                    db,
+                    connection_ids=[connection_id],
+                )
+                inferred_appended = self._apply_inferred_relationships_to_mdl(
+                    db,
+                    inferred_relationships=inferred,
+                    change_summary=f"Infer relationships from naming patterns for connection {connection_id}",
+                    min_confidence=0.6,
+                )
+                logger.info(
+                    "Applied %s inferred relationships to MDL for connection %s",
+                    inferred_appended,
+                    connection_id,
+                )
 
             # 6. Status Update
             job.status = "success"

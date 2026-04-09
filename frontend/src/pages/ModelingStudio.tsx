@@ -25,6 +25,7 @@ interface MDLContent {
             from: string;
             to: string;
             condition: string;
+            join_type?: string;
         }>;
     };
     is_locked: boolean;
@@ -86,10 +87,14 @@ export default function ModelingStudio() {
             });
             if (response.ok) {
                 const data = await response.json();
-                setSuggestions(data);
+                setSuggestions(Array.isArray(data) ? data : []);
+            } else {
+                console.error('Failed to fetch suggestions:', response.status, await response.text());
+                setSuggestions([]);
             }
         } catch (error) {
             console.error('Failed to fetch suggestions:', error);
+            setSuggestions([]);
         }
     }, []);
 
@@ -175,8 +180,14 @@ export default function ModelingStudio() {
 
             if (response.ok) {
                 const data = await response.json();
-                toast({ title: 'Suggestions generated', description: `Found ${data.suggestions?.length || 0} potential relationships` });
-                fetchSuggestions();
+                const generated = Array.isArray(data?.suggestions) ? data.suggestions : [];
+                const pending = generated.filter((s: RelationshipSuggestion) => s.status === 'pending');
+                setSuggestions(pending);
+                setActivePanel('suggestions');
+                toast({ title: 'Suggestions generated', description: `Found ${pending.length} potential relationships` });
+            } else {
+                const detail = await response.text();
+                toast({ title: 'Suggestion generation failed', description: detail || 'Unknown error', variant: 'destructive' });
             }
         } catch (error) {
             console.error('Failed to generate suggestions:', error);
@@ -195,8 +206,12 @@ export default function ModelingStudio() {
 
             if (response.ok) {
                 toast({ title: `Relationship ${action}ed` });
-                fetchSuggestions();
-                fetchMDL();
+                // Remove the actioned suggestion from local state immediately
+                setSuggestions(prev => prev.filter(s => s.id !== id));
+                // Refresh MDL to pick up the new relationship edge
+                if (action === 'confirm') {
+                    await fetchMDL();
+                }
             }
         } catch (error) {
             console.error('Failed to handle suggestion:', error);

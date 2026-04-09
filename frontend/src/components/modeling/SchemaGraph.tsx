@@ -1,10 +1,12 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import ReactFlow, {
     Node,
     Edge,
     Background,
     Controls,
     MiniMap,
+    Handle,
+    Position,
     useNodesState,
     useEdgesState,
     MarkerType,
@@ -43,6 +45,8 @@ function TableNode({ data, selected }: { data: any; selected: boolean }) {
                 bg-obsidian-surface-mid border border-obsidian-outline-variant/15
             `}
         >
+            <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-obsidian-primary !border-obsidian-surface-mid" />
+            <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-obsidian-secondary-purple !border-obsidian-surface-mid" />
             {/* Table Header */}
             <div className={`
                 px-4 py-2.5 flex items-center justify-between
@@ -139,6 +143,16 @@ export default function SchemaGraph({
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+    // Sync edges when relationships prop changes (initial render only captures once)
+    useEffect(() => {
+        setEdges(initialEdges);
+    }, [initialEdges, setEdges]);
+
+    // Sync nodes when models prop changes
+    useEffect(() => {
+        setNodes(initialNodes);
+    }, [initialNodes, setNodes]);
 
     const onNodeClick = useCallback(
         (_: React.MouseEvent, node: Node) => {

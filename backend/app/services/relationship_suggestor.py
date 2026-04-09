@@ -165,22 +165,34 @@ class RelationshipSuggestor:
     ) -> Dict[str, str]:
         """Identify primary key columns for each table."""
         primary_keys = {}
-        
+
         for table_name, columns in tables.items():
             # Look for 'id' column first
             for col in columns:
                 if col["name"].lower() == "id":
                     primary_keys[table_name] = col["name"]
                     break
-            
-            # If no 'id', look for tablename_id
-            if table_name not in primary_keys:
-                base_name = table_name.split(".")[-1]  # Remove schema prefix
-                for col in columns:
-                    if col["name"].lower() == f"{base_name}_id":
-                        primary_keys[table_name] = col["name"]
-                        break
-        
+
+            if table_name in primary_keys:
+                continue
+
+            base_name = table_name.split(".")[-1].lower()  # Remove schema prefix
+            singular = base_name[:-1] if base_name.endswith("s") else base_name
+            stripped_prefix = base_name.split("_", 1)[1] if "_" in base_name else base_name
+            stripped_singular = stripped_prefix[:-1] if stripped_prefix.endswith("s") else stripped_prefix
+
+            candidate_pk_names = {
+                f"{base_name}_id",
+                f"{singular}_id",
+                f"{stripped_prefix}_id",
+                f"{stripped_singular}_id",
+            }
+
+            for col in columns:
+                if col["name"].lower() in candidate_pk_names:
+                    primary_keys[table_name] = col["name"]
+                    break
+
         return primary_keys
     
     def _is_potential_fk(self, col_name: str, col_type: str) -> bool:

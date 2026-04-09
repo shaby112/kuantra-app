@@ -428,12 +428,17 @@ def confirm_relationship(
             relationships = content.get("relationships", [])
             
             # Add new relationship
+            # Convention: from = PK side (one), to = FK side (many) → one_to_many
             new_rel = {
-                "name": f"{suggestion.from_table}_{suggestion.to_table}",
-                "from": suggestion.from_table,
-                "to": suggestion.to_table,
-                "join_type": "many_to_one",
-                "condition": f"{suggestion.from_table}.{suggestion.from_column} = {suggestion.to_table}.{suggestion.to_column}"
+                "name": f"{suggestion.from_table}_{suggestion.from_column}__{suggestion.to_table}_{suggestion.to_column}",
+                "from": suggestion.to_table,
+                "from_column": suggestion.to_column,
+                "to": suggestion.from_table,
+                "to_column": suggestion.from_column,
+                "join_type": "one_to_many",
+                "condition": f"{suggestion.to_table}.{suggestion.to_column} = {suggestion.from_table}.{suggestion.from_column}",
+                "confidence": suggestion.confidence,
+                "method": "ai_suggestion",
             }
             relationships.append(new_rel)
             content["relationships"] = relationships
@@ -480,7 +485,8 @@ async def trigger_relationship_suggestion(
             db, connection_ids=connection_ids
         )
         
-        # Store suggestions in DB
+        # Store suggestions in DB and return persisted rows (with ids/status)
+        persisted_suggestions: List[Dict[str, Any]] = []
         for suggestion in suggestions:
             existing = db.query(SuggestedRelationship).filter(
                 SuggestedRelationship.from_table == suggestion["from_table"],
@@ -488,27 +494,40 @@ async def trigger_relationship_suggestion(
                 SuggestedRelationship.to_table == suggestion["to_table"],
                 SuggestedRelationship.to_column == suggestion["to_column"]
             ).first()
-            
+
             if existing:
                 # Refresh confidence and move back to pending so it appears in UI queue
                 existing.confidence = suggestion["confidence"]
                 existing.status = "pending"
                 existing.confirmed_by = None
+                row = existing
             else:
-                new_suggestion = SuggestedRelationship(
+                row = SuggestedRelationship(
                     from_table=suggestion["from_table"],
                     from_column=suggestion["from_column"],
                     to_table=suggestion["to_table"],
                     to_column=suggestion["to_column"],
-                    confidence=suggestion["confidence"]
+                    confidence=suggestion["confidence"],
+                    status="pending",
                 )
-                db.add(new_suggestion)
-        
+                db.add(row)
+
+            db.flush()
+            persisted_suggestions.append({
+                "id": str(row.id),
+                "from_table": row.from_table,
+                "from_column": row.from_column,
+                "to_table": row.to_table,
+                "to_column": row.to_column,
+                "confidence": row.confidence,
+                "status": row.status,
+            })
+
         db.commit()
-        
+
         return {
-            "message": f"Generated {len(suggestions)} suggestions",
-            "suggestions": suggestions,
+            "message": f"Generated {len(persisted_suggestions)} suggestions",
+            "suggestions": persisted_suggestions,
             "connection_ids": connection_ids
         }
     except Exception as e:
