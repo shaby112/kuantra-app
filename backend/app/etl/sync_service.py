@@ -599,7 +599,15 @@ class SyncService:
             
             from app.services.schema_service import schema_service
             logger.info(f"Triggering MDL refresh after sync for connection {connection_id}")
-            schema_service.refresh_mdl(db)
+
+            synced = (
+                db.query(SyncConfig.connection_id)
+                .filter(SyncConfig.last_sync_status == "success")
+                .all()
+            )
+            refresh_connection_ids = {str(s.connection_id) for s in synced if s.connection_id}
+            refresh_connection_ids.add(str(connection_id))
+            schema_service.refresh_mdl(db, connection_ids=sorted(refresh_connection_ids))
 
             if source_fk_relationships:
                 appended = self._apply_source_fk_relationships_to_mdl(

@@ -19,8 +19,9 @@ export function SyncProgressDialog({ connectionId, open, onOpenChange }: SyncPro
         queryKey: ["syncProgress", connectionId],
         queryFn: () => getSyncProgress(connectionId as string),
         enabled: !!connectionId && open,
-        refetchInterval: (data) => {
-            if (data?.status === "running" || data?.status === "pending") return 1000;
+        refetchInterval: (query) => {
+            const status = (query.state.data as SyncProgressResponse | undefined)?.status;
+            if (!status || status === "running" || status === "pending") return 1000;
             return false;
         },
     });

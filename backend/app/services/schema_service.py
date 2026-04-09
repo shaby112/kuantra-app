@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from app.core.logging import logger
 from app.services.semantic_model_service import semantic_model_service
@@ -12,13 +12,14 @@ class SchemaService:
     def __init__(self, mdl_path: str = "app/semantic/model.mdl"):
         self.mdl_path = mdl_path
 
-    def refresh_mdl(self, db: Session) -> Dict[str, Any]:
+    def refresh_mdl(self, db: Session, connection_ids: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Backward-compatible wrapper around SemanticModelService refresh.
         """
         try:
             mdl_content = semantic_model_service.refresh(
                 db=db,
+                connection_ids=connection_ids,
                 created_by=None,
                 change_summary="Automatic schema refresh (Enhanced v2)",
             )

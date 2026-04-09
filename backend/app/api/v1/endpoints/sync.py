@@ -411,7 +411,7 @@ async def get_sync_progress(
                     status=recent_history.status,
                     progress=100 if recent_history.status == "success" else 0, # Don't fake 100% on failure
                     rows_synced=recent_history.rows_synced,
-                    tables_completed=[], # We don't persist this detail in history for now
+                    tables_completed=recent_history.tables_synced or [],
                     tables_pending=[],
                     error=recent_history.error_message,
                     started_at=recent_history.started_at,
