@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.db.models import DbConnection, SyncConfig, SyncHistory
+from app.db.models import DbConnection, SyncConfig, SyncHistory, MDLVersion
 from app.etl.pipeline import ETLPipeline
 from app.etl.bridge import bridge
 from app.utils.identifiers import connection_schema_name, to_uuid
@@ -69,6 +69,126 @@ class SyncService:
         self._initialized = True
         
         logger.info("SyncService initialized")
+
+    def _normalize_table_key(self, schema: str, table: str) -> str:
+        return table if schema == "public" else f"{schema}.{table}"
+
+    def _build_model_name_map(self, models: List[Dict[str, Any]]) -> Dict[str, str]:
+        name_map: Dict[str, str] = {}
+        for m in models:
+            full_name = m.get("name")
+            if not full_name:
+                continue
+            short = full_name.split(".")[-1]
+            name_map.setdefault(short, full_name)
+            # Keep a direct identity mapping as well
+            name_map.setdefault(full_name, full_name)
+        return name_map
+
+    def _extract_postgres_fk_relationships(self, shared_source, discovered_tables: List[str]) -> List[Dict[str, str]]:
+        """Read FK metadata from source Postgres and return normalized relationships."""
+        discovered_set = set(discovered_tables)
+        query = """
+            SELECT
+                kcu.table_schema AS fk_schema,
+                kcu.table_name AS fk_table,
+                kcu.column_name AS fk_column,
+                ccu.table_schema AS pk_schema,
+                ccu.table_name AS pk_table,
+                ccu.column_name AS pk_column
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+              ON tc.constraint_name = kcu.constraint_name
+             AND tc.table_schema = kcu.table_schema
+            JOIN information_schema.constraint_column_usage ccu
+              ON ccu.constraint_name = tc.constraint_name
+             AND ccu.table_schema = tc.table_schema
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+            ORDER BY kcu.table_schema, kcu.table_name
+        """
+
+        async def _fetch_fks():
+            async with shared_source._get_connection() as conn:
+                return await conn.fetch(query)
+
+        rows = bridge.run_async(_fetch_fks())
+        rels: List[Dict[str, str]] = []
+        for r in rows:
+            fk_table_key = self._normalize_table_key(r["fk_schema"], r["fk_table"])
+            pk_table_key = self._normalize_table_key(r["pk_schema"], r["pk_table"])
+            if fk_table_key not in discovered_set or pk_table_key not in discovered_set:
+                continue
+            rels.append({
+                "fk_table": fk_table_key,
+                "fk_column": r["fk_column"],
+                "pk_table": pk_table_key,
+                "pk_column": r["pk_column"],
+            })
+        return rels
+
+    def _apply_source_fk_relationships_to_mdl(
+        self,
+        db: Session,
+        source_fk_relationships: List[Dict[str, str]],
+        change_summary: str,
+    ) -> int:
+        """Append source FK relationships into latest MDL as a new version."""
+        if not source_fk_relationships:
+            return 0
+
+        current_mdl = db.query(MDLVersion).order_by(MDLVersion.version.desc()).first()
+        if not current_mdl or not isinstance(current_mdl.content, dict):
+            return 0
+
+        content = dict(current_mdl.content)
+        relationships = list(content.get("relationships", []))
+        models = list(content.get("models", []))
+        model_name_map = self._build_model_name_map(models)
+
+        existing_keys = {
+            (r.get("from"), r.get("from_column"), r.get("to"), r.get("to_column"))
+            for r in relationships
+        }
+
+        appended = 0
+        for rel in source_fk_relationships:
+            pk_model = model_name_map.get(rel["pk_table"].split(".")[-1])
+            fk_model = model_name_map.get(rel["fk_table"].split(".")[-1])
+            if not pk_model or not fk_model:
+                continue
+
+            key = (pk_model, rel["pk_column"], fk_model, rel["fk_column"])
+            if key in existing_keys:
+                continue
+
+            relationships.append({
+                "name": f"{fk_model}_{rel['fk_column']}__{pk_model}_{rel['pk_column']}_srcfk",
+                "from": pk_model,
+                "from_column": rel["pk_column"],
+                "to": fk_model,
+                "to_column": rel["fk_column"],
+                "join_type": "one_to_many",
+                "condition": f"{pk_model}.{rel['pk_column']} = {fk_model}.{rel['fk_column']}",
+                "confidence": 1.0,
+                "method": "source_constraint",
+            })
+            existing_keys.add(key)
+            appended += 1
+
+        if appended == 0:
+            return 0
+
+        content["relationships"] = relationships
+        new_mdl = MDLVersion(
+            version=current_mdl.version + 1,
+            content=content,
+            user_overrides=current_mdl.user_overrides or {},
+            created_by=None,
+            change_summary=change_summary,
+        )
+        db.add(new_mdl)
+        db.commit()
+        return appended
     
     def get_job(self, job_id: str) -> Optional[SyncJob]:
         """Get a sync job by ID."""
@@ -207,6 +327,16 @@ class SyncService:
             tables = bridge.run_async(shared_source.get_tables())
             logger.info(f"Discovered {len(tables)} tables for connection {connection.id}: {tables}")
             job.tables_pending = list(tables)
+
+            source_fk_relationships: List[Dict[str, str]] = []
+            if connection.connection_type == "postgres":
+                try:
+                    source_fk_relationships = self._extract_postgres_fk_relationships(shared_source, tables)
+                    logger.info(
+                        f"Detected {len(source_fk_relationships)} source FK constraints for connection {connection.id}"
+                    )
+                except Exception as fk_err:
+                    logger.warning(f"Could not extract source FK constraints: {fk_err}")
             
             # 3. Bulk Discovery of PKs and Incremental Columns
             logger.info(f"Gathering metadata for {len(tables)} tables...")
@@ -470,6 +600,14 @@ class SyncService:
             from app.services.schema_service import schema_service
             logger.info(f"Triggering MDL refresh after sync for connection {connection_id}")
             schema_service.refresh_mdl(db)
+
+            if source_fk_relationships:
+                appended = self._apply_source_fk_relationships_to_mdl(
+                    db,
+                    source_fk_relationships,
+                    change_summary=f"Import source FK constraints for connection {connection_id}",
+                )
+                logger.info(f"Applied {appended} source FK relationships to MDL for connection {connection_id}")
 
             # 6. Status Update
             job.status = "success"

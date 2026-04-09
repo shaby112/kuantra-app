@@ -21,6 +21,7 @@ interface Relationship {
     from: string;
     to: string;
     condition: string;
+    join_type?: 'one_to_one' | 'one_to_many' | 'many_to_one' | 'many_to_many' | string;
 }
 
 interface SchemaGraphProps {
@@ -111,6 +112,14 @@ export default function SchemaGraph({
     }, [models, selectedNode]);
 
     const initialEdges: Edge[] = useMemo(() => {
+        const cardinalityLabel = (joinType?: string) => {
+            if (joinType === 'one_to_many') return '1:N';
+            if (joinType === 'many_to_one') return 'N:1';
+            if (joinType === 'many_to_many') return 'N:M';
+            if (joinType === 'one_to_one') return '1:1';
+            return '';
+        };
+
         return relationships.map((rel) => ({
             id: rel.name,
             source: rel.from,
@@ -122,8 +131,8 @@ export default function SchemaGraph({
                 type: MarkerType.ArrowClosed,
                 color: '#8b5cf6',
             },
-            label: rel.name.length < 20 ? rel.name : '',
-            labelStyle: { fill: '#85948B', fontSize: 10, fontFamily: 'Space Grotesk' },
+            label: cardinalityLabel(rel.join_type),
+            labelStyle: { fill: '#85948B', fontSize: 10, fontFamily: 'Space Grotesk', fontWeight: 700 },
             labelBgStyle: { fill: '#201F1F', fillOpacity: 0.9 },
         }));
     }, [relationships]);

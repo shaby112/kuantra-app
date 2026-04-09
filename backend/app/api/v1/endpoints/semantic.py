@@ -490,8 +490,10 @@ async def trigger_relationship_suggestion(
             ).first()
             
             if existing:
-                # Update confidence if it changed
+                # Refresh confidence and move back to pending so it appears in UI queue
                 existing.confidence = suggestion["confidence"]
+                existing.status = "pending"
+                existing.confirmed_by = None
             else:
                 new_suggestion = SuggestedRelationship(
                     from_table=suggestion["from_table"],
