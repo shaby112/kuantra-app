@@ -83,7 +83,7 @@ export function WidgetCard({
       transition={{ duration: 0.3 }}
       className={cn(
         "h-full flex flex-col transition-all duration-200 rounded-lg",
-        config.showBackground !== false ? "bg-obsidian-surface-low" : "bg-transparent",
+        config.showBackground !== false ? "bg-obsidian-surface-low/70 backdrop-blur-md" : "bg-transparent",
         config.showBorder !== false ? "border border-obsidian-outline-variant/15" : "border-none",
         config.errorMessage && "border-red-500/40 ring-1 ring-red-500/20",
         isEditMode && "ring-1 ring-obsidian-primary/10 hover:ring-obsidian-primary/30",
@@ -96,7 +96,7 @@ export function WidgetCard({
       {(isEditMode || (config.showBorder !== false && config.showBackground !== false)) && (
         <div
           className={cn(
-            "flex items-center justify-between px-4 py-2.5 border-b border-obsidian-outline-variant/10 bg-obsidian-surface-mid/30",
+            "flex items-center justify-between px-4 py-2.5 border-b border-obsidian-outline-variant/10 bg-obsidian-surface-mid/40 backdrop-blur-sm",
             !isEditMode && (config.showBorder === false || config.showBackground === false) && "hidden"
           )}
         >
@@ -197,7 +197,7 @@ export function WidgetCard({
       <div
         className={cn(
           "flex-1 min-h-0 relative",
-          config.showBackground !== false ? "bg-obsidian-surface-low" : "bg-transparent"
+          config.showBackground !== false ? "bg-obsidian-surface-low/70" : "bg-transparent"
         )}
       >
         {config.errorMessage && !showSql && (

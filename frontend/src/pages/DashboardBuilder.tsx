@@ -415,7 +415,10 @@ export default function DashboardBuilder() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="flex-1 flex overflow-hidden relative bg-obsidian-surface"
+            className={cn(
+              "flex-1 flex overflow-hidden relative bg-obsidian-surface transition-[padding] duration-300",
+              libraryCollapsed ? "pr-14" : "pr-[280px]"
+            )}
           >
             {/* Canvas Background Pattern */}
             <div
@@ -448,14 +451,16 @@ export default function DashboardBuilder() {
               />
             )}
 
-            <ComponentLibrary
-              collapsed={libraryCollapsed}
-              onToggle={() => setLibraryCollapsed(!libraryCollapsed)}
-              onAddWidget={handleAddWidget}
-              onShowTemplates={() => setShowTemplates(true)}
-              onShowHistory={() => setShowHistory(true)}
-              onShowColors={() => setShowColorPicker(true)}
-            />
+            <div className="absolute right-0 top-0 bottom-0 z-40 pointer-events-auto">
+              <ComponentLibrary
+                collapsed={libraryCollapsed}
+                onToggle={() => setLibraryCollapsed(!libraryCollapsed)}
+                onAddWidget={handleAddWidget}
+                onShowTemplates={() => setShowTemplates(true)}
+                onShowHistory={() => setShowHistory(true)}
+                onShowColors={() => setShowColorPicker(true)}
+              />
+            </div>
 
             {/* Color Scheme Modal */}
             <Dialog open={showColorPicker} onOpenChange={setShowColorPicker}>

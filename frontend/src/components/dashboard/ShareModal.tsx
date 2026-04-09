@@ -34,16 +34,25 @@ export function ShareModal({
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
-  const shareUrl = `${window.location.origin}/dashboard/${dashboardId}`;
+  const shareUrl = `${window.location.origin}/dashboard/builder/${dashboardId}`;
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const input = document.createElement("input");
+        input.value = shareUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
       setCopied(true);
       toast({ title: "Link copied!", description: "Share URL copied to clipboard" });
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
+      toast({ title: "Failed to copy", description: "Please copy the URL manually", variant: "destructive" });
     }
   };
 
