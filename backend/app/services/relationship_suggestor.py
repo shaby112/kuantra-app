@@ -8,13 +8,14 @@ Features:
 """
 
 import re
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Set
 from difflib import SequenceMatcher
 
 from sqlalchemy.orm import Session
 
 from app.core.logging import logger
 from app.services.duckdb_manager import duckdb_manager
+from app.utils.identifiers import connection_schema_name
 
 
 class RelationshipSuggestor:
@@ -42,7 +43,8 @@ class RelationshipSuggestor:
     
     async def suggest_relationships(
         self,
-        db: Session
+        db: Session,
+        connection_ids: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Analyze schema and suggest potential FK relationships.
@@ -53,7 +55,15 @@ class RelationshipSuggestor:
         
         try:
             # Get all tables and columns from DuckDB
-            tables = self._get_schema_info()
+            allowed_schemas: Optional[Set[str]] = None
+            if connection_ids:
+                allowed_schemas = {
+                    connection_schema_name(conn_id)
+                    for conn_id in connection_ids
+                    if conn_id
+                }
+
+            tables = self._get_schema_info(allowed_schemas=allowed_schemas)
             
             if not tables:
                 logger.warning("No tables found in DuckDB for relationship analysis")
@@ -103,7 +113,7 @@ class RelationshipSuggestor:
             logger.error(f"Relationship suggestion failed: {e}")
             raise
     
-    def _get_schema_info(self) -> Dict[str, List[Dict[str, str]]]:
+    def _get_schema_info(self, allowed_schemas: Optional[Set[str]] = None) -> Dict[str, List[Dict[str, str]]]:
         """Get all tables and columns from DuckDB."""
         tables = {}
         
@@ -115,8 +125,10 @@ class RelationshipSuggestor:
             
             for schema_row in schemas:
                 schema_name = schema_row["table_schema"]
-                if schema_name.startswith("_"):
-                    continue  # Skip internal schemas
+                if schema_name.startswith("_") or schema_name in {"information_schema", "pg_catalog", "main"}:
+                    continue  # Skip internal/system schemas
+                if allowed_schemas and schema_name not in allowed_schemas:
+                    continue
                 
                 # Get tables in schema
                 table_result = duckdb_manager.execute(f"""
