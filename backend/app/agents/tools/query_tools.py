@@ -50,6 +50,40 @@ def _qualify_tables(sql: str, schema_name: str) -> str:
         return sql
 
 
+def _auto_qualify_all_tables(sql: str) -> str:
+    """Attempt to qualify unqualified table names by looking up DuckDB schemas."""
+    try:
+        table_rows = duckdb_manager.execute(
+            "SELECT table_schema, table_name "
+            "FROM information_schema.tables "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
+            "AND table_name NOT LIKE '_dlt_%'"
+        )
+        table_map: dict = {}
+        for row in table_rows:
+            table_map.setdefault(row["table_name"], []).append(row["table_schema"])
+
+        expression = sqlglot.parse_one(sql, read="duckdb")
+        for table in list(expression.find_all(exp.Table)):
+            if table.db or table.catalog:
+                continue
+            schemas = table_map.get(table.name, [])
+            if len(schemas) == 1:
+                chosen_schema = schemas[0]
+            elif len(schemas) > 1:
+                non_staging = [s for s in schemas if not s.endswith("_staging")]
+                chosen_schema = non_staging[0] if len(non_staging) == 1 else None
+            else:
+                chosen_schema = None
+
+            if chosen_schema:
+                table.set("db", exp.Identifier(this=chosen_schema, quoted=True))
+                table.set("this", exp.Identifier(this=table.name, quoted=True))
+        return expression.sql(dialect="duckdb")
+    except Exception:
+        return sql
+
+
 def execute_analytical_query(
     sql: str,
     connection_ids: Optional[List[str]] = None,
@@ -86,5 +120,21 @@ def execute_analytical_query(
                 return f"Error: QUERY_TIMEOUT after {effective_timeout}s"
         return results
     except Exception as e:
+        msg = str(e)
+        # Auto-qualify table names on catalog errors and retry once
+        if "Catalog Error" in msg:
+            logger.info(f"Catalog error, attempting auto-qualification: {msg}")
+            qualified = _auto_qualify_all_tables(working_sql)
+            if qualified.strip() != working_sql.strip():
+                try:
+                    with ThreadPoolExecutor(max_workers=1) as executor:
+                        future = executor.submit(duckdb_manager.execute, qualified)
+                        try:
+                            return future.result(timeout=effective_timeout)
+                        except FuturesTimeoutError:
+                            return f"Error: QUERY_TIMEOUT after {effective_timeout}s"
+                except Exception as retry_e:
+                    logger.error(f"Retry after qualification also failed: {retry_e}")
+                    return f"Error executing query: {str(retry_e)}"
         logger.error(f"Agent query failed: {e}")
-        return f"Error executing query: {str(e)}"
+        return f"Error executing query: {msg}"

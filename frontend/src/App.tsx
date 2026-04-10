@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import DashboardBuilder from "./pages/DashboardBuilder";
+import DashboardView from "./pages/DashboardView";
 import ModelingStudio from "./pages/ModelingStudio";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="builder/:id" element={<DashboardBuilder />} />
                 <Route path="modeling" element={<ModelingStudio />} />
               </Route>
+              <Route path="/dashboard/view" element={<DashboardView />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

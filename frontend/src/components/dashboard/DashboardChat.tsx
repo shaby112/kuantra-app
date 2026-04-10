@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import type { ChatMessage, DashboardPlan, PlanningResponse } from "@/types/dashboard";
 import { apiFetch } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDashboardStore } from "@/stores/dashboard-store";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -19,14 +20,11 @@ interface DashboardChatProps {
     currentPlan: DashboardPlan | null;
 }
 
-const INITIAL_MESSAGE: ChatMessage = {
-    id: "1",
-    role: "assistant",
-    content: "Hi! I'm your AI Dashboard Builder. What kind of dashboard would you like to create? Try saying:\n\n• \"Build me a marketing dashboard\"\n• \"Create a sales performance dashboard\"\n• \"Show me user analytics\"",
-};
-
 export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }: DashboardChatProps) {
-    const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+    // Messages persisted in Zustand store (survive tab switches)
+    const messages = useDashboardStore((s) => s.chatMessages);
+    const setMessages = useDashboardStore((s) => s.setChatMessages);
+
     const [input, setInput] = useState("");
     const [isThinking, setIsThinking] = useState(false);
     const [connections, setConnections] = useState<{ id: string, name: string }[]>([]);
@@ -39,22 +37,29 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
     };
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    // Track in-flight request so we can ignore stale responses
+    const abortRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
     useEffect(() => {
-        // Fetch available connections and auto-select all for AI context
         apiFetch<{ id: string, name: string }[]>("/api/v1/connections/", { auth: true })
             .then(data => {
                 setConnections(data);
-                // Auto-select all so the AI can immediately use all available data
                 if (data.length > 0 && selectedConnectionIds.length === 0) {
                     setSelectedConnectionIds(data.map(c => c.id));
                 }
             })
             .catch(err => console.error("Failed to fetch connections", err));
+    }, []);
+
+    // Clean up in-flight request on unmount (but don't clear messages)
+    useEffect(() => {
+        return () => {
+            abortRef.current?.abort();
+        };
     }, []);
 
     const simulateTyping = async (text: string, messageId: string) => {
@@ -99,6 +104,11 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
         setInput("");
         setIsThinking(true);
 
+        // Abort any previous in-flight request
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
         try {
             const response = await apiFetch<PlanningResponse>("/api/v1/dashboards/planning", {
                 method: "POST",
@@ -107,8 +117,12 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                     history: messages.map(m => ({ role: m.role, content: m.content })),
                     connection_ids: selectedConnectionIds
                 }),
-                auth: true
+                auth: true,
+                signal: controller.signal,
             });
+
+            // If aborted (tab switch etc.), don't update state
+            if (controller.signal.aborted) return;
 
             const aiMessageId = (Date.now() + 1).toString();
 
@@ -123,7 +137,8 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                 await simulateTyping(responseText, aiMessageId);
                 onPlanReady(plan);
             }
-        } catch (e) {
+        } catch (e: any) {
+            if (e?.name === "AbortError") return;
             console.error("Planning failed", e);
             setMessages(prev => [...prev, {
                 id: (Date.now() + 2).toString(),
@@ -131,7 +146,9 @@ export function DashboardChat({ onPlanReady, onGenerateDashboard, currentPlan }:
                 content: "I encountered an error while planning. Please check your connection and try again."
             }]);
         } finally {
-            setIsThinking(false);
+            if (!controller.signal.aborted) {
+                setIsThinking(false);
+            }
         }
     };
 

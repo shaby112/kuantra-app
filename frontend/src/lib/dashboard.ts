@@ -172,7 +172,8 @@ export async function saveDashboard(dashboard: DashboardConfig): Promise<Dashboa
             y: layoutItem?.y || 0,
             w: layoutItem?.w || 6,
             h: layoutItem?.h || 4
-          }
+          },
+          sql_query: w.sql_query,
         };
       })
     }
@@ -209,7 +210,8 @@ export async function loadDashboard(id: string): Promise<DashboardConfig | null>
       colors: w.colors || ["violet"],
       valueFormat: (w.valueFormatter as any) || "number",
       dateRange: "30d",
-      aggregation: "sum"
+      aggregation: "sum",
+      sql_query: (w as any).sql_query,
     })),
     layout: data.config.widgets.map(w => ({
       i: w.id,
@@ -239,7 +241,8 @@ export async function getDashboards(): Promise<DashboardConfig[]> {
       colors: w.colors || ["violet"],
       valueFormat: (w.valueFormatter as any) || "number",
       dateRange: "30d",
-      aggregation: "sum"
+      aggregation: "sum",
+      sql_query: (w as any).sql_query,
     })),
     layout: data.config.widgets.map(w => ({
       i: w.id,

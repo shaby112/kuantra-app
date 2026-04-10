@@ -66,6 +66,7 @@ export function WidgetSettingsModal({ open, onOpenChange, widget, onSave, connec
   const [targetValue, setTargetValue] = useState<number>(100);
   const [countdownTarget, setCountdownTarget] = useState("");
   const [headerLevel, setHeaderLevel] = useState<1 | 2 | 3>(2);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
     if (widget) {
@@ -84,6 +85,7 @@ export function WidgetSettingsModal({ open, onOpenChange, widget, onSave, connec
       setTargetValue(widget.target || 100);
       setCountdownTarget(widget.countdownTarget || "");
       setHeaderLevel(widget.headerLevel || 2);
+      setTitle(widget.title || "");
     }
   }, [widget]);
 
@@ -91,6 +93,7 @@ export function WidgetSettingsModal({ open, onOpenChange, widget, onSave, connec
     const updates: Partial<WidgetConfig> = {
       showBorder,
       showBackground,
+      title: title.trim() || widget?.title || "Widget",
     };
 
     const settings = getWidgetSettings(widget?.chartType || chartType);
@@ -171,6 +174,14 @@ export function WidgetSettingsModal({ open, onOpenChange, widget, onSave, connec
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label className="text-foreground">Widget Title</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter widget title"
+            />
+          </div>
           {/* Chart Type Selection - Only for switchable chart widgets */}
           {settings.showChartType && (
             <div className="space-y-2">

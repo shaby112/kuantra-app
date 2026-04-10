@@ -46,7 +46,7 @@ class MDLUpdateRequest(BaseModel):
 
 
 class RelationshipSuggestion(BaseModel):
-    id: str
+    id: UUID
     from_table: str
     from_column: str
     to_table: str
@@ -485,28 +485,53 @@ async def trigger_relationship_suggestion(
             db, connection_ids=connection_ids
         )
         
+        # Build set of relationships already in the MDL so we skip them
+        current_mdl = get_current_mdl(db)
+        existing_mdl_rels: set = set()
+        if current_mdl:
+            for rel in current_mdl.content.get("relationships", []):
+                # Normalize both directions to catch duplicates
+                existing_mdl_rels.add((
+                    rel.get("from", ""), rel.get("from_column", ""),
+                    rel.get("to", ""), rel.get("to_column", ""),
+                ))
+                existing_mdl_rels.add((
+                    rel.get("to", ""), rel.get("to_column", ""),
+                    rel.get("from", ""), rel.get("from_column", ""),
+                ))
+
         # Store suggestions in DB and return persisted rows (with ids/status)
         persisted_suggestions: List[Dict[str, Any]] = []
         for suggestion in suggestions:
+            ft = suggestion["from_table"]
+            fc = suggestion["from_column"]
+            tt = suggestion["to_table"]
+            tc = suggestion["to_column"]
+
+            # Skip if this relationship already exists in the MDL
+            if (ft, fc, tt, tc) in existing_mdl_rels or (tt, tc, ft, fc) in existing_mdl_rels:
+                continue
+
             existing = db.query(SuggestedRelationship).filter(
-                SuggestedRelationship.from_table == suggestion["from_table"],
-                SuggestedRelationship.from_column == suggestion["from_column"],
-                SuggestedRelationship.to_table == suggestion["to_table"],
-                SuggestedRelationship.to_column == suggestion["to_column"]
+                SuggestedRelationship.from_table == ft,
+                SuggestedRelationship.from_column == fc,
+                SuggestedRelationship.to_table == tt,
+                SuggestedRelationship.to_column == tc,
             ).first()
 
             if existing:
-                # Refresh confidence and move back to pending so it appears in UI queue
+                # Preserve confirmed/rejected status — don't reset
+                if existing.status in ("confirmed", "rejected"):
+                    continue
+                # Only update confidence for pending suggestions
                 existing.confidence = suggestion["confidence"]
-                existing.status = "pending"
-                existing.confirmed_by = None
                 row = existing
             else:
                 row = SuggestedRelationship(
-                    from_table=suggestion["from_table"],
-                    from_column=suggestion["from_column"],
-                    to_table=suggestion["to_table"],
-                    to_column=suggestion["to_column"],
+                    from_table=ft,
+                    from_column=fc,
+                    to_table=tt,
+                    to_column=tc,
                     confidence=suggestion["confidence"],
                     status="pending",
                 )

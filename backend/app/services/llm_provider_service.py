@@ -38,7 +38,11 @@ class LLMProvider(ABC):
 
     @abstractmethod
     async def stream(
-        self, prompt: str, config: Optional[Dict[str, Any]] = None
+        self,
+        prompt: str,
+        config: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
     ) -> AsyncIterator[str]:
         """Stream text chunks."""
 
@@ -76,10 +80,14 @@ class GeminiProvider(LLMProvider):
         return await asyncio.to_thread(_call)
 
     async def stream(
-        self, prompt: str, config: Optional[Dict[str, Any]] = None
+        self,
+        prompt: str,
+        config: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
     ) -> AsyncIterator[str]:
         # Fallback stream implementation for current usage.
-        text = await self.generate(prompt, config=config)
+        text = await self.generate(prompt, config=config, system_prompt=system_prompt, history=history)
         if text:
             yield text
 
@@ -89,6 +97,56 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         self.base_url = settings.LOCAL_LLM_BASE_URL.rstrip("/")
         self.model = settings.LOCAL_LLM_MODEL
         self.api_key = settings.LOCAL_LLM_API_KEY
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def _get_client(self, timeout: float = 120.0) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(timeout, connect=30.0)
+            )
+        return self._client
+
+    def _build_messages(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
+    ) -> List[Dict[str, str]]:
+        messages: List[Dict[str, str]] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": prompt})
+        return messages
+
+    def _build_payload(
+        self,
+        messages: List[Dict[str, str]],
+        config: Optional[Dict[str, Any]] = None,
+        stream: bool = False,
+    ) -> Dict[str, Any]:
+        return {
+            "model": self.model,
+            "messages": messages,
+            "temperature": (config or {}).get("temperature", 0.1),
+            "stream": stream,
+            "options": {
+                "num_predict": (config or {}).get("num_predict", 512),
+                "num_thread": 2,
+            },
+        }
+
+    def _build_headers(self) -> Dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+    async def _ensure_model(self):
+        if settings.LOCAL_LLM_AUTO_PULL:
+            from app.services.local_llm_runtime_service import local_llm_runtime_service
+            await local_llm_runtime_service.ensure_model(self.model)
 
     async def generate(
         self,
@@ -97,28 +155,13 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         system_prompt: Optional[str] = None,
         history: Optional[List[Dict[str, str]]] = None,
     ) -> str:
-        if settings.LOCAL_LLM_AUTO_PULL:
-            from app.services.local_llm_runtime_service import local_llm_runtime_service
+        await self._ensure_model()
 
-            await local_llm_runtime_service.ensure_model(self.model)
+        messages = self._build_messages(prompt, system_prompt, history)
+        payload = self._build_payload(messages, config, stream=False)
+        headers = self._build_headers()
+        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 120))
 
-        messages: List[Dict[str, str]] = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        if history:
-            messages.extend(history)
-        messages.append({"role": "user", "content": prompt})
-
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": (config or {}).get("temperature", 0.1),
-        }
-        headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
-        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 300))
         async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=30.0)) as client:
             response = await client.post(
                 f"{self.base_url}/v1/chat/completions",
@@ -135,11 +178,52 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         )
 
     async def stream(
-        self, prompt: str, config: Optional[Dict[str, Any]] = None
+        self,
+        prompt: str,
+        config: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, str]]] = None,
     ) -> AsyncIterator[str]:
-        text = await self.generate(prompt, config=config)
-        if text:
-            yield text
+        """Real streaming via Ollama OpenAI-compatible SSE endpoint."""
+        await self._ensure_model()
+
+        messages = self._build_messages(prompt, system_prompt, history)
+        payload = self._build_payload(messages, config, stream=True)
+        headers = self._build_headers()
+        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 120))
+
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=30.0)) as client:
+                async with client.stream(
+                    "POST",
+                    f"{self.base_url}/v1/chat/completions",
+                    json=payload,
+                    headers=headers,
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            import json as _json
+                            chunk = _json.loads(data_str)
+                            delta = (
+                                chunk.get("choices", [{}])[0]
+                                .get("delta", {})
+                                .get("content", "")
+                            )
+                            if delta:
+                                yield delta
+                        except Exception:
+                            continue
+        except Exception as e:
+            logger.error(f"Streaming failed, falling back to generate: {e}")
+            text = await self.generate(prompt, config=config, system_prompt=system_prompt, history=history)
+            if text:
+                yield text
 
 
 class LLMProviderRegistry:

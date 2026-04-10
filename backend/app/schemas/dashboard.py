@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict, Any, Union
 from datetime import datetime
+from uuid import UUID
 
 # --- Dashboard Plan Schemas (Agent Output) ---
 
@@ -18,7 +19,7 @@ class GridPosition(BaseModel):
     model_config = {'extra': 'forbid'}
 
 class DashboardVisualization(BaseModel):
-    type: Literal['line', 'bar', 'area', 'donut', 'pie', 'number', 'table']
+    type: Literal['line', 'bar', 'area', 'donut', 'pie', 'number', 'table', 'metric', 'kpi', 'stat', 'gauge', 'sparkline', 'heatmap', 'radar', 'scatter', 'funnel', 'treemap', 'sankey', 'waterfall', 'bubble']
     metrics: List[str] = Field(description="List of metric names to visualize")
     breakdown: Optional[str] = Field(None, description="Dimension to break down by, e.g., 'region'")
     grid_position: Optional[GridPosition] = None
@@ -54,7 +55,7 @@ class DashboardConfig(BaseModel):
 # --- API Request/Response Schemas ---
 
 class DashboardOut(BaseModel):
-    id: str
+    id: UUID
     title: str
     config: DashboardConfig
     created_at: datetime
@@ -73,7 +74,7 @@ class WidgetExecutionStatus(BaseModel):
 
 
 class DashboardGenerationOut(BaseModel):
-    id: str
+    id: UUID
     title: str
     config: DashboardConfig
     created_at: datetime

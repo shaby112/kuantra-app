@@ -34,8 +34,9 @@ def _build_schema_context() -> str:
         tables = duckdb_manager.execute(
             "SELECT table_schema, table_name "
             "FROM information_schema.tables "
-            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'main') "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
             "AND table_name NOT LIKE '_dlt_%' "
+            "AND table_schema NOT LIKE '%_staging' "
             "ORDER BY table_schema, table_name"
         )
         if not tables:
@@ -44,8 +45,10 @@ def _build_schema_context() -> str:
         columns = duckdb_manager.execute(
             "SELECT table_schema, table_name, column_name, data_type "
             "FROM information_schema.columns "
-            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'main') "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
             "AND table_name NOT LIKE '_dlt_%' "
+            "AND table_schema NOT LIKE '%_staging' "
+            "AND column_name NOT LIKE '_dlt_%' "
             "ORDER BY table_schema, table_name, ordinal_position"
         )
 
@@ -106,6 +109,71 @@ class ExecuteRequest(BaseModel):
 class ExecuteResponse(BaseModel):
     results: List[Any]
 
+def _qualify_sql_tables(sql: str) -> str:
+    """Best-effort qualification of unqualified table names to "schema"."table"."""
+    from app.services.duckdb_manager import duckdb_manager
+
+    try:
+        import sqlglot
+        from sqlglot import exp
+    except Exception:
+        return sql
+
+    try:
+        table_rows = duckdb_manager.execute(
+            "SELECT table_schema, table_name "
+            "FROM information_schema.tables "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
+            "AND table_name NOT LIKE '_dlt_%' "
+            "AND table_schema NOT LIKE '%_staging'"
+        )
+        table_map: Dict[str, List[str]] = {}
+        for row in table_rows:
+            table_map.setdefault(row["table_name"], []).append(row["table_schema"])
+
+        tree = sqlglot.parse_one(sql, read="duckdb")
+
+        for table in list(tree.find_all(exp.Table)):
+            # Already qualified (schema or catalog present)
+            if table.db or table.catalog:
+                continue
+            tname = table.name
+            schemas = table_map.get(tname, [])
+            if len(schemas) == 1:
+                chosen_schema = schemas[0]
+            elif len(schemas) > 1:
+                non_staging = [s for s in schemas if not s.endswith("_staging")]
+                chosen_schema = non_staging[0] if len(non_staging) == 1 else None
+            else:
+                chosen_schema = None
+
+            if chosen_schema:
+                table.set("db", exp.Identifier(this=chosen_schema, quoted=True))
+                table.set("this", exp.Identifier(this=tname, quoted=True))
+
+        return tree.sql(dialect="duckdb")
+    except Exception:
+        return sql
+
+
+def _execute_with_qualified_fallback(sql: str):
+    """Execute SQL and retry once with auto-qualified table names on missing-table errors."""
+    from app.services.duckdb_manager import duckdb_manager
+
+    try:
+        return duckdb_manager.execute(sql)
+    except Exception as e:
+        msg = str(e)
+        if "Catalog Error: Table with name" not in msg:
+            raise
+
+        qualified_sql = _qualify_sql_tables(sql)
+        if qualified_sql.strip() == sql.strip():
+            raise
+
+        logger.info("Retrying query with auto-qualified table names")
+        return duckdb_manager.execute(qualified_sql)
+
 
 @router.post("/execute", response_model=ExecuteResponse)
 @limiter.limit(settings.RATE_LIMIT_QUERY_EXECUTE)
@@ -125,7 +193,7 @@ async def execute_query_endpoint(
             )
 
         # Always execute against DuckDB warehouse — this is where all synced data lives
-        results = duckdb_manager.execute(body.sql)
+        results = _execute_with_qualified_fallback(body.sql)
         return {"results": results}
     except QueryTimeoutError as e:
         logger.warning(f"Query timeout: {e}")
@@ -211,42 +279,60 @@ async def chat_stream(
             schema_context = _build_schema_context()
             system_prompt = SYSTEM_PROMPT_TEMPLATE.format(schema_context=schema_context)
 
-            # Stream the AI response
-            full_response = ""
-            sql_generated = None
-
+            # Stream the AI response with real token-by-token streaming
             from app.services.llm_provider_service import llm_provider_registry
 
             provider = llm_provider_registry.get_provider()
+            full_response = ""
+
             try:
-                full_response = await provider.generate(
+                async for chunk in provider.stream(
                     prompt=query,
                     system_prompt=system_prompt,
                     history=history if history else None,
-                )
+                ):
+                    full_response += chunk
+                    # Stream each chunk to the frontend immediately
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
             except Exception as llm_exc:
                 logger.error(f"LLM provider failed: {llm_exc}")
-                full_response = (
-                    "AI is temporarily unavailable. Please configure a valid AI key in Settings "
-                    "or switch to Local AI and download the model."
-                )
+                exc_msg = str(llm_exc).lower()
+                if "connection refused" in exc_msg or "connect" in exc_msg:
+                    full_response = (
+                        "Could not connect to the local AI model (Ollama). "
+                        "Make sure Ollama is running and accessible."
+                    )
+                elif "timeout" in exc_msg or "timed out" in exc_msg:
+                    full_response = (
+                        "The AI model took too long to respond. "
+                        "Try a shorter question or check Ollama resource usage."
+                    )
+                elif "api key" in exc_msg or "api_key" in exc_msg or "unauthorized" in exc_msg:
+                    full_response = (
+                        "AI API key is invalid or missing. "
+                        "Please configure a valid key in Settings."
+                    )
+                else:
+                    full_response = f"AI encountered an error: {llm_exc}"
+                yield f"data: {json.dumps({'type': 'chunk', 'content': full_response})}\n\n"
 
+            # Now parse the complete response for SQL
             raw = full_response.strip()
-            # Extract SQL from markdown code blocks if present
+            sql_generated = None
             sql_match = re.search(r"```(?:sql)?\s*\n?([\s\S]*?)```", raw)
             if sql_match:
                 sql_generated = sql_match.group(1).strip()
                 natural_text = re.sub(r"```(?:sql)?\s*\n?[\s\S]*?```", "", raw).strip()
                 if not natural_text:
-                    natural_text = f"Here's a query to answer your question:"
+                    natural_text = "Here's a query to answer your question:"
             elif raw.upper().lstrip().startswith(("SELECT ", "WITH ", "INSERT ", "UPDATE ", "DELETE ")):
-                # The whole response is just a SQL query
                 sql_generated = raw
-                natural_text = f"Here's a query to answer your question:"
+                natural_text = "Here's a query to answer your question:"
             else:
                 natural_text = raw
                 sql_generated = None
 
+            # Send final parsed result (text + sql separated)
             yield f"data: {json.dumps({'type': 'text', 'content': natural_text})}\n\n"
             if sql_generated:
                 yield f"data: {json.dumps({'type': 'status', 'sql': sql_generated})}\n\n"

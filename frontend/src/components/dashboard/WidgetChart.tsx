@@ -60,6 +60,34 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
   const navigate = useNavigate();
   const { chartType, data, indexField, categories, colors, valueFormat } = config;
   const formatter = valueFormatters[valueFormat] || valueFormatters.number;
+  const COLOR_MAP: Record<string, string> = {
+    rose: "#f43f5e",
+    amber: "#f59e0b",
+    blue: "#3b82f6",
+    emerald: "#10b981",
+    violet: "#8b5cf6",
+    cyan: "#06b6d4",
+    orange: "#f97316",
+    pink: "#ec4899",
+    indigo: "#6366f1",
+    teal: "#14b8a6",
+    red: "#ef4444",
+    purple: "#a855f7",
+    sky: "#0ea5e9",
+    green: "#22c55e",
+    lime: "#84cc16",
+    yellow: "#eab308",
+    slate: "#64748b",
+    gray: "#6b7280",
+    zinc: "#71717a",
+    neutral: "#737373",
+    stone: "#78716c",
+    fuchsia: "#d946ef",
+  };
+  const resolveColor = (color?: string, fallback = "#8b5cf6") => {
+    if (!color) return fallback;
+    return COLOR_MAP[color] || color;
+  };
 
   switch (chartType) {
     case "area":
@@ -76,7 +104,7 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
               smooth: true,
               areaStyle: { opacity: 0.28 },
               data: data.map((d) => d[cat]),
-              itemStyle: { color: colors?.[i] },
+              itemStyle: { color: resolveColor(colors?.[i]) },
             })),
           }}
         />
@@ -93,7 +121,7 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
               name: cat,
               type: "bar",
               data: data.map((d) => d[cat]),
-              itemStyle: { color: colors?.[i], borderRadius: [6, 6, 0, 0] },
+              itemStyle: { color: resolveColor(colors?.[i]), borderRadius: [6, 6, 0, 0] },
             })),
           }}
         />
@@ -111,7 +139,7 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
               type: "line",
               smooth: true,
               data: data.map((d) => d[cat]),
-              itemStyle: { color: colors?.[i] },
+              itemStyle: { color: resolveColor(colors?.[i]) },
             })),
           }}
         />
@@ -133,7 +161,7 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
                 data: data.map((d, i) => ({
                   name: d[indexField],
                   value: d[categories[0]],
-                  itemStyle: colors?.[i] ? { color: colors[i] } : undefined,
+                  itemStyle: colors?.[i] ? { color: resolveColor(colors[i]) } : undefined,
                 })),
               },
             ],
@@ -143,6 +171,9 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
 
     case "metric":
     case "kpi":
+      const dataValue = data?.[0]?.[categories?.[0]];
+      const displayValue = dataValue ?? config.value ?? 0;
+      const primaryColor = resolveColor(colors?.[0], "#10b981");
       return (
         <div className={cn("h-full flex flex-col items-center justify-center p-4 text-center", className)}>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
@@ -150,8 +181,8 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
           </p>
           <div className="flex items-baseline gap-1">
             {config.prefix && <span className="text-2xl font-medium text-muted-foreground">{config.prefix}</span>}
-            <span className="text-4xl font-bold tracking-tight text-foreground">
-              {typeof config.value === 'number' ? formatter(config.value) : config.value || data[0]?.[categories[0]] || 0}
+            <span className="text-4xl font-bold tracking-tight" style={{ color: primaryColor }}>
+              {typeof displayValue === 'number' ? formatter(displayValue) : displayValue}
             </span>
             {config.suffix && <span className="text-lg font-medium text-muted-foreground">{config.suffix}</span>}
           </div>
@@ -736,7 +767,11 @@ export function WidgetChart({ config, className, isEditMode = false, onUpdate }:
       );
 
     default:
-      return <AreaChart {...chartProps} />;
+      return (
+        <div className={cn("h-full flex items-center justify-center text-xs text-muted-foreground", className)}>
+          Unsupported chart type: {chartType}
+        </div>
+      );
   }
 }
 
