@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useGlobalState } from "@/context/GlobalStateContext";
 import { Icon } from "@/components/Icon";
+import DashboardBuilder from "./DashboardBuilder";
 
 export default function Dashboard() {
   const {
@@ -30,11 +31,8 @@ export default function Dashboard() {
       setActiveTab("modeling");
       return;
     }
-    if (location.pathname.includes("/dashboard/builder")) {
-      setActiveTab("dashboards");
-      return;
-    }
-    if (location.pathname === "/dashboard" && ["modeling", "dashboards"].includes(activeTab)) {
+    // Don't reset tab based on URL for builder — we manage it inline now
+    if (location.pathname === "/dashboard" && activeTab === "modeling") {
       setActiveTab("connections");
     }
   }, [location.pathname, activeTab, setActiveTab]);
@@ -70,7 +68,7 @@ export default function Dashboard() {
     });
   };
 
-  const isNestedRoute = location.pathname !== "/dashboard";
+  const isModelingRoute = location.pathname.includes("/dashboard/modeling");
   const appVersion = (import.meta as any)?.env?.VITE_APP_VERSION || "0.0.0";
 
   return (
@@ -82,12 +80,13 @@ export default function Dashboard() {
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          if (tab === "dashboards") {
-            navigate("/dashboard/builder");
-          } else if (tab === "modeling") {
+          if (tab === "modeling") {
             navigate("/dashboard/modeling");
           } else {
-            navigate("/dashboard");
+            // Stay on /dashboard for everything — builder is inline
+            if (location.pathname !== "/dashboard") {
+              navigate("/dashboard");
+            }
           }
         }}
         onLogout={handleLogout}
@@ -120,37 +119,48 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {isNestedRoute ? (
-          <Outlet />
-        ) : (
-          <>
-            {/* Connections Tab */}
-            <div className={activeTab === "connections" ? "contents" : "hidden"}>
-              <ConnectionsView />
-            </div>
+        {/* Modeling route — uses Outlet */}
+        {isModelingRoute && <Outlet />}
 
-            {/* Settings Tab */}
-            <div className={activeTab === "settings" ? "contents" : "hidden"}>
-              <SettingsView />
-            </div>
+        {/* Dashboard Builder — always mounted, hidden when not active */}
+        <div className={cn(
+          "flex-1 overflow-hidden",
+          activeTab === "dashboards" && !isModelingRoute ? "flex" : "hidden"
+        )}>
+          <DashboardBuilder />
+        </div>
 
-            {/* AI Assistant / Chat Tab */}
-            <div className={cn(
-              "flex-1 flex flex-col md:flex-row overflow-hidden",
-              (activeTab !== "connections" && activeTab !== "settings") ? "flex" : "hidden"
-            )}>
-              <div className="flex-1 min-w-0 border-r border-obsidian-outline-variant/10">
-                <ChatPanel
-                  onDataUpdate={setActiveWorkspaceData}
-                  onOpenDangerModal={handleOpenDangerModal}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <DataWorkspace data={activeWorkspaceData} />
-              </div>
-            </div>
-          </>
-        )}
+        {/* Connections Tab */}
+        <div className={cn(
+          "flex-1 overflow-hidden",
+          activeTab === "connections" && !isModelingRoute ? "contents" : "hidden"
+        )}>
+          <ConnectionsView />
+        </div>
+
+        {/* Settings Tab */}
+        <div className={cn(
+          "flex-1 overflow-hidden",
+          activeTab === "settings" && !isModelingRoute ? "contents" : "hidden"
+        )}>
+          <SettingsView />
+        </div>
+
+        {/* AI Assistant / Chat Tab */}
+        <div className={cn(
+          "flex-1 flex flex-col md:flex-row overflow-hidden",
+          activeTab === "history" && !isModelingRoute ? "flex" : "hidden"
+        )}>
+          <div className="flex-1 min-w-0 border-r border-obsidian-outline-variant/10">
+            <ChatPanel
+              onDataUpdate={setActiveWorkspaceData}
+              onOpenDangerModal={handleOpenDangerModal}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <DataWorkspace data={activeWorkspaceData} />
+          </div>
+        </div>
       </div>
 
       {/* Dev watermark */}

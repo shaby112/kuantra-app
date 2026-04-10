@@ -49,6 +49,194 @@ def _normalize_widget_rows(data: Any) -> tuple[list[str], list[dict[str, Any]]]:
     # Fallback for primitive arrays.
     return ["value"], [{"value": row} for row in data]
 
+@router.post("/demo/novamart", response_model=DashboardGenerationOut)
+async def generate_novamart_demo(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate a flagship NovaMart demo dashboard with pre-crafted SQL queries
+    that run against the actual synced data. Discovers schema names dynamically.
+    """
+    from app.services.duckdb_manager import duckdb_manager
+
+    # Discover the NovaMart schema — find which conn_ schema has novamart_ tables
+    try:
+        schema_rows = duckdb_manager.execute(
+            "SELECT DISTINCT table_schema FROM information_schema.tables "
+            "WHERE table_name LIKE 'novamart_%' "
+            "AND table_schema NOT LIKE '%_staging' "
+            "LIMIT 1"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to discover NovaMart schema: {e}")
+
+    if not schema_rows:
+        raise HTTPException(
+            status_code=404,
+            detail="NovaMart data not found. Please sync a NovaMart PostgreSQL connection first."
+        )
+
+    schema = schema_rows[0]["table_schema"]
+    customers = f'"{schema}"."novamart_customers"'
+    orders = f'"{schema}"."novamart_orders"'
+    order_items = f'"{schema}"."novamart_order_items"'
+
+    # Pre-crafted SQL queries for each widget
+    queries = {
+        "total_revenue": f"SELECT ROUND(CAST(SUM(total_amount) AS DOUBLE), 2) AS value FROM {orders} WHERE status != 'cancelled'",
+        "total_customers": f"SELECT COUNT(*) AS value FROM {customers}",
+        "total_orders": f"SELECT COUNT(*) AS value FROM {orders}",
+        "avg_order_value": f"SELECT ROUND(CAST(AVG(total_amount) AS DOUBLE), 2) AS value FROM {orders} WHERE status != 'cancelled'",
+        "revenue_trend": (
+            f"SELECT strftime(date_trunc('month', order_date), '%b %Y') AS month, "
+            f"ROUND(CAST(SUM(total_amount) AS DOUBLE), 2) AS revenue "
+            f"FROM {orders} WHERE status != 'cancelled' "
+            f"GROUP BY date_trunc('month', order_date) ORDER BY date_trunc('month', order_date)"
+        ),
+        "orders_by_status": (
+            f"SELECT status, COUNT(*) AS count "
+            f"FROM {orders} GROUP BY status ORDER BY count DESC"
+        ),
+        "top_customers": (
+            f"SELECT c.first_name || ' ' || c.last_name AS customer, "
+            f"ROUND(CAST(SUM(o.total_amount) AS DOUBLE), 2) AS revenue, "
+            f"COUNT(o.order_id) AS orders "
+            f"FROM {orders} o JOIN {customers} c ON o.customer_id = c.customer_id "
+            f"WHERE o.status != 'cancelled' "
+            f"GROUP BY 1 ORDER BY 2 DESC LIMIT 10"
+        ),
+        "revenue_by_payment": (
+            f"SELECT payment_method, ROUND(CAST(SUM(total_amount) AS DOUBLE), 2) AS revenue "
+            f"FROM {orders} WHERE status != 'cancelled' "
+            f"GROUP BY payment_method ORDER BY revenue DESC"
+        ),
+        "customers_by_state": (
+            f"SELECT state, COUNT(*) AS customers "
+            f"FROM {customers} "
+            f"GROUP BY state ORDER BY customers DESC LIMIT 10"
+        ),
+        "recent_orders": (
+            f"SELECT o.order_id, c.first_name || ' ' || c.last_name AS customer, "
+            f"o.order_date::DATE AS date, o.status, "
+            f"ROUND(CAST(o.total_amount AS DOUBLE), 2) AS amount, o.payment_method "
+            f"FROM {orders} o JOIN {customers} c ON o.customer_id = c.customer_id "
+            f"ORDER BY o.order_date DESC LIMIT 15"
+        ),
+    }
+
+    def _serialize_results(rows: list) -> list:
+        """Ensure all values are JSON-serializable."""
+        import datetime as _dt
+        from decimal import Decimal
+        serialized = []
+        for row in rows:
+            clean = {}
+            for k, v in row.items():
+                if isinstance(v, (_dt.datetime, _dt.date)):
+                    clean[k] = v.isoformat()
+                elif isinstance(v, Decimal):
+                    clean[k] = float(v)
+                else:
+                    clean[k] = v
+            serialized.append(clean)
+        return serialized
+
+    # Execute all queries and build widget configs
+    widgets = []
+    widget_status_list = []
+
+    widget_defs = [
+        {"key": "total_revenue", "title": "Total Revenue", "type": "metric", "gp": {"x": 0, "y": 0, "w": 3, "h": 2},
+         "prefix": "$", "valueFormat": "compact", "colors": ["emerald"]},
+        {"key": "total_customers", "title": "Total Customers", "type": "metric", "gp": {"x": 3, "y": 0, "w": 3, "h": 2},
+         "valueFormat": "number", "colors": ["violet"]},
+        {"key": "total_orders", "title": "Total Orders", "type": "metric", "gp": {"x": 6, "y": 0, "w": 3, "h": 2},
+         "valueFormat": "number", "colors": ["blue"]},
+        {"key": "avg_order_value", "title": "Avg Order Value", "type": "metric", "gp": {"x": 9, "y": 0, "w": 3, "h": 2},
+         "prefix": "$", "valueFormat": "number", "colors": ["amber"]},
+        {"key": "revenue_trend", "title": "Revenue Trend", "type": "area", "gp": {"x": 0, "y": 2, "w": 8, "h": 4},
+         "colors": ["emerald", "violet"]},
+        {"key": "orders_by_status", "title": "Orders by Status", "type": "donut", "gp": {"x": 8, "y": 2, "w": 4, "h": 4},
+         "colors": ["emerald", "violet", "blue", "amber", "rose"]},
+        {"key": "top_customers", "title": "Top 10 Customers", "type": "bar", "gp": {"x": 0, "y": 6, "w": 6, "h": 4},
+         "colors": ["violet"]},
+        {"key": "revenue_by_payment", "title": "Revenue by Payment Method", "type": "bar", "gp": {"x": 6, "y": 6, "w": 6, "h": 4},
+         "colors": ["emerald"]},
+        {"key": "recent_orders", "title": "Recent Orders", "type": "table", "gp": {"x": 0, "y": 10, "w": 8, "h": 4},
+         "colors": ["violet"]},
+        {"key": "customers_by_state", "title": "Customers by State", "type": "bar", "gp": {"x": 8, "y": 10, "w": 4, "h": 4},
+         "colors": ["blue"]},
+    ]
+
+    for wd in widget_defs:
+        sql = queries[wd["key"]]
+        widget_id = str(uuid.uuid4())
+        data = []
+        error = None
+
+        try:
+            result = duckdb_manager.execute(sql)
+            data = _serialize_results(result) if isinstance(result, list) else []
+        except Exception as e:
+            error = str(e)
+
+        if data:
+            keys = list(data[0].keys())
+            if wd["type"] in ("metric", "kpi", "number", "stat"):
+                # Single-value widgets: use the first key as both index and category
+                index_key = keys[0]
+                cats = [keys[0]]
+            else:
+                index_key = keys[0]
+                cats = [k for k in keys if k != index_key]
+        else:
+            index_key = "name"
+            cats = ["value"]
+
+        widget = WidgetConfig(
+            id=widget_id,
+            type=wd["type"],
+            title=wd["title"],
+            data=data,
+            index=index_key,
+            categories=cats if cats else ["value"],
+            gridPosition=GridPosition(**wd["gp"]),
+            colors=wd.get("colors"),
+            valueFormatter=wd.get("valueFormat", "number"),
+            sql_query=sql,
+        )
+        widgets.append(widget)
+        widget_status_list.append(
+            WidgetExecutionStatus(
+                widget_id=widget_id,
+                status="error" if error else "ok",
+                error=error,
+                sql=sql,
+            )
+        )
+
+    dashboard_config = DashboardConfig(widgets=widgets)
+
+    async with AsyncSessionLocal() as db:
+        dashboard = Dashboard(
+            user_id=current_user.id,
+            title="NovaMart Command Center",
+            config=dashboard_config.model_dump()
+        )
+        db.add(dashboard)
+        await db.commit()
+        await db.refresh(dashboard)
+        return {
+            "id": dashboard.id,
+            "title": dashboard.title,
+            "config": dashboard.config,
+            "created_at": dashboard.created_at,
+            "updated_at": dashboard.updated_at,
+            "share_url": None,
+            "widget_status": widget_status_list,
+        }
+
+
 @router.post("/planning", response_model=PlanningResponse)
 async def plan_dashboard(
     request: PlanningRequest,

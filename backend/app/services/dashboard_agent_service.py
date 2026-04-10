@@ -29,8 +29,9 @@ def _build_schema_context() -> str:
         tables = duckdb_manager.execute(
             "SELECT table_schema, table_name "
             "FROM information_schema.tables "
-            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'main') "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
             "AND table_name NOT LIKE '_dlt_%' "
+            "AND table_schema NOT LIKE '%_staging' "
             "ORDER BY table_schema, table_name"
         )
         if not tables:
@@ -39,8 +40,10 @@ def _build_schema_context() -> str:
         columns = duckdb_manager.execute(
             "SELECT table_schema, table_name, column_name, data_type "
             "FROM information_schema.columns "
-            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'main') "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
             "AND table_name NOT LIKE '_dlt_%' "
+            "AND table_schema NOT LIKE '%_staging' "
+            "AND column_name NOT LIKE '_dlt_%' "
             "ORDER BY table_schema, table_name, ordinal_position"
         )
 

@@ -146,6 +146,7 @@ export interface DashboardOut {
       colors?: string[];
       valueFormatter?: string;
       gridPosition: { x: number; y: number; w: number; h: number };
+      sql_query?: string;
     }[];
   };
   created_at: string;

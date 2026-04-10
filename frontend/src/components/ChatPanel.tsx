@@ -170,10 +170,23 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
               if (data.type === "conversation") {
                 setCurrentConversationId(String(data.conversation_id));
                 apiFetch<Conversation[]>("/api/v1/conversations/", { auth: true }).then(setConversations).catch(console.error);
+              } else if (data.type === "chunk") {
+                // Real-time streaming chunk from LLM
+                const token = data.content || "";
+                if (!token) continue;
+                assistantContent += token;
+                // Strip markdown SQL blocks from the displayed text for clean rendering
+                const displayContent = assistantContent.replace(/```(?:sql)?\s*\n?[\s\S]*?```/g, '').trim();
+                setMessages((prev) => {
+                  const existing = prev.find(m => m.id === aiMessageId);
+                  if (existing) return prev.map(m => m.id === aiMessageId ? { ...m, content: displayContent } : m);
+                  return [...prev, { id: aiMessageId, role: "assistant", content: displayContent }];
+                });
               } else if (data.type === "text") {
+                // Final parsed natural text (replaces streamed content)
                 let content = data.content || "";
                 if (content.includes("```tool_outputs") || content.includes("execute_sql_tool_response") || content.includes("Connection ID")) continue;
-                assistantContent += content;
+                assistantContent = content;
                 setMessages((prev) => {
                   const existing = prev.find(m => m.id === aiMessageId);
                   if (existing) return prev.map(m => m.id === aiMessageId ? { ...m, content: assistantContent } : m);

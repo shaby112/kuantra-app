@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Clock, Trash2, LayoutDashboard, Plus, Save } from "lucide-react";
+import { Search, Clock, Trash2, LayoutDashboard, Plus, Save, Sparkles } from "lucide-react";
 import type { DashboardConfig } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ interface DashboardHistoryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectDashboard: (config: DashboardConfig) => void;
+  onCreateDemoDashboard?: () => Promise<void> | void;
   currentDashboard: DashboardConfig;
 }
 
@@ -27,6 +28,7 @@ export function DashboardHistory({
   open,
   onOpenChange,
   onSelectDashboard,
+  onCreateDemoDashboard,
   currentDashboard
 }: DashboardHistoryProps) {
   const { toast } = useToast();
@@ -100,6 +102,18 @@ export function DashboardHistory({
               className="pl-9"
             />
           </div>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              if (!onCreateDemoDashboard) return;
+              await onCreateDemoDashboard();
+              fetchDashboards();
+            }}
+            className="gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            Create Demo
+          </Button>
           <Button onClick={handleSaveCurrent} className="gap-2">
             <Save className="w-4 h-4" />
             Save Current

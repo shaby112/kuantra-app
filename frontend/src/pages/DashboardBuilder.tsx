@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { DashboardConfig, DashboardPlan, WidgetConfig, LayoutItem, DashboardOut, ChartType, ColorScheme } from "@/types/dashboard";
 import { createWidgetFromPlan, generateDefaultLayout } from "@/lib/dashboard";
 import { motion, AnimatePresence } from "framer-motion";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { Icon } from "@/components/Icon";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useGlobalState } from "@/context/GlobalStateContext";
@@ -18,6 +18,9 @@ import { TemplateStore } from "@/components/dashboard/TemplateStore";
 import { DashboardHistory } from "@/components/dashboard/DashboardHistory";
 import { DashboardSplitView } from "@/components/dashboard/DashboardSplitView";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const COLOR_SCHEMES: { id: ColorScheme; name: string; colors: string[] }[] = [
   { id: "default", name: "Default", colors: ["#f43f5e", "#f59e0b", "#10b981", "#3b82f6"] },
@@ -52,6 +55,10 @@ export default function DashboardBuilder() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveTitle, setSaveTitle] = useState("");
+  const [saveDate, setSaveDate] = useState(new Date().toISOString().slice(0, 10));
+  const [connections, setConnections] = useState<{ id: string; name: string }[]>([]);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -64,6 +71,12 @@ export default function DashboardBuilder() {
     activeTab,
     setActiveTab
   } = useGlobalState();
+
+  useEffect(() => {
+    apiFetch<any[]>("/api/v1/connections/", { auth: true })
+      .then(data => setConnections(data))
+      .catch(() => setConnections([]));
+  }, []);
 
   const handlePlanReady = (plan: DashboardPlan) => {
     setCurrentPlan(plan);
@@ -101,6 +114,7 @@ export default function DashboardBuilder() {
         aggregation: "sum",
         connectionId: connectionIds.length > 0 ? connectionIds[0] : undefined,
         errorMessage: statusByWidget.get(w.id)?.error,
+        sql_query: (w as any).sql_query || statusByWidget.get(w.id)?.sql,
       }));
 
       const newLayout = response.config.widgets.map(w => ({
@@ -152,17 +166,23 @@ export default function DashboardBuilder() {
         const widgets = prev.widgets.map(w => {
           if (w.id === widgetId) {
             const keys = results.length > 0 ? Object.keys(results[0]) : [];
+            const nextCategories = keys.slice(1).length > 0 ? keys.slice(1) : (keys[0] ? [keys[0]] : w.categories);
+            const refreshedValue = results.length > 0 && nextCategories?.[0]
+              ? results[0][nextCategories[0]]
+              : w.value;
             return {
               ...w,
               data: results,
               sql_query: sql,
+              value: typeof refreshedValue === 'number' || typeof refreshedValue === 'string' ? refreshedValue : w.value,
+              errorMessage: undefined,
               indexField: keys[0] || w.indexField,
-              categories: keys.slice(1).length > 0 ? keys.slice(1) : [keys[0]]
+              categories: nextCategories
             };
           }
           return w;
         });
-        return { ...prev, widgets };
+        return { ...prev, widgets, updatedAt: new Date().toISOString() };
       });
 
       toast({ title: "Success", description: "Widget data refreshed." });
@@ -323,8 +343,6 @@ export default function DashboardBuilder() {
       ...defaults
     };
 
-    const maxY = dashboard.layout.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-
     const smallWidgets = ['metric', 'sparkline', 'gauge', 'stat', 'number', 'button', 'countdown', 'stopwatch', 'progressRing'];
     const mediumWidgets = ['progress', 'comparison', 'kpi', 'text', 'header', 'divider', 'quickStats', 'activityFeed'];
     const wideWidgets = ['ticker', 'timeline', 'leaderboard', 'map'];
@@ -346,10 +364,41 @@ export default function DashboardBuilder() {
       height = 2;
     }
 
+    // Find a free spot: scan rows from top to find an open position
+    const occupied = new Set<string>();
+    for (const item of dashboard.layout) {
+      for (let gx = item.x; gx < item.x + item.w; gx++) {
+        for (let gy = item.y; gy < item.y + item.h; gy++) {
+          occupied.add(`${gx},${gy}`);
+        }
+      }
+    }
+
+    let placeX = 0;
+    let placeY = 0;
+    let found = false;
+    for (let row = 0; row < 100 && !found; row++) {
+      for (let col = 0; col <= 12 - width && !found; col++) {
+        let fits = true;
+        for (let dx = 0; dx < width && fits; dx++) {
+          for (let dy = 0; dy < height && fits; dy++) {
+            if (occupied.has(`${col + dx},${row + dy}`)) {
+              fits = false;
+            }
+          }
+        }
+        if (fits) {
+          placeX = col;
+          placeY = row;
+          found = true;
+        }
+      }
+    }
+
     const newLayoutItem: LayoutItem = {
       i: newWidget.id,
-      x: 0,
-      y: maxY,
+      x: placeX,
+      y: placeY,
       w: width,
       h: height,
       minW: 2,
@@ -382,6 +431,112 @@ export default function DashboardBuilder() {
     setShowHistory(false);
     toast({ title: "Dashboard loaded", description: config.title });
   };
+
+  const handleOpenSaveModal = () => {
+    setSaveTitle(dashboard.title || "New Dashboard");
+    setSaveDate(new Date().toISOString().slice(0, 10));
+    setShowSaveModal(true);
+  };
+
+  const handleSaveDashboard = async () => {
+    try {
+      const updated: DashboardConfig = {
+        ...dashboard,
+        title: saveTitle.trim() || dashboard.title || "New Dashboard",
+        updatedAt: new Date(`${saveDate}T00:00:00.000Z`).toISOString(),
+      };
+      const saved = await saveDashboard(updated);
+      setDashboard({
+        ...updated,
+        id: saved.id.toString(),
+        createdAt: saved.created_at,
+        updatedAt: saved.updated_at,
+      });
+      setShowSaveModal(false);
+      toast({ title: "Dashboard saved", description: `Saved as \"${updated.title}\"` });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error", description: "Failed to save dashboard", variant: "destructive" });
+    }
+  };
+
+  const handleCreateDemoDashboard = useCallback(async () => {
+    toast({ title: "Building NovaMart dashboard...", description: "Querying live data..." });
+
+    try {
+      const response = await apiFetch<DashboardOut>("/api/v1/dashboards/demo/novamart", {
+        method: "POST",
+        auth: true
+      });
+
+      const widgetStatus = Array.isArray(response.widget_status) ? response.widget_status : [];
+      const statusByWidget = new Map(widgetStatus.map((s) => [s.widget_id, s]));
+
+      const newWidgets: WidgetConfig[] = response.config.widgets.map(w => {
+        const isMetric = ["metric", "kpi", "number", "stat"].includes(w.type);
+        const scalarValue = isMetric && w.data?.[0]
+          ? w.data[0][Object.keys(w.data[0])[0]]
+          : undefined;
+
+        // Detect currency widgets from title
+        const titleLower = w.title.toLowerCase();
+        const isCurrency = titleLower.includes("revenue") || titleLower.includes("value") || titleLower.includes("spend");
+
+        return {
+          id: w.id,
+          title: w.title,
+          chartType: w.type as ChartType,
+          data: w.data,
+          indexField: w.index,
+          categories: w.categories,
+          colors: w.colors || ["violet"],
+          valueFormat: (w.valueFormatter as any) || "number",
+          dateRange: "30d",
+          aggregation: "sum",
+          errorMessage: statusByWidget.get(w.id)?.error,
+          sql_query: (w as any).sql_query || statusByWidget.get(w.id)?.sql,
+          value: scalarValue,
+          prefix: isCurrency && isMetric ? "$" : undefined,
+        };
+      });
+
+      const newLayout: LayoutItem[] = response.config.widgets.map(w => ({
+        i: w.id,
+        x: w.gridPosition.x,
+        y: w.gridPosition.y,
+        w: w.gridPosition.w,
+        h: w.gridPosition.h,
+      }));
+
+      setDashboard({
+        id: response.id.toString(),
+        title: response.title,
+        widgets: newWidgets,
+        layout: newLayout,
+        isPublic: false,
+        createdAt: response.created_at,
+        updatedAt: response.updated_at,
+      });
+
+      const failed = widgetStatus.filter((w) => w.status === "error");
+      if (failed.length > 0) {
+        toast({
+          title: "Partial dashboard",
+          description: `${failed.length} widget(s) had errors. Open widget cards to inspect.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "NovaMart Command Center ready!", description: `${newWidgets.length} widgets loaded with live data.` });
+      }
+    } catch (e) {
+      console.error(e);
+      let message = "Make sure NovaMart data is synced.";
+      if (e instanceof ApiError) {
+        message = typeof e.detail === "string" ? e.detail : e.message;
+      }
+      toast({ title: "Demo generation failed", description: message, variant: "destructive" });
+    }
+  }, [setDashboard, toast]);
 
   const hasWidgets = dashboard.widgets.length > 0;
 
@@ -420,15 +575,6 @@ export default function DashboardBuilder() {
               libraryCollapsed ? "pr-14" : "pr-[280px]"
             )}
           >
-            {/* Canvas Background Pattern */}
-            <div
-              className="absolute inset-0 z-0 opacity-[0.3] pointer-events-none"
-              style={{
-                backgroundImage: `radial-gradient(circle, rgba(133,148,139,0.15) 1px, transparent 1px)`,
-                backgroundSize: "24px 24px",
-              }}
-            />
-
             {/* Chat Toggle Button */}
             <button
               onClick={() => setChatCollapsed(!chatCollapsed)}
@@ -447,6 +593,8 @@ export default function DashboardBuilder() {
                 dashboard={dashboard}
                 onUpdate={handleUpdateDashboard}
                 onAddWidget={() => handleAddWidget()}
+                onSaveDashboard={handleOpenSaveModal}
+                onCreateDemoDashboard={handleCreateDemoDashboard}
                 onRefreshWidget={handleRefreshWidgetData}
               />
             )}
@@ -461,6 +609,30 @@ export default function DashboardBuilder() {
                 onShowColors={() => setShowColorPicker(true)}
               />
             </div>
+
+            {/* Save Dashboard Modal */}
+            <Dialog open={showSaveModal} onOpenChange={setShowSaveModal}>
+              <DialogContent className="max-w-md bg-obsidian-surface-mid border-obsidian-outline-variant/20">
+                <DialogHeader>
+                  <DialogTitle className="text-obsidian-on-surface">Save Dashboard</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label className="text-obsidian-on-surface">Dashboard name</Label>
+                    <Input value={saveTitle} onChange={(e) => setSaveTitle(e.target.value)} placeholder="Q2 Revenue Command Center" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-obsidian-on-surface">Save date</Label>
+                    <Input type="date" value={saveDate} onChange={(e) => setSaveDate(e.target.value)} />
+                  </div>
+                  <p className="text-xs text-obsidian-on-surface-variant">Created and updated timestamps are persisted with this save.</p>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancel</Button>
+                    <Button onClick={handleSaveDashboard}>Save</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Color Scheme Modal */}
             <Dialog open={showColorPicker} onOpenChange={setShowColorPicker}>
@@ -504,6 +676,7 @@ export default function DashboardBuilder() {
           open={showHistory}
           onOpenChange={setShowHistory}
           onSelectDashboard={handleLoadDashboard}
+          onCreateDemoDashboard={handleCreateDemoDashboard}
           currentDashboard={dashboard}
         />
       </div>

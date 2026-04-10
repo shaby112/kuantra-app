@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { DashboardConfig, DashboardPlan, WidgetConfig } from "@/types/dashboard";
+import type { DashboardConfig, DashboardPlan, WidgetConfig, ChatMessage } from "@/types/dashboard";
 
 type SetStateAction<T> = T | ((prev: T) => T);
 
@@ -13,10 +13,20 @@ const initialDashboard: DashboardConfig = {
   updatedAt: new Date().toISOString(),
 };
 
+const INITIAL_CHAT_MESSAGE: ChatMessage = {
+  id: "1",
+  role: "assistant",
+  content: "Hi! I'm your AI Dashboard Builder. What kind of dashboard would you like to create? Try saying:\n\n• \"Build me a marketing dashboard\"\n• \"Create a sales performance dashboard\"\n• \"Show me user analytics\"",
+};
+
 interface DashboardState {
   dashboard: DashboardConfig;
   currentPlan: DashboardPlan | null;
   isEditing: boolean;
+
+  // Dashboard chat state (persisted across tab switches)
+  chatMessages: ChatMessage[];
+  setChatMessages: (messages: SetStateAction<ChatMessage[]>) => void;
 
   setDashboard: (dashboard: SetStateAction<DashboardConfig>) => void;
   setCurrentPlan: (plan: SetStateAction<DashboardPlan | null>) => void;
@@ -30,6 +40,15 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   dashboard: initialDashboard,
   currentPlan: null,
   isEditing: false,
+  chatMessages: [INITIAL_CHAT_MESSAGE],
+
+  setChatMessages: (messages) =>
+    set((state) => ({
+      chatMessages:
+        typeof messages === "function"
+          ? (messages as (prev: ChatMessage[]) => ChatMessage[])(state.chatMessages)
+          : messages,
+    })),
 
   setDashboard: (dashboard) =>
     set((state) => ({
