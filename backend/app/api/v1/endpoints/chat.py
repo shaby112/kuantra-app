@@ -156,6 +156,66 @@ def _qualify_sql_tables(sql: str) -> str:
         return sql
 
 
+def _remap_wrong_qualified_tables(sql: str) -> str:
+    """Fix wrongly-qualified tables like "conn_x"."orders" when table exists in another schema."""
+    from app.services.duckdb_manager import duckdb_manager
+
+    try:
+        import sqlglot
+        from sqlglot import exp
+    except Exception:
+        return sql
+
+    try:
+        table_rows = duckdb_manager.execute(
+            "SELECT table_schema, table_name "
+            "FROM information_schema.tables "
+            "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
+            "AND table_name NOT LIKE '_dlt_%' "
+            "AND table_schema NOT LIKE '%_staging'"
+        )
+        table_map: Dict[str, List[str]] = {}
+        schema_table_set = set()
+        for row in table_rows:
+            schema = row["table_schema"]
+            table = row["table_name"]
+            table_map.setdefault(table, []).append(schema)
+            schema_table_set.add((schema, table))
+
+        tree = sqlglot.parse_one(sql, read="duckdb")
+        changed = False
+
+        for table in list(tree.find_all(exp.Table)):
+            if not table.db or table.catalog:
+                continue
+            tname = table.name
+            db_name = table.db
+
+            if (db_name, tname) in schema_table_set:
+                continue
+
+            schemas = table_map.get(tname, [])
+            if len(schemas) == 1:
+                chosen_schema = schemas[0]
+            elif len(schemas) > 1:
+                non_staging = [s for s in schemas if not s.endswith("_staging")]
+                chosen_schema = non_staging[0] if len(non_staging) == 1 else None
+            else:
+                chosen_schema = None
+
+            if chosen_schema and chosen_schema != db_name:
+                table.set("db", exp.Identifier(this=chosen_schema, quoted=True))
+                table.set("this", exp.Identifier(this=tname, quoted=True))
+                changed = True
+
+        if not changed:
+            return sql
+
+        return tree.sql(dialect="duckdb")
+    except Exception:
+        return sql
+
+
 def _execute_with_qualified_fallback(sql: str):
     """Execute SQL and retry once with auto-qualified table names on missing-table errors."""
     from app.services.duckdb_manager import duckdb_manager
@@ -168,11 +228,16 @@ def _execute_with_qualified_fallback(sql: str):
             raise
 
         qualified_sql = _qualify_sql_tables(sql)
-        if qualified_sql.strip() == sql.strip():
-            raise
+        if qualified_sql.strip() != sql.strip():
+            logger.info("Retrying query with auto-qualified table names")
+            return duckdb_manager.execute(qualified_sql)
 
-        logger.info("Retrying query with auto-qualified table names")
-        return duckdb_manager.execute(qualified_sql)
+        remapped_sql = _remap_wrong_qualified_tables(sql)
+        if remapped_sql.strip() != sql.strip():
+            logger.info("Retrying query with remapped qualified table names")
+            return duckdb_manager.execute(remapped_sql)
+
+        raise
 
 
 def _is_repairable_sql_error(error_message: str) -> bool:
