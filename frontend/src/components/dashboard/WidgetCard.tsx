@@ -82,7 +82,7 @@ export function WidgetCard({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "h-full flex flex-col transition-all duration-200 rounded-lg",
+        "h-full flex flex-col transition-all duration-200 rounded-lg text-obsidian-on-surface [&_.text-foreground]:text-obsidian-on-surface [&_.text-muted-foreground]:text-obsidian-on-surface-variant",
         config.showBackground !== false ? "bg-obsidian-surface-low/70 backdrop-blur-md" : "bg-transparent",
         config.showBorder !== false ? "border border-obsidian-outline-variant/15" : "border-none",
         config.errorMessage && "border-red-500/40 ring-1 ring-red-500/20",
@@ -231,7 +231,7 @@ export function WidgetCard({
               </>
             ) : (
               <div className="h-full rounded-lg bg-obsidian-surface-lowest p-3 border border-obsidian-outline-variant/10 overflow-auto">
-                <pre className="text-xs leading-relaxed font-mono text-obsidian-primary/70 whitespace-pre-wrap">
+                <pre className="text-xs leading-relaxed font-mono text-obsidian-on-surface whitespace-pre-wrap">
                   {config.sql_query || "-- No SQL query configured for this widget"}
                 </pre>
               </div>
