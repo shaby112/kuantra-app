@@ -220,7 +220,7 @@ async def generate_novamart_demo(
     async with AsyncSessionLocal() as db:
         dashboard = Dashboard(
             user_id=current_user.id,
-            title="NovaMart Command Center",
+            title="New NovaMart Dashboard",
             config=dashboard_config.model_dump()
         )
         db.add(dashboard)
