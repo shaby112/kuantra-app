@@ -93,7 +93,9 @@ All data is stored in a DuckDB warehouse. Use DuckDB SQL syntax (it is PostgreSQ
 7. If the user's question is ambiguous (e.g., multiple tables could match), ask which data source they mean.
 8. Keep explanations concise. Focus on the SQL and the insight.
 9. For date/time operations, use DuckDB functions (e.g., date_trunc, current_date, interval).
-10. Always use LIMIT when the user doesn't specify a row count (default LIMIT 100)."""
+10. Always use LIMIT when the user doesn't specify a row count (default LIMIT 100).
+11. Return at most ONE executable SQL code block per answer.
+12. If user asks for multiple metrics (for example "all three"), combine them into one query using CTEs and joins so there is a single result table."""
 
 
 class ChatRequest(BaseModel):
@@ -506,10 +508,14 @@ async def chat_stream(
             # Now parse the complete response for SQL
             raw = full_response.strip()
             sql_generated = None
-            sql_match = re.search(r"```(?:sql)?\s*\n?([\s\S]*?)```", raw)
-            if sql_match:
-                sql_generated = sql_match.group(1).strip()
+            sql_blocks = re.findall(r"```(?:sql)?\s*\n?([\s\S]*?)```", raw)
+            if sql_blocks:
+                # Keep one executable SQL block for UI/execute path.
+                # If model returns multiple blocks, take the last one (typically final revision).
+                sql_generated = sql_blocks[-1].strip()
                 natural_text = re.sub(r"```(?:sql)?\s*\n?[\s\S]*?```", "", raw).strip()
+                if len(sql_blocks) > 1:
+                    logger.warning("LLM returned multiple SQL blocks; keeping the last block for execution")
                 if not natural_text:
                     natural_text = "Here's a query to answer your question:"
             elif raw.upper().lstrip().startswith(("SELECT ", "WITH ", "INSERT ", "UPDATE ", "DELETE ")):
