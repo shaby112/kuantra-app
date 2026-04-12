@@ -103,8 +103,9 @@ class MDLGenerator:
         "otps",
     }
 
-    # Keep relationship inference in-source by default to avoid cross-connection false positives.
-    ALLOW_CROSS_SCHEMA_RELATIONSHIPS = False
+    # Allow cross-schema (cross-connection) relationship inference so product_id
+    # links between tables from different connections can be detected.
+    ALLOW_CROSS_SCHEMA_RELATIONSHIPS = True
 
     def __init__(self):
         self._model_cache = {}
@@ -283,7 +284,14 @@ class MDLGenerator:
         # PASS 2: Statistical with Batch Value Overlap (85-95% confidence)
         rel_pass2 = self._pass_statistical_batch(models)
         self._merge_relationships(relationships, rel_pass2)
-        
+
+        # PASS 2b: Shared-key detection — matches columns with the same _id
+        # name across tables and verifies value overlap.  This catches joins
+        # like table_a.some_id ↔ table_b.some_id where
+        # neither side is the table's PK.
+        rel_pass2b = self._pass_shared_keys(models)
+        self._merge_relationships(relationships, rel_pass2b)
+
         # PASS 3: Naming Conventions (70-85% confidence)
         # Run this pass even without rapidfuzz. Fuzzy matching is optional;
         # deterministic naming heuristics still provide high value.
@@ -895,6 +903,125 @@ class MDLGenerator:
                 "cast_applied": cast_applied,
             }
         return None
+
+    # ── PASS 2b: Shared-Key Detection ──────────────────────────────
+
+    def _pass_shared_keys(self, models: List[Dict]) -> List[Dict]:
+        """Detect relationships via shared key columns (same column name across tables).
+
+        Catches the common pattern where tables from different sources share a
+        business key (e.g. ``product_id``) that is not the PK on either side.
+        Verifies with value overlap to eliminate false positives.
+        """
+        logger.info("Pass 2b: Shared-Key Detection")
+
+        # Collect all _id columns grouped by column name
+        col_index: Dict[str, List[Dict]] = {}
+        for model in models:
+            schema = model.get("schema", "main")
+            table = self._get_table_name(model)
+            for col in model["columns"]:
+                cname = col["name"]
+                if not (cname.endswith("_id") or cname.endswith("_key")):
+                    continue
+                if cname.startswith("_dlt_"):
+                    continue
+                col_index.setdefault(cname, []).append({
+                    "model": model["name"],
+                    "table": table,
+                    "schema": schema,
+                    "type": col.get("type"),
+                    "is_unique": col.get("is_unique", False),
+                    "cardinality": (col.get("stats") or {}).get("cardinality", 0),
+                })
+
+        rels: List[Dict] = []
+        seen: Set[Tuple[str, str, str, str]] = set()
+
+        for col_name, entries in col_index.items():
+            if len(entries) < 2:
+                continue
+
+            # For each pair, verify value overlap
+            for i, a in enumerate(entries):
+                for b in entries[i + 1:]:
+                    if a["model"] == b["model"]:
+                        continue
+
+                    # Determine direction: the side with higher cardinality or
+                    # unique flag is the "primary" side.
+                    if b.get("is_unique") and not a.get("is_unique"):
+                        pk_side, fk_side = b, a
+                    elif a.get("is_unique") and not b.get("is_unique"):
+                        pk_side, fk_side = a, b
+                    elif (a.get("cardinality", 0) or 0) >= (b.get("cardinality", 0) or 0):
+                        pk_side, fk_side = a, b
+                    else:
+                        pk_side, fk_side = b, a
+
+                    pair_key = (fk_side["model"], col_name, pk_side["model"], col_name)
+                    if pair_key in seen:
+                        continue
+                    seen.add(pair_key)
+
+                    # Verify value overlap in DuckDB
+                    try:
+                        fk_q = f'"{fk_side["schema"]}"."{fk_side["table"]}"'
+                        pk_q = f'"{pk_side["schema"]}"."{pk_side["table"]}"'
+                        query = (
+                            f'SELECT COUNT(*) AS match_count, '
+                            f'(SELECT COUNT(DISTINCT CAST("{col_name}" AS VARCHAR)) '
+                            f'FROM {fk_q} WHERE "{col_name}" IS NOT NULL) AS total_count '
+                            f'FROM (SELECT DISTINCT CAST("{col_name}" AS VARCHAR) AS v '
+                            f'FROM {fk_q} WHERE "{col_name}" IS NOT NULL LIMIT 500) fk '
+                            f'WHERE fk.v IN (SELECT CAST("{col_name}" AS VARCHAR) FROM {pk_q})'
+                        )
+                        result = duckdb_manager.execute(query)
+                        if not result:
+                            continue
+                        row = result[0]
+                        match_count = row.get("match_count", 0) or 0
+                        total_count = row.get("total_count", 0) or 0
+                        if total_count == 0 or match_count < 3:
+                            continue
+                        score = match_count / total_count
+                        if score < 0.50:
+                            continue
+                    except Exception as e:
+                        logger.debug(f"Shared-key overlap check failed for {col_name}: {e}")
+                        continue
+
+                    base_confidence = 0.80 + (score - 0.50) * 0.3
+                    cross_schema = fk_side["schema"] != pk_side["schema"]
+                    if cross_schema:
+                        base_confidence = min(base_confidence + 0.05, 0.98)
+
+                    condition, cast_applied = self._build_join_condition(
+                        from_model=pk_side["model"],
+                        from_column=col_name,
+                        to_model=fk_side["model"],
+                        to_column=col_name,
+                        from_type=pk_side.get("type"),
+                        to_type=fk_side.get("type"),
+                    )
+
+                    rels.append({
+                        "name": f"{fk_side['model']}_{col_name}__{pk_side['model']}_{col_name}_shared",
+                        "from": pk_side["model"],
+                        "from_column": col_name,
+                        "to": fk_side["model"],
+                        "to_column": col_name,
+                        "join_type": "one_to_many",
+                        "condition": condition,
+                        "confidence": round(min(base_confidence, 0.98), 2),
+                        "method": "shared_key",
+                        "value_overlap": round(score, 2),
+                        "cross_schema": cross_schema,
+                        "cast_applied": cast_applied,
+                    })
+
+        logger.info(f"Pass 2b found {len(rels)} shared-key relationships")
+        return rels
 
     # ── PASS 3: Naming Conventions ────────────────────────────────
 

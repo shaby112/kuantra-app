@@ -420,13 +420,16 @@ def confirm_relationship(
     
     db.commit()
     
-    # If confirmed, add to MDL
+    # If confirmed, add to MDL and user_overrides (so it survives MDL refresh)
     if request.action == "confirm":
         current_mdl = get_current_mdl(db)
         if current_mdl:
-            content = current_mdl.content.copy()
+            import copy
+            content = copy.deepcopy(current_mdl.content)
             relationships = content.get("relationships", [])
-            
+            user_overrides = copy.deepcopy(current_mdl.user_overrides or {})
+            override_rels = user_overrides.setdefault("relationships", [])
+
             # Add new relationship
             # Convention: from = PK side (one), to = FK side (many) → one_to_many
             new_rel = {
@@ -442,12 +445,13 @@ def confirm_relationship(
             }
             relationships.append(new_rel)
             content["relationships"] = relationships
-            
+            override_rels.append(new_rel)
+
             # Create new MDL version
             new_mdl = MDLVersion(
                 version=current_mdl.version + 1,
                 content=content,
-                user_overrides=current_mdl.user_overrides,
+                user_overrides=user_overrides,
                 created_by=current_user.id,
                 change_summary=f"Added relationship: {suggestion.from_table} -> {suggestion.to_table}"
             )
@@ -581,19 +585,22 @@ def create_relationship(
             detail="MDL is locked by another user"
         )
     
+    import copy
     current_mdl = get_current_mdl(db)
     if not current_mdl:
         raise HTTPException(status_code=404, detail="No MDL exists. Run sync first.")
-    
-    content = current_mdl.content.copy()
+
+    content = copy.deepcopy(current_mdl.content)
     relationships = content.get("relationships", [])
-    
+    user_overrides = copy.deepcopy(current_mdl.user_overrides or {})
+    override_rels = user_overrides.setdefault("relationships", [])
+
     # Check for duplicate
     rel_name = f"{request.from_table}_{request.to_table}"
     existing = next((r for r in relationships if r.get("name") == rel_name), None)
     if existing:
         raise HTTPException(status_code=400, detail="Relationship already exists")
-    
+
     # Add new relationship
     new_rel = {
         "name": rel_name,
@@ -608,12 +615,13 @@ def create_relationship(
     }
     relationships.append(new_rel)
     content["relationships"] = relationships
-    
+    override_rels.append(new_rel)
+
     # Create new MDL version
     new_mdl = MDLVersion(
         version=current_mdl.version + 1,
         content=content,
-        user_overrides=current_mdl.user_overrides,
+        user_overrides=user_overrides,
         created_by=current_user.id,
         change_summary=f"Added manual relationship: {request.from_table} -> {request.to_table}"
     )

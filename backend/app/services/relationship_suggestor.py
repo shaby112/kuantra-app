@@ -218,42 +218,61 @@ class RelationshipSuggestor:
     ) -> float:
         """
         Compute confidence score for a potential relationship.
-        
+
         Factors:
         1. Name similarity (40%)
         2. Extracted table name match (40%)
         3. Column naming convention (20%)
         """
         score = 0.0
-        
-        # 1. Name similarity between FK column and PK table
-        pk_base = pk_table.split(".")[-1].lower()  # e.g., "users"
-        pk_singular = pk_base.rstrip("s")  # e.g., "user"
+
+        # Get base table name (strip schema prefix) and also the "core" name
+        # e.g., "conn_abc.myschema_customers" -> base="myschema_customers", core="customers"
+        pk_base = pk_table.split(".")[-1].lower()
+        pk_singular = pk_base.rstrip("s")
         fk_lower = fk_column.lower()
-        
-        # Check if FK column contains table name
+
+        # Strip common prefixes to get "core" table name
+        # e.g. "t_123_product_catalog" -> "product_catalog", "acme_customers" -> "customers"
+        pk_core = pk_base
+        for prefix_pattern in [r"^t_\d+_", r"^[a-z]+_(?=\w)"]:
+            stripped = re.sub(prefix_pattern, "", pk_core)
+            if stripped != pk_core:
+                pk_core = stripped
+                break
+        pk_core_singular = pk_core.rstrip("s")
+
+        # 1. Name similarity — check against both full base and core name
         if pk_base in fk_lower or pk_singular in fk_lower:
             score += 0.4
+        elif pk_core in fk_lower or pk_core_singular in fk_lower:
+            score += 0.4
         else:
-            # Use sequence matching for partial similarity
-            similarity = SequenceMatcher(None, fk_lower, pk_singular).ratio()
+            similarity = max(
+                SequenceMatcher(None, fk_lower, pk_singular).ratio(),
+                SequenceMatcher(None, fk_lower, pk_core_singular).ratio(),
+            )
             score += similarity * 0.2
-        
+
         # 2. Check for table name extraction from FK column
         for pattern in self.FK_PATTERNS:
             match = re.match(pattern, fk_column, re.IGNORECASE)
             if match:
                 extracted = match.group(1).lower()
-                if extracted == pk_singular or extracted == pk_base:
+                if extracted in (pk_singular, pk_base, pk_core, pk_core_singular):
                     score += 0.4
                 elif extracted in pk_base or pk_base in extracted:
                     score += 0.2
+                elif extracted in pk_core or pk_core in extracted:
+                    score += 0.2
                 break
-        
-        # 3. Convention bonus (ends with _id and points to id)
-        if fk_column.lower().endswith("_id") and pk_column.lower() == "id":
-            score += 0.2
-        
+
+        # 3. Convention bonus
+        if fk_column.lower().endswith("_id"):
+            # Direct match: customer_id -> pk_column is customer_id or id
+            if pk_column.lower() in ("id", fk_column.lower()):
+                score += 0.2
+
         return min(score, 1.0)
 
 

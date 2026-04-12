@@ -1,6 +1,7 @@
 from google.adk.agents import LlmAgent
 from app.agents.analyst import get_analyst_agent
 from app.agents.designer import get_designer_agent
+from app.core.config import settings
 
 # Initialize sub-agents
 analyst = get_analyst_agent()
@@ -8,7 +9,7 @@ designer = get_designer_agent()
 
 # Define Orchestrator
 orchestrator = LlmAgent(
-    model="gemini-2.0-flash",
+    model=settings.LLM_MODEL or "gemini-2.0-flash",
     name="Orchestrator",
     instruction="""
     You are the Kuantra Assistant Orchestrator.

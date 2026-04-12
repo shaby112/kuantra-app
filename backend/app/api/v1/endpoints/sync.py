@@ -169,53 +169,8 @@ def _build_effective_status(
 
 
 # --- Endpoints ---
-
-@router.post("/{connection_id}", response_model=SyncTriggerResponse)
-async def trigger_sync(
-    connection_id: UUID,
-    incremental: bool = True,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
-):
-    """
-    Trigger a manual sync for a connection.
-    
-    - **connection_id**: ID of the connection to sync
-    - **incremental**: If true, only sync changed data (default: true)
-    """
-    # Get connection
-    connection = db.query(DbConnection).filter(
-        DbConnection.id == connection_id,
-        DbConnection.user_id == current_user.id
-    ).first()
-    
-    if not connection:
-        raise HTTPException(status_code=404, detail="Connection not found")
-    
-    # Check if already syncing
-    if sync_service.is_syncing(str(connection_id)):
-        job = sync_service.get_connection_job(str(connection_id))
-        return SyncTriggerResponse(
-            job_id=job.job_id if job else "",
-            connection_id=str(connection_id),
-            status="already_running",
-            message="Sync is already in progress"
-        )
-    
-    # Start sync
-    try:
-        job = await sync_service.start_sync(db, connection, incremental)
-        
-        return SyncTriggerResponse(
-            job_id=job.job_id,
-            connection_id=str(connection_id),
-            status="started",
-            message="Sync job started successfully"
-        )
-    except Exception as e:
-        logger.error(f"Failed to start sync: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+# NOTE: /all must be defined BEFORE /{connection_id} so FastAPI matches
+# the literal path first, not the UUID path parameter.
 
 @router.post("/all", response_model=List[SyncTriggerResponse])
 async def sync_all_connections(
@@ -225,16 +180,16 @@ async def sync_all_connections(
 ):
     """
     Sync all connections for the current user.
-    
+
     - **incremental**: If true, only sync changed data (default: true)
     """
     connections = db.query(DbConnection).filter(
         DbConnection.user_id == current_user.id
     ).all()
-    
+
     if not connections:
         return []
-    
+
     results = []
     for connection in connections:
         try:
@@ -261,8 +216,55 @@ async def sync_all_connections(
                 status="failed",
                 message=str(e)
             ))
-    
+
     return results
+
+
+@router.post("/{connection_id}", response_model=SyncTriggerResponse)
+async def trigger_sync(
+    connection_id: UUID,
+    incremental: bool = True,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Trigger a manual sync for a connection.
+
+    - **connection_id**: ID of the connection to sync
+    - **incremental**: If true, only sync changed data (default: true)
+    """
+    # Get connection
+    connection = db.query(DbConnection).filter(
+        DbConnection.id == connection_id,
+        DbConnection.user_id == current_user.id
+    ).first()
+
+    if not connection:
+        raise HTTPException(status_code=404, detail="Connection not found")
+
+    # Check if already syncing
+    if sync_service.is_syncing(str(connection_id)):
+        job = sync_service.get_connection_job(str(connection_id))
+        return SyncTriggerResponse(
+            job_id=job.job_id if job else "",
+            connection_id=str(connection_id),
+            status="already_running",
+            message="Sync is already in progress"
+        )
+
+    # Start sync
+    try:
+        job = await sync_service.start_sync(db, connection, incremental)
+
+        return SyncTriggerResponse(
+            job_id=job.job_id,
+            connection_id=str(connection_id),
+            status="started",
+            message="Sync job started successfully"
+        )
+    except Exception as e:
+        logger.error(f"Failed to start sync: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{connection_id}/status", response_model=SyncStatusResponse)

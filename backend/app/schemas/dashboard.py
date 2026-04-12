@@ -9,7 +9,7 @@ class DashboardMetric(BaseModel):
     name: str = Field(description="Name of the metric, e.g., 'Total Revenue'")
     aggregation: Literal['sum', 'avg', 'count', 'min', 'max', 'percentage', 'none']
     sql_column: str = Field(description="The source column or expression, e.g., 'amount' or 'COUNT(*)'")
-    model_config = {'extra': 'forbid'}
+    model_config = {'extra': 'ignore'}
 
 class GridPosition(BaseModel):
     x: int
@@ -23,15 +23,15 @@ class DashboardVisualization(BaseModel):
     metrics: List[str] = Field(description="List of metric names to visualize")
     breakdown: Optional[str] = Field(None, description="Dimension to break down by, e.g., 'region'")
     grid_position: Optional[GridPosition] = None
-    model_config = {'extra': 'forbid'}
+    model_config = {'extra': 'ignore'}
 
 class DashboardPlan(BaseModel):
     title: str
     metrics: List[DashboardMetric]
     dimensions: List[str] = Field(default=[], description="List of available breakdown dimensions")
-    time_range: str = Field(description="Time range for the dashboard, e.g., 'Last 30 Days'")
+    time_range: str = Field(default="All time", description="Time range for the dashboard, e.g., 'Last 30 Days'")
     visualizations: List[DashboardVisualization]
-    model_config = {'extra': 'forbid'}
+    model_config = {'extra': 'ignore'}
 
 # --- Widget & Dashboard Persistence Schemas ---
 

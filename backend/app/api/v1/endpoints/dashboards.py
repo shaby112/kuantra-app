@@ -263,20 +263,25 @@ async def generate_dashboard(
     # Smart layout: KPI/number widgets are small (3-wide), charts are larger (6-wide)
     kpi_types = {"number", "metric", "kpi", "stat", "gauge", "sparkline"}
 
-    for i, viz in enumerate(request.plan.visualizations):
+    # Build aggregation maps for all visualizations
+    all_aggs = []
+    for viz in request.plan.visualizations:
         aggs = {}
         for m_name in viz.metrics:
             metric_conf = next((m for m in request.plan.metrics if m.name == m_name), None)
             if metric_conf:
                 aggs[m_name] = metric_conf.aggregation
+        all_aggs.append(aggs)
 
-        result = await dashboard_agent_service.generate_widget_data(
-            viz,
-            current_user.id,
-            aggregations=aggs,
-            connection_ids=request.connection_ids,
-        )
+    # Generate ALL widget SQL in a single LLM call (batch)
+    all_results = await dashboard_agent_service.generate_all_widget_data_batch(
+        request.plan.visualizations,
+        all_aggs,
+        current_user.id,
+        connection_ids=request.connection_ids,
+    )
 
+    for i, (viz, result) in enumerate(zip(request.plan.visualizations, all_results)):
         title = f"{', '.join(viz.metrics)}"
         if viz.breakdown:
             title += f" by {viz.breakdown}"

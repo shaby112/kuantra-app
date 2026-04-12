@@ -38,7 +38,7 @@ COPY backend/ ./backend/
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN mkdir -p /app/data /app/data/uploads /app/data/ssh_keys /app/data/duckdb_temp \
+RUN mkdir -p /app/data /app/data/uploads /app/data/ssh_keys /app/data/duckdb_temp /app/data/bronze \
     && chown -R kuantra:kuantra /app/data /app/backend
 
 ENV PYTHONPATH=/app/backend \
@@ -46,6 +46,7 @@ ENV PYTHONPATH=/app/backend \
     UPLOAD_DIR=/app/data/uploads \
     SSH_KEY_DIR=/app/data/ssh_keys \
     DUCKDB_TEMP_DIR=/app/data/duckdb_temp \
+    BRONZE_BASE_PATH=/app/data/bronze \
     PORT=8000
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \

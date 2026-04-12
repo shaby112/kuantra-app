@@ -37,8 +37,9 @@ semantic_query_tool = FunctionTool(
 )
 
 def get_analyst_agent() -> LlmAgent:
+    from app.core.config import settings
     return LlmAgent(
-        model="gemini-2.0-flash",
+        model=settings.LLM_MODEL or "gemini-2.0-flash",
         name="Data Analyst",
         instruction="""
         You are an expert Data Analyst using a Semantic Layer.

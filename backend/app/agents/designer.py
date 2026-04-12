@@ -1,10 +1,11 @@
 from google.adk.agents import LlmAgent
 from typing import List, Dict, Any
 import json
+from app.core.config import settings
 
 def get_designer_agent() -> LlmAgent:
     return LlmAgent(
-        model="gemini-2.0-flash",
+        model=settings.LLM_MODEL or "gemini-2.0-flash",
         name="Dashboard Designer",
         instruction="""
         You are an expert UI/UX Dashboard Designer.

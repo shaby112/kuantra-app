@@ -44,9 +44,28 @@ class LocalLLMRuntimeService:
         if settings.AI_PROVIDER.lower() not in ("local", "ollama"):
             return {"status": "disabled", "provider": settings.AI_PROVIDER}
 
+        base = self._base()
+
         try:
             async with httpx.AsyncClient(timeout=settings.LOCAL_LLM_HEALTH_TIMEOUT_SECONDS) as client:
-                tags_resp = await client.get(f"{self._base()}/api/tags")
+                # Try llama-server /health first, then Ollama /api/tags
+                try:
+                    health_resp = await client.get(f"{base}/health")
+                    health_resp.raise_for_status()
+                    data = health_resp.json()
+                    if data.get("status") == "ok":
+                        return {
+                            "status": "healthy",
+                            "provider": "local",
+                            "base_url": base,
+                            "model": settings.LOCAL_LLM_MODEL,
+                            "model_present": True,
+                        }
+                except httpx.HTTPStatusError:
+                    pass
+
+                # Fallback: Ollama /api/tags
+                tags_resp = await client.get(f"{base}/api/tags")
                 tags_resp.raise_for_status()
                 tags = tags_resp.json().get("models", [])
                 model_names = [m.get("name", "") for m in tags]
@@ -58,7 +77,7 @@ class LocalLLMRuntimeService:
                 return {
                     "status": "healthy",
                     "provider": "local",
-                    "base_url": self._base(),
+                    "base_url": base,
                     "model": settings.LOCAL_LLM_MODEL,
                     "model_present": model_present,
                     "models_count": len(tags),

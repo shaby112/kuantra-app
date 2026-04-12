@@ -285,36 +285,53 @@ async def chat_stream(
             provider = llm_provider_registry.get_provider()
             full_response = ""
 
-            try:
-                async for chunk in provider.stream(
-                    prompt=query,
-                    system_prompt=system_prompt,
-                    history=history if history else None,
-                ):
-                    full_response += chunk
-                    # Stream each chunk to the frontend immediately
-                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-            except Exception as llm_exc:
-                logger.error(f"LLM provider failed: {llm_exc}")
-                exc_msg = str(llm_exc).lower()
-                if "connection refused" in exc_msg or "connect" in exc_msg:
+            # Pre-flight: check if local LLM is available before streaming
+            if settings.AI_PROVIDER.lower() in ("local", "ollama"):
+                from app.services.local_llm_runtime_service import local_llm_runtime_service
+                health = await local_llm_runtime_service.health()
+                if health.get("status") == "unhealthy" or not health.get("model_present", True):
                     full_response = (
-                        "Could not connect to the local AI model (Ollama). "
-                        "Make sure Ollama is running and accessible."
+                        "The Kuantra AI model is not available yet. "
+                        "Please go to **Settings** and download the AI model first."
                     )
-                elif "timeout" in exc_msg or "timed out" in exc_msg:
-                    full_response = (
-                        "The AI model took too long to respond. "
-                        "Try a shorter question or check Ollama resource usage."
-                    )
-                elif "api key" in exc_msg or "api_key" in exc_msg or "unauthorized" in exc_msg:
-                    full_response = (
-                        "AI API key is invalid or missing. "
-                        "Please configure a valid key in Settings."
-                    )
-                else:
-                    full_response = f"AI encountered an error: {llm_exc}"
-                yield f"data: {json.dumps({'type': 'chunk', 'content': full_response})}\n\n"
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': full_response})}\n\n"
+                    yield f"data: {json.dumps({'type': 'model_unavailable'})}\n\n"
+                    # Save and finalize below
+                    # Skip the streaming block
+                    provider = None
+
+            if provider is not None:
+                try:
+                    async for chunk in provider.stream(
+                        prompt=query,
+                        system_prompt=system_prompt,
+                        history=history if history else None,
+                    ):
+                        full_response += chunk
+                        # Stream each chunk to the frontend immediately
+                        yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+                except Exception as llm_exc:
+                    logger.error(f"LLM provider failed: {llm_exc}")
+                    exc_msg = str(llm_exc).lower()
+                    if "connection refused" in exc_msg or "connect" in exc_msg:
+                        full_response = (
+                            "The Kuantra AI model is not reachable. "
+                            "Please check that the AI service is running, or go to **Settings** to download the model."
+                        )
+                        yield f"data: {json.dumps({'type': 'model_unavailable'})}\n\n"
+                    elif "timeout" in exc_msg or "timed out" in exc_msg:
+                        full_response = (
+                            "The AI model took too long to respond. "
+                            "Try a shorter question or check resource usage in Settings."
+                        )
+                    elif "api key" in exc_msg or "api_key" in exc_msg or "unauthorized" in exc_msg:
+                        full_response = (
+                            "AI API key is invalid or missing. "
+                            "Please configure a valid key in Settings."
+                        )
+                    else:
+                        full_response = f"AI encountered an error: {llm_exc}"
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': full_response})}\n\n"
 
             # Now parse the complete response for SQL
             raw = full_response.strip()

@@ -6,28 +6,35 @@ services:
       args:
         VITE_AUTH_MODE: ${VITE_AUTH_MODE:-dev}
     ports:
-      - "${INSIGHTOPS_PORT:-8080}:8080"
+      - "${KUANTRA_PORT:-8080}:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
+      # Auth — defaults to dev mode (no login required). Set AUTH_MODE=license for production.
       - AUTH_MODE=${AUTH_MODE:-dev}
       - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-}
       - AUTH_ISSUER=${AUTH_ISSUER:-}
       - AUTH_JWKS_URL=${AUTH_JWKS_URL:-}
+      # AI — defaults to local inference (no API key needed). Set AI_PROVIDER=gemini for cloud.
+      - AI_PROVIDER=${AI_PROVIDER:-local}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
-      - AI_PROVIDER=${AI_PROVIDER:-ollama}
       - ALLOW_CLOUD_LLM=${ALLOW_CLOUD_LLM:-false}
-      - LOCAL_LLM_BASE_URL=${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434}
-      - LOCAL_LLM_MODEL=${LOCAL_LLM_MODEL:-gemma4-e2b}
+      - LOCAL_LLM_BASE_URL=${LOCAL_LLM_BASE_URL:-http://host.docker.internal:8081}
+      - LOCAL_LLM_MODEL=${LOCAL_LLM_MODEL:-gemma3:4b}
       - LOCAL_LLM_API_KEY=${LOCAL_LLM_API_KEY:-}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-ec2-kuantra-encryption-key-2026}
+      - LOCAL_LLM_AUTO_PULL=${LOCAL_LLM_AUTO_PULL:-false}
+      # Security — auto-generated if not set (see entrypoint)
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
+      # Database — internal, no user config needed
       - DATABASE_URL=postgresql+asyncpg://kuantra:${DB_PASSWORD:-kuantra}@db:5432/kuantra
       - SQLALCHEMY_DATABASE_URI=postgresql://kuantra:${DB_PASSWORD:-kuantra}@db:5432/kuantra
+      # Performance
       - DUCKDB_MEMORY_LIMIT=${DUCKDB_MEMORY_LIMIT:-2GB}
       - DUCKDB_THREADS=${DUCKDB_THREADS:-2}
+      # Runtime
       - ENVIRONMENT=${ENVIRONMENT:-development}
-      - DEBUG=${DEBUG:-true}
+      - DEBUG=${DEBUG:-false}
       - CORS_ORIGINS=${CORS_ORIGINS:-}
       - UVICORN_WORKERS=${UVICORN_WORKERS:-1}
       - UVICORN_LOG_LEVEL=${UVICORN_LOG_LEVEL:-info}

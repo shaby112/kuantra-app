@@ -171,8 +171,8 @@ async def test_connection_params(
                 database = url.database or database
                 username = url.username or username
                 password = url.password or password
-            except:
-                pass
+            except Exception as parse_e:
+                logger.debug(f"Could not parse connection URI, using individual fields: {parse_e}")
 
         if request.use_ssh_tunnel:
             if not (request.ssh_host and request.ssh_username and request.ssh_pkey):

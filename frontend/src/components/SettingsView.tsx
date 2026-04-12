@@ -22,9 +22,8 @@ export function SettingsView() {
     const [downloadError, setDownloadError] = useState<string>("");
     const [initialLoading, setInitialLoading] = useState(true);
 
-    const enterpriseDomains = ["acme.com", "globex.com", "kuantra.ai", "enterprise.io"];
     const emailDomain = useMemo(() => authEmail.split("@")[1]?.toLowerCase() ?? "", [authEmail]);
-    const isEnterpriseDomain = enterpriseDomains.includes(emailDomain);
+    const isEnterpriseDomain = emailDomain === "usekuantra.com";
 
     const handleSaveGoogleApiKey = () => {
         setStoredLLMApiKey(googleApiKey);
@@ -160,7 +159,7 @@ export function SettingsView() {
                 return;
             }
             setDownloadState("starting"); setDownloadProgress(0);
-            toast({ title: "Model download started", description: `${configuredModel || "Model"} is downloading in the background.` });
+            toast({ title: "Model download started", description: "Kuantra AI model is downloading in the background." });
         } catch (e: any) {
             setIsDownloadingModel(false); setDownloadState("failed"); setDownloadError(e?.message || "Could not start model download.");
             toast({ title: "Download failed", description: e?.message || "Could not start model download." });
@@ -260,18 +259,18 @@ export function SettingsView() {
                                     <span className="text-zinc-500 text-xs font-label uppercase">Subscription</span>
                                 </div>
                                 <p className="text-zinc-400 text-sm mt-2">
-                                    {modelTier === "Pro" ? "Full access to Gemini models." : "Access to local model inference."}
+                                    {modelTier === "Pro" ? "Using cloud API with your API key." : "Privacy-first local AI inference."}
                                 </p>
                             </div>
 
                             <div className="bg-obsidian-surface-low rounded-lg p-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Icon name="memory" className="text-obsidian-primary" />
-                                    <h2 className="font-headline font-bold text-lg text-white">Local AI Model</h2>
+                                    <h2 className="font-headline font-bold text-lg text-white">Kuantra AI</h2>
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <div className="flex justify-between items-center bg-obsidian-surface px-3 py-2 rounded border border-obsidian-outline-variant/10">
-                                        <span className="text-sm font-label">{configuredModel || "Local Model"}</span>
+                                        <span className="text-sm font-label">Kuantra AI (Local)</span>
                                         <span className={`text-[10px] px-2 py-0.5 rounded font-label ${downloadState === "completed" ? "bg-obsidian-primary-container/20 text-obsidian-primary" : downloadState === "failed" ? "bg-obsidian-error-container/20 text-obsidian-error" : "bg-zinc-500/20 text-zinc-400"}`}>
                                             {downloadState.toUpperCase()}
                                         </span>
@@ -287,13 +286,13 @@ export function SettingsView() {
                                     {downloadError && <p className="text-xs text-obsidian-error break-all">{downloadError}</p>}
                                     <button
                                         onClick={handleDownloadStarterModel}
-                                        disabled={isDownloadingModel}
+                                        disabled={isDownloadingModel || downloadState === "completed"}
                                         className="mt-2 w-full py-2 bg-obsidian-surface-highest border border-obsidian-outline-variant/20 text-obsidian-on-surface font-label text-[10px] uppercase tracking-widest hover:bg-obsidian-primary/10 hover:text-obsidian-primary transition-all disabled:opacity-50"
                                     >
-                                        {isDownloadingModel ? "Downloading..." : "Download Model"}
+                                        {isDownloadingModel ? "Downloading..." : downloadState === "completed" ? "Model Ready" : "Download AI Model"}
                                     </button>
                                     {llmProvider !== "local" && llmProvider !== "ollama" && (
-                                        <p className="text-xs text-amber-500 mt-1">Model can be pre-downloaded; runtime will use it once provider is switched to Local.</p>
+                                        <p className="text-xs text-amber-500 mt-1">Model can be pre-downloaded for local inference mode.</p>
                                     )}
                                 </div>
                             </div>

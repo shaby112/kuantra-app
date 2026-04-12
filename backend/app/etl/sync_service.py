@@ -79,10 +79,15 @@ class SyncService:
             full_name = m.get("name")
             if not full_name:
                 continue
-            short = full_name.split(".")[-1]
+            short = full_name.split(".")[-1]  # e.g., "public_customers"
             name_map.setdefault(short, full_name)
-            # Keep a direct identity mapping as well
             name_map.setdefault(full_name, full_name)
+            # Also map the bare table name without the dlt source-schema prefix.
+            # dlt prefixes tables with the source schema: "public_customers"
+            # -> strip "public_" -> "customers" so FK lookups by source name work.
+            parts = short.split("_", 1)
+            if len(parts) == 2:
+                name_map.setdefault(parts[1], full_name)
         return name_map
 
     def _extract_postgres_fk_relationships(self, shared_source, discovered_tables: List[str]) -> List[Dict[str, str]]:
@@ -550,7 +555,8 @@ class SyncService:
                         logger.warning(f"Batch {batch_num} hit DuckDB conflict, dropping pending packages...")
                         try:
                             pipeline._pipeline.drop_pending_packages()
-                        except: pass
+                        except Exception as drop_e:
+                            logger.debug(f"Failed to drop pending packages: {drop_e}")
                         
                         # Retry once after cleanup
                         try:
@@ -620,7 +626,8 @@ class SyncService:
                         logger.warning(f"Large table {table} hit DuckDB conflict, dropping pending packages...")
                         try:
                             pipeline._pipeline.drop_pending_packages()
-                        except: pass
+                        except Exception as drop_e:
+                            logger.debug(f"Failed to drop pending packages for {table}: {drop_e}")
                         
                         try:
                             res = pipeline.create_resource(
@@ -645,8 +652,8 @@ class SyncService:
             # Close the shared source
             try:
                 bridge.run_async(shared_source.close())
-            except:
-                pass
+            except Exception as close_e:
+                logger.debug(f"Failed to close shared source: {close_e}")
             
             # Final stats
             job.rows_synced = sum(table_row_counts.get(t, 0) for t in completed_tables)
@@ -757,7 +764,8 @@ class SyncService:
                         start_time = start_time.replace(tzinfo=timezone.utc)
                     history.duration_seconds = (history.completed_at - start_time).total_seconds() if start_time else 0
                 db.commit()
-            except: pass
+            except Exception as hist_e:
+                logger.warning(f"Failed to update sync history: {hist_e}")
         finally:
             db.close()
             if connection_id in self._running_syncs:

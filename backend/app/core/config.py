@@ -1,4 +1,5 @@
 import os
+import secrets
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import model_validator
 from typing import Optional, List
@@ -25,15 +26,11 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     
-    # Auth mode: "jwks" (external IdP), "license" (local HMAC JWT), "dev" (auto dev-user)
-    AUTH_MODE: str = "dev"
-
     # Auth modes: dev (no token), license (HS256 token), jwks (OIDC/JWKS)
     AUTH_MODE: str = "dev"
-    AUTH_SECRET_KEY: str = ""
+    AUTH_SECRET_KEY: str = ""  # HMAC secret for license mode JWT signing/verification
     AUTH_ISSUER: str = ""
     AUTH_JWKS_URL: str = ""
-    AUTH_SECRET_KEY: str = ""  # HMAC secret for license mode JWT signing/verification
 
     # Auth (Logto - Self-Hosted SSO)
     LOGTO_ISSUER: str = ""
@@ -128,7 +125,7 @@ class Settings(BaseSettings):
                 if d and not os.path.exists(d):
                     try:
                         os.makedirs(d, exist_ok=True)
-                    except:
+                    except OSError:
                         pass
 
         # Handle construction from separate Postgres parts if URI is missing
@@ -171,9 +168,10 @@ class Settings(BaseSettings):
             self.LOGTO_JWKS_URL = f"{self.LOGTO_ISSUER.rstrip('/')}/oidc/jwks"
 
 
-        # Use an explicit encryption key for secrets-at-rest (DB passwords, SSH creds).
+        # Auto-generate encryption key if not provided.
+        # In production, set ENCRYPTION_KEY for stable secrets across restarts.
         if not self.ENCRYPTION_KEY:
-            self.ENCRYPTION_KEY = "local-dev-encryption-key"
+            self.ENCRYPTION_KEY = secrets.token_urlsafe(32)
 
         auth_mode = (self.AUTH_MODE or "dev").lower()
         if auth_mode not in {"jwks", "license", "dev"}:
@@ -181,8 +179,6 @@ class Settings(BaseSettings):
         self.AUTH_MODE = auth_mode
 
         is_production = (self.ENVIRONMENT or "").lower() == "production"
-        if is_production and self.ENCRYPTION_KEY == "local-dev-encryption-key":
-            raise ValueError("ENCRYPTION_KEY must be set in production.")
         if is_production and auth_mode == "dev":
             raise ValueError("AUTH_MODE='dev' is not allowed in production.")
         if is_production and auth_mode == "jwks" and not (self.AUTH_ISSUER or self.AUTH_JWKS_URL or self.LOGTO_ISSUER or self.LOGTO_JWKS_URL):

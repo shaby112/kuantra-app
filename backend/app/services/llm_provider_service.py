@@ -99,7 +99,7 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         self.api_key = settings.LOCAL_LLM_API_KEY
         self._client: Optional[httpx.AsyncClient] = None
 
-    def _get_client(self, timeout: float = 120.0) -> httpx.AsyncClient:
+    def _get_client(self, timeout: float = 300.0) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
                 timeout=httpx.Timeout(timeout, connect=30.0)
@@ -130,11 +130,8 @@ class OpenAICompatibleLocalProvider(LLMProvider):
             "model": self.model,
             "messages": messages,
             "temperature": (config or {}).get("temperature", 0.1),
+            "max_tokens": (config or {}).get("num_predict", 1024),
             "stream": stream,
-            "options": {
-                "num_predict": (config or {}).get("num_predict", 512),
-                "num_thread": 2,
-            },
         }
 
     def _build_headers(self) -> Dict[str, str]:
@@ -160,7 +157,7 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         messages = self._build_messages(prompt, system_prompt, history)
         payload = self._build_payload(messages, config, stream=False)
         headers = self._build_headers()
-        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 120))
+        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 300))
 
         async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=30.0)) as client:
             response = await client.post(
@@ -190,7 +187,7 @@ class OpenAICompatibleLocalProvider(LLMProvider):
         messages = self._build_messages(prompt, system_prompt, history)
         payload = self._build_payload(messages, config, stream=True)
         headers = self._build_headers()
-        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 120))
+        timeout = (config or {}).get("timeout", max(settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS, 300))
 
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=30.0)) as client:

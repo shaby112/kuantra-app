@@ -101,21 +101,33 @@ export default function DashboardBuilder() {
         widgetStatus.map((s) => [s.widget_id, s]),
       );
 
-      const newWidgets: WidgetConfig[] = response.config.widgets.map(w => ({
-        id: w.id,
-        title: w.title,
-        chartType: w.type as any,
-        data: w.data,
-        indexField: w.index,
-        categories: w.categories,
-        colors: w.colors || ["violet"],
-        valueFormat: (w.valueFormatter as any) || "number",
-        dateRange: "30d",
-        aggregation: "sum",
-        connectionId: connectionIds.length > 0 ? connectionIds[0] : undefined,
-        errorMessage: statusByWidget.get(w.id)?.error,
-        sql_query: (w as any).sql_query || statusByWidget.get(w.id)?.sql,
-      }));
+      const newWidgets: WidgetConfig[] = response.config.widgets.map(w => {
+        const isMetric = ["metric", "kpi", "number", "stat"].includes(w.type);
+        const scalarValue = isMetric && w.data?.[0]
+          ? w.data[0][Object.keys(w.data[0])[0]]
+          : undefined;
+
+        const titleLower = w.title.toLowerCase();
+        const isCurrency = titleLower.includes("revenue") || titleLower.includes("value") || titleLower.includes("spend") || titleLower.includes("amount");
+
+        return {
+          id: w.id,
+          title: w.title,
+          chartType: w.type as any,
+          data: w.data,
+          indexField: w.index,
+          categories: w.categories,
+          colors: w.colors || ["violet"],
+          valueFormat: (w.valueFormatter as any) || "number",
+          dateRange: "30d",
+          aggregation: "sum",
+          connectionId: connectionIds.length > 0 ? connectionIds[0] : undefined,
+          errorMessage: statusByWidget.get(w.id)?.error,
+          sql_query: (w as any).sql_query || statusByWidget.get(w.id)?.sql,
+          value: scalarValue,
+          prefix: isCurrency && isMetric ? "$" : undefined,
+        };
+      });
 
       const newLayout = response.config.widgets.map(w => ({
         i: w.id,

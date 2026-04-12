@@ -209,12 +209,12 @@ class ETLPipeline:
                 try:
                     # 1. Pipeline drop (clears destination metadata)
                     try: self._pipeline.drop()
-                    except: pass
-                    
+                    except Exception as drop_e: logger.debug(f"Pipeline drop during self-heal: {drop_e}")
+
                     # 2. Close DuckDB manager handles
                     from app.services.duckdb_manager import duckdb_manager
                     try: duckdb_manager.close()
-                    except: pass
+                    except Exception as close_e: logger.debug(f"DuckDB close during self-heal: {close_e}")
                     
                     # 3. Aggressive Schema/Table Drop in DuckDB
                     import duckdb
@@ -232,7 +232,7 @@ class ETLPipeline:
                     finally:
                         if conn:
                             try: conn.close()
-                            except: pass
+                            except Exception: pass
 
                     # 4. Re-initialize and retry with full refresh
                     self.__init__(self.connection_id, self.connection_name)

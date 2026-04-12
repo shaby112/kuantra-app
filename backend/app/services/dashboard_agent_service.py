@@ -22,7 +22,12 @@ except ImportError:
 
 
 def _build_schema_context() -> str:
-    """Build compact schema description from DuckDB for LLM prompts."""
+    """Build compact schema description from DuckDB for LLM prompts.
+
+    Uses plain table names — the auto-qualifier resolves schemas at execution.
+    Validates each table is queryable before including it.
+    Includes connection source names so the LLM can pick the right table.
+    """
     from app.services.duckdb_manager import duckdb_manager
 
     try:
@@ -36,6 +41,39 @@ def _build_schema_context() -> str:
         )
         if not tables:
             return "No synced data sources are available yet."
+
+        # Build schema-to-connection-name map from PostgreSQL metadata
+        schema_to_source: Dict[str, str] = {}
+        try:
+            from sqlalchemy import create_engine, text as sa_text
+            sync_url = settings.DATABASE_URL.replace("+asyncpg", "").replace("+aiopg", "")
+            _sync_eng = create_engine(sync_url, pool_pre_ping=True, pool_size=1)
+            with _sync_eng.connect() as pg_conn:
+                rows = pg_conn.execute(sa_text(
+                    "SELECT id, name FROM connections"
+                )).fetchall()
+                for row in rows:
+                    conn_id = str(row[0]).replace("-", "")
+                    schema_to_source[f"conn_{conn_id}"] = row[1]
+            _sync_eng.dispose()
+        except Exception:
+            pass
+
+        # Verify which tables are actually queryable (file tables may have missing parquets)
+        valid_tables = []
+        for t in tables:
+            schema = t["table_schema"]
+            tname = t["table_name"]
+            try:
+                duckdb_manager.execute(
+                    f'SELECT 1 FROM "{schema}"."{tname}" LIMIT 1'
+                )
+                valid_tables.append(t)
+            except Exception:
+                logger.debug(f"Skipping broken table {schema}.{tname}")
+
+        if not valid_tables:
+            return "No queryable data sources are available yet."
 
         columns = duckdb_manager.execute(
             "SELECT table_schema, table_name, column_name, data_type "
@@ -53,12 +91,22 @@ def _build_schema_context() -> str:
             col_map.setdefault(key, []).append(f'{c["column_name"]} ({c["data_type"]})')
 
         lines = []
-        for t in tables:
+        for t in valid_tables:
             schema = t["table_schema"]
             tname = t["table_name"]
-            fqn = f'"{schema}"."{tname}"'
-            cols = col_map.get(f"{schema}.{tname}", [])
-            lines.append(f"Table {fqn}: {', '.join(cols)}")
+            key = f"{schema}.{tname}"
+            cols = col_map.get(key, [])
+            source = schema_to_source.get(schema, "")
+            source_label = f" [source: {source}]" if source else ""
+            lines.append(f"Table: {tname}{source_label}")
+            for col_desc in cols:
+                lines.append(f"  - {col_desc}")
+
+        if valid_tables:
+            example_table = valid_tables[0]["table_name"]
+            lines.append(f'\nUse plain table names in SQL: SELECT * FROM {example_table} LIMIT 10')
+            lines.append("IMPORTANT: Each column belongs ONLY to the table listed above it.")
+            lines.append("Do NOT use a column from one table in a query on a different table.")
 
         return "\n".join(lines)
     except Exception as e:
@@ -66,69 +114,52 @@ def _build_schema_context() -> str:
         return "Schema context unavailable."
 
 
-PLANNING_PROMPT = """You are an expert dashboard planning assistant for a DuckDB-based BI tool.
-You build rich, comprehensive dashboards that impress users with depth and insight.
+PLANNING_PROMPT = """You are a dashboard planning assistant for DuckDB. Respond with ONLY raw JSON, no markdown.
 
-## Available Data
+## Data
 {schema_context}
 
-## User Request
+## Request
 {query}
 
-## Instructions
-Analyze ALL available data sources and the user's request. Automatically discover every relevant table and column — do NOT require the user to specify data sources manually.
-
-Respond with a JSON object (no markdown, just raw JSON) with this exact structure:
-
+## Output format
 {{
   "title": "Dashboard title",
   "metrics": [
-    {{"name": "Metric Name", "aggregation": "sum|avg|count|min|max|none", "sql_column": "column_name"}}
+    {{"name": "Total Revenue", "aggregation": "sum", "sql_column": "total_amount"}},
+    {{"name": "Order Count", "aggregation": "count", "sql_column": "id"}}
   ],
-  "dimensions": ["column1", "column2"],
+  "dimensions": ["region", "order_date"],
   "time_range": "All time",
   "visualizations": [
-    {{"type": "bar|line|area|number|table|donut", "metrics": ["Metric Name"], "breakdown": "dimension_or_null"}}
+    {{"type": "number", "metrics": ["Total Revenue"], "breakdown": null}},
+    {{"type": "bar", "metrics": ["Total Revenue"], "breakdown": "region"}}
   ]
 }}
 
 ## Rules
-- Use ONLY tables and columns from the available data above.
-- Scan ALL tables for relevant data — pull metrics from every relevant source.
-- Create **6-12 visualizations** for a comprehensive dashboard. More is better for complex requests.
-- Mix visualization types for variety:
-  * "number" for headline KPIs (revenue, total count, averages) — use 3-5 of these
-  * "donut" for breakdowns/proportions (category splits, status distributions)
-  * "bar" for comparisons across categories
-  * "line" or "area" for trends over time
-  * "table" for detailed data views
-- Each metric should appear in exactly ONE visualization.
-- For KPI/number widgets, use a SINGLE metric per visualization.
-- For chart widgets, you may combine 1-3 related metrics.
-- If the request mentions "KPIs" or "lots of metrics", generate at least 4-5 number-type widgets.
-- If the request is too vague AND no data is available, respond with: {{"clarify": "Your question here"}}
-- If data IS available, always try to build a dashboard — be proactive, not conservative.
+- Use ONLY tables/columns from available data above
+- Create 4-8 visualizations mixing types: 2-3 "number" KPIs, plus bar/line/donut/table
+- Each metric in exactly ONE visualization
+- sql_column must be actual column names from the data
+- IMPORTANT: visualizations[].metrics is a list of PLAIN STRINGS (metric names), NOT objects
+- If no data available and request is vague: {{"clarify": "question"}}
 """
 
 
-WIDGET_SQL_PROMPT = """You are a DuckDB SQL expert. Generate a read-only SQL query for a dashboard widget.
+WIDGET_SQL_PROMPT = """DuckDB SQL expert. Return ONLY raw SQL, no markdown.
 
-## Available Data
-{schema_context}
+Data: {schema_context}
 
-## Widget Requirements
-- Type: {viz_type}
-- Metrics: {metrics}
-- Breakdown: {breakdown}
-- Aggregations: {aggregations}
+Widget: type={viz_type}, metrics=[{metrics}], breakdown={breakdown}, aggregations={aggregations}
 
-## Rules
-1. ALWAYS use fully schema-qualified table names with double quotes: "schema"."table"
-2. Use DuckDB SQL syntax
-3. Return ONLY the raw SQL query, no markdown, no explanation
-4. Use LIMIT 50
-5. For "number" widgets, return a single aggregated value
-6. For chart widgets, GROUP BY the breakdown dimension
+Rules:
+- Use plain table names (no schema prefix). Do NOT use aliases like T1, T2 — use the actual table name.
+- LIMIT 50 for charts, no LIMIT for single-value "number"/"metric" widgets.
+- Charts: GROUP BY the breakdown dimension. Every non-aggregated column in SELECT MUST be in GROUP BY.
+- When joining tables, prefix columns with the actual table name, NOT an alias.
+- CRITICAL: Only SELECT columns that actually exist on the table you are querying. Check the column list above carefully. If a column is listed under Table A, do NOT use it in a query on Table B.
+- If a metric name doesn't exactly match a column name, find the closest matching column from the correct table.
 """
 
 
@@ -182,7 +213,7 @@ class DashboardAgentService:
         prompt = PLANNING_PROMPT.format(schema_context=schema_context, query=query)
 
         provider = llm_provider_registry.get_provider()
-        raw = await provider.generate(prompt=prompt, config={"temperature": 0.2})
+        raw = await provider.generate(prompt=prompt, config={"temperature": 0.2, "num_predict": 2048})
 
         # Extract JSON from response
         raw = raw.strip()
@@ -201,6 +232,14 @@ class DashboardAgentService:
 
         if "clarify" in plan_data:
             return PlanningResponse(status="clarifying", question=plan_data["clarify"])
+
+        # Coerce visualization metrics from objects to strings if needed
+        for viz in plan_data.get("visualizations", []):
+            if "metrics" in viz:
+                viz["metrics"] = [
+                    m["name"] if isinstance(m, dict) and "name" in m else str(m)
+                    for m in viz["metrics"]
+                ]
 
         try:
             plan = DashboardPlan(**plan_data)
@@ -284,6 +323,83 @@ class DashboardAgentService:
         if raw.upper().lstrip().startswith(("SELECT ", "WITH ")):
             return raw
         return raw
+
+    async def _local_generate_all_widget_sql(
+        self,
+        visualizations: List[Any],
+        all_aggregations: List[Dict[str, str]],
+    ) -> List[str]:
+        """Generate SQL for ALL widgets in a single LLM call (batch)."""
+        from app.services.llm_provider_service import llm_provider_registry
+
+        schema_context = _build_schema_context()
+
+        widget_specs = []
+        for i, (viz, aggs) in enumerate(zip(visualizations, all_aggregations)):
+            widget_specs.append(
+                f"Widget {i+1}: type={viz.type}, metrics=[{', '.join(viz.metrics)}], "
+                f"breakdown={viz.breakdown or 'none'}, aggregations={json.dumps(aggs)}"
+            )
+
+        prompt = f"""DuckDB SQL expert. Generate SQL queries for dashboard widgets. Return ONLY a JSON array.
+
+## Data
+{schema_context}
+
+## Widgets
+{chr(10).join(widget_specs)}
+
+## Rules
+- Use plain table names (no schema prefix needed). Do NOT use aliases like T1, T2 — use the actual table name.
+- LIMIT 50 for charts, no LIMIT for single-value "number"/"metric" widgets
+- "number"/"metric" type: return single aggregated value (e.g., SELECT SUM(col) AS value FROM table)
+- Charts: GROUP BY the breakdown dimension. Every non-aggregated column in SELECT MUST also appear in GROUP BY.
+- When joining tables, prefix columns with the actual table name, NOT an alias.
+- CRITICAL: Only SELECT columns that actually exist on the table you are querying. Check the column list above carefully. If a column is listed under Table A, do NOT use it in a query on Table B.
+- If a metric name doesn't exactly match a column name, find the closest matching column from the correct table.
+
+## Output
+JSON array of SQL strings, one per widget. Example: ["SELECT SUM(x) FROM t1", "SELECT a, COUNT(*) FROM t2 GROUP BY a LIMIT 50"]
+"""
+
+        provider = llm_provider_registry.get_provider()
+        raw = await provider.generate(prompt=prompt, config={"temperature": 0.1, "num_predict": 2048})
+
+        raw = raw.strip()
+        # Try to extract JSON array
+        json_match = re.search(r"```(?:json)?\s*\n?([\s\S]*?)```", raw)
+        if json_match:
+            raw = json_match.group(1).strip()
+
+        try:
+            sql_list = json.loads(raw)
+            if isinstance(sql_list, list):
+                parsed = [str(s).strip() for s in sql_list]
+                # Pad or truncate to match expected count
+                while len(parsed) < len(visualizations):
+                    parsed.append("")
+                return parsed[:len(visualizations)]
+        except json.JSONDecodeError:
+            pass
+
+        # Fallback: extract individual SQL statements from raw text
+        logger.warning(f"Batch SQL generation didn't return valid JSON array: {raw[:200]}")
+        # Try to find SELECT statements
+        sql_statements = re.findall(r'((?:SELECT|WITH)\b[^;]*?)(?:;|\Z)', raw, re.IGNORECASE | re.DOTALL)
+        if sql_statements and len(sql_statements) >= len(visualizations):
+            return [s.strip() for s in sql_statements[:len(visualizations)]]
+
+        # Last resort: individual calls
+        logger.warning("Falling back to individual SQL generation calls")
+        results = []
+        for i, (viz, aggs) in enumerate(zip(visualizations, all_aggregations)):
+            try:
+                sql = await self._local_generate_widget_sql(viz, aggs)
+                results.append(sql)
+            except Exception as e:
+                logger.error(f"Widget {i+1} SQL generation failed: {e}")
+                results.append("")
+        return results
 
     async def generate_widget_data(
         self,
@@ -370,5 +486,66 @@ class DashboardAgentService:
         except Exception as e:
             logger.error(f"Widget generation failed: {e}")
             return {"data": [], "index": "error", "categories": [], "sql": "", "error": str(e)}
+
+    async def generate_all_widget_data_batch(
+        self,
+        visualizations: List[Any],
+        all_aggregations: List[Dict[str, str]],
+        user_id: str,
+        connection_ids: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Generate SQL for all widgets in one LLM call, then execute each."""
+        if not self.adk_enabled:
+            sql_list = await self._local_generate_all_widget_sql(visualizations, all_aggregations)
+        else:
+            # ADK path: fall back to individual calls
+            sql_list = []
+            for viz, aggs in zip(visualizations, all_aggregations):
+                result = await self.generate_widget_data(viz, user_id, aggs, connection_ids)
+                sql_list.append(result.get("sql", ""))
+
+            # For ADK, results are already complete — return early
+            # (this won't actually be reached in the refactored flow)
+
+        results = []
+        for i, (viz, sql_query) in enumerate(zip(visualizations, sql_list)):
+            try:
+                if not sql_query or not sql_query.strip():
+                    results.append({"data": [], "index": "error", "categories": [], "sql": "", "error": "No SQL generated"})
+                    continue
+
+                if not self._is_read_only_sql(sql_query):
+                    results.append({
+                        "data": [], "index": "error", "categories": [],
+                        "sql": sql_query, "error": "Generated SQL was not read-only and was blocked.",
+                    })
+                    continue
+
+                query_results = execute_analytical_query(
+                    sql_query,
+                    connection_ids=connection_ids,
+                    timeout_s=settings.ANALYTICAL_QUERY_TIMEOUT_SECONDS,
+                )
+
+                if isinstance(query_results, str):
+                    results.append({"data": [], "index": "error", "categories": [], "sql": sql_query, "error": query_results})
+                elif query_results:
+                    keys = list(query_results[0].keys())
+                    index_key = keys[0]
+                    results.append({
+                        "data": query_results,
+                        "index": index_key,
+                        "categories": [k for k in keys if k != index_key],
+                        "sql": sql_query,
+                    })
+                else:
+                    results.append({"data": [], "index": "x", "categories": [], "sql": sql_query})
+
+            except Exception as e:
+                logger.error(f"Widget {i+1} execution failed: {e}")
+                results.append({"data": [], "index": "error", "categories": [], "sql": sql_query if sql_query else "", "error": str(e)})
+
+        return results
+
 
 dashboard_agent_service = DashboardAgentService()

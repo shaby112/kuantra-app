@@ -328,10 +328,10 @@ class ConnectionService:
         """Extract table names from SQL."""
         try:
             return [
-                t.name 
+                t.name
                 for t in sqlglot.parse_one(sql).find_all(exp.Table)
             ]
-        except:
+        except Exception:
             return []
 
     def _rewrite_query_for_duckdb(self, sql: str, schema: str) -> str:
@@ -343,7 +343,7 @@ class ConnectionService:
                 if not table.db:
                     table.set("db", exp.Identifier(this=schema, quoted=False))
             return expression.sql()
-        except:
+        except Exception:
             return sql
 
 

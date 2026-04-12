@@ -26,6 +26,8 @@ interface MDLContent {
             to: string;
             condition: string;
             join_type?: string;
+            from_column?: string;
+            to_column?: string;
         }>;
     };
     is_locked: boolean;

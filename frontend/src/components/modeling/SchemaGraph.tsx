@@ -24,6 +24,8 @@ interface Relationship {
     to: string;
     condition: string;
     join_type?: 'one_to_one' | 'one_to_many' | 'many_to_one' | 'many_to_many' | string;
+    from_column?: string;
+    to_column?: string;
 }
 
 interface SchemaGraphProps {
@@ -61,22 +63,29 @@ function TableNode({ data, selected }: { data: any; selected: boolean }) {
 
             {/* Columns */}
             <div className="max-h-[200px] overflow-y-auto">
-                {data.columns?.slice(0, 8).map((col: any, index: number) => (
-                    <div
-                        key={index}
-                        className="flex items-center justify-between px-4 py-1.5 hover:bg-obsidian-surface-high/30 transition-colors"
-                    >
-                        <div className="flex items-center gap-1.5">
-                            {index === 0 && (
-                                <span className="material-symbols-outlined text-obsidian-primary" style={{ fontSize: '10px', fontVariationSettings: "'FILL' 1" }}>key</span>
-                            )}
-                            <span className="text-xs font-label text-obsidian-on-surface">{col.name}</span>
+                {data.columns?.slice(0, 8).map((col: any, index: number) => {
+                    const isLinked = Array.isArray(data.linkedColumns) && data.linkedColumns.includes(col.name);
+                    return (
+                        <div
+                            key={index}
+                            className={`flex items-center justify-between px-4 py-1.5 transition-colors ${isLinked ? '' : 'hover:bg-obsidian-surface-high/30'}`}
+                            style={isLinked ? { backgroundColor: 'rgba(139, 92, 246, 0.15)' } : undefined}
+                        >
+                            <div className="flex items-center gap-1.5">
+                                {index === 0 && (
+                                    <span className="material-symbols-outlined text-obsidian-primary" style={{ fontSize: '10px', fontVariationSettings: "'FILL' 1" }}>key</span>
+                                )}
+                                {isLinked && index !== 0 && (
+                                    <span className="material-symbols-outlined" style={{ fontSize: '10px', color: '#8b5cf6', fontVariationSettings: "'FILL' 1" }}>link</span>
+                                )}
+                                <span className={`text-xs font-label ${isLinked ? 'font-bold' : 'text-obsidian-on-surface'}`} style={isLinked ? { color: '#8b5cf6' } : undefined}>{col.name}</span>
+                            </div>
+                            <span className="text-[10px] font-label text-obsidian-outline">
+                                {col.type?.split('(')[0]?.substring(0, 10)}
+                            </span>
                         </div>
-                        <span className="text-[10px] font-label text-obsidian-outline">
-                            {col.type?.split('(')[0]?.substring(0, 10)}
-                        </span>
-                    </div>
-                ))}
+                    );
+                })}
                 {data.columns?.length > 8 && (
                     <div className="text-[10px] text-obsidian-outline px-4 py-1.5 font-label">
                         +{data.columns.length - 8} more
@@ -97,6 +106,23 @@ export default function SchemaGraph({
     onNodeSelect,
     selectedNode,
 }: SchemaGraphProps) {
+    // Build a plain array of highlighted columns per table (columns involved in relationships).
+    // Must be a plain array (not Set) so it survives ReactFlow's data cloning.
+    const linkedColumns = useMemo(() => {
+        const map: Record<string, string[]> = {};
+        for (const rel of relationships) {
+            if (rel.from_column) {
+                const arr = (map[rel.from] ??= []);
+                if (!arr.includes(rel.from_column)) arr.push(rel.from_column);
+            }
+            if (rel.to_column) {
+                const arr = (map[rel.to] ??= []);
+                if (!arr.includes(rel.to_column)) arr.push(rel.to_column);
+            }
+        }
+        return map;
+    }, [relationships]);
+
     const initialNodes: Node[] = useMemo(() => {
         return models.map((model, index) => {
             const col = index % 4;
@@ -109,11 +135,12 @@ export default function SchemaGraph({
                 data: {
                     label: model.name.split('.').pop(),
                     columns: model.columns,
+                    linkedColumns: linkedColumns[model.name],
                 },
                 selected: model.name === selectedNode,
             };
         });
-    }, [models, selectedNode]);
+    }, [models, selectedNode, linkedColumns]);
 
     const initialEdges: Edge[] = useMemo(() => {
         const cardinalityLabel = (joinType?: string) => {
@@ -124,21 +151,32 @@ export default function SchemaGraph({
             return '';
         };
 
-        return relationships.map((rel) => ({
-            id: rel.name,
-            source: rel.from,
-            target: rel.to,
-            type: 'smoothstep',
-            animated: true,
-            style: { stroke: '#8b5cf6', strokeWidth: 2 },
-            markerEnd: {
-                type: MarkerType.ArrowClosed,
-                color: '#8b5cf6',
-            },
-            label: cardinalityLabel(rel.join_type),
-            labelStyle: { fill: '#85948B', fontSize: 10, fontFamily: 'Space Grotesk', fontWeight: 700 },
-            labelBgStyle: { fill: '#201F1F', fillOpacity: 0.9 },
-        }));
+        return relationships.map((rel) => {
+            const cardinality = cardinalityLabel(rel.join_type);
+            const colLabel = rel.from_column && rel.to_column
+                ? `${rel.from_column} → ${rel.to_column}`
+                : '';
+            const label = colLabel
+                ? (cardinality ? `${cardinality}  ${colLabel}` : colLabel)
+                : cardinality;
+
+            return {
+                id: rel.name,
+                source: rel.from,
+                target: rel.to,
+                type: 'smoothstep',
+                animated: true,
+                style: { stroke: '#8b5cf6', strokeWidth: 2 },
+                markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    color: '#8b5cf6',
+                },
+                label,
+                labelStyle: { fill: '#85948B', fontSize: 10, fontFamily: 'Space Grotesk', fontWeight: 700 },
+                labelBgStyle: { fill: '#201F1F', fillOpacity: 0.9 },
+                labelBgPadding: [6, 4] as [number, number],
+            };
+        });
     }, [relationships]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);

@@ -198,6 +198,12 @@ export function ChatPanel({ onDataUpdate, onOpenDangerModal }: ChatPanelProps) {
                   if (existing) return prev.map(m => m.id === aiMessageId ? { ...m, sql: data.sql } : m);
                   return [...prev, { id: aiMessageId, role: "assistant", content: "", sql: data.sql }];
                 });
+              } else if (data.type === "model_unavailable") {
+                toast({
+                  title: "AI Model Not Ready",
+                  description: "Go to Settings to download the Kuantra AI model.",
+                  variant: "destructive",
+                });
               } else if (data.type === "error" && !data.content.includes("Connection ID")) {
                 assistantContent += "\n\n*I encountered a slight issue processing that request.*";
                 setMessages((prev) => {
