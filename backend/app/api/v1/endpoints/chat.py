@@ -217,25 +217,43 @@ def _remap_wrong_qualified_tables(sql: str) -> str:
 
 
 def _execute_with_qualified_fallback(sql: str):
-    """Execute SQL and retry once with auto-qualified table names on missing-table errors."""
+    """Execute SQL and retry with fast deterministic repair (no LLM)."""
     from app.services.duckdb_manager import duckdb_manager
 
     try:
         return duckdb_manager.execute(sql)
     except Exception as e:
         msg = str(e)
-        if "Catalog Error: Table with name" not in msg:
-            raise
 
-        qualified_sql = _qualify_sql_tables(sql)
-        if qualified_sql.strip() != sql.strip():
-            logger.info("Retrying query with auto-qualified table names")
-            return duckdb_manager.execute(qualified_sql)
+        # 1) Missing table: qualify/unify schema references
+        if "Catalog Error: Table with name" in msg:
+            qualified_sql = _qualify_sql_tables(sql)
+            if qualified_sql.strip() != sql.strip():
+                logger.info("Retrying query with auto-qualified table names")
+                return duckdb_manager.execute(qualified_sql)
 
-        remapped_sql = _remap_wrong_qualified_tables(sql)
-        if remapped_sql.strip() != sql.strip():
-            logger.info("Retrying query with remapped qualified table names")
-            return duckdb_manager.execute(remapped_sql)
+            remapped_sql = _remap_wrong_qualified_tables(sql)
+            if remapped_sql.strip() != sql.strip():
+                logger.info("Retrying query with remapped qualified table names")
+                return duckdb_manager.execute(remapped_sql)
+
+        # 2) Binder/catalog deterministic repair pass for common LLM mistakes
+        if "Binder Error" in msg or "Catalog Error" in msg or "Referenced column" in msg:
+            try:
+                from app.agents.tools.query_tools import _strip_short_table_aliases, _fix_group_by, _fix_wrong_table_columns
+
+                repaired_sql = sql
+                repaired_sql = _strip_short_table_aliases(repaired_sql)
+                repaired_sql = _fix_group_by(repaired_sql)
+                repaired_sql = _fix_wrong_table_columns(repaired_sql)
+                repaired_sql = _qualify_sql_tables(repaired_sql)
+                repaired_sql = _remap_wrong_qualified_tables(repaired_sql)
+
+                if repaired_sql.strip() != sql.strip():
+                    logger.info("Retrying query with deterministic SQL repair")
+                    return duckdb_manager.execute(repaired_sql)
+            except Exception:
+                pass
 
         raise
 
