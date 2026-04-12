@@ -208,10 +208,13 @@ async def _repair_sql_with_llm(original_sql: str, error_message: str) -> Optiona
 
     try:
         provider = llm_provider_registry.get_provider()
-        repaired = await provider.generate(
-            prompt=repair_prompt,
-            system_prompt=repair_system_prompt,
-            config={"temperature": 0.0, "num_predict": 768},
+        repaired = await asyncio.wait_for(
+            provider.generate(
+                prompt=repair_prompt,
+                system_prompt=repair_system_prompt,
+                config={"temperature": 0.0, "num_predict": 512, "timeout": 8},
+            ),
+            timeout=8.0,
         )
         if not repaired:
             return None
@@ -269,6 +272,7 @@ async def execute_query_endpoint(
     from app.services.duckdb_manager import duckdb_manager
 
     try:
+        logger.info("Execute requested by user %s", current_user.id)
         if not connection_service.is_safe_query(body.sql):
             raise HTTPException(
                 status_code=400,
@@ -276,7 +280,7 @@ async def execute_query_endpoint(
             )
 
         # Always execute against DuckDB warehouse — this is where all synced data lives
-        results = await _execute_with_feedback_loop(body.sql, max_attempts=2)
+        results = _execute_with_qualified_fallback(body.sql)
         return {"results": results}
     except QueryTimeoutError as e:
         logger.warning(f"Query timeout: {e}")
