@@ -149,7 +149,7 @@ class SyncConfig(Base):
 
     id = _uuid_pk()
     connection_id = Column(PG_UUID(as_uuid=True), ForeignKey("db_connections.id"), unique=True, nullable=False)
-    sync_interval_minutes = Column(Integer, default=60)
+    sync_interval_minutes = Column(Integer, default=30)
     is_auto_sync_enabled = Column(Boolean, default=False)
     last_sync_at = Column(DateTime, nullable=True)
     last_sync_status = Column(String, default="never")

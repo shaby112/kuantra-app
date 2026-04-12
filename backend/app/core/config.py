@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     ETL_RETRY_DELAY_SECONDS: int = 30
     
     # Sync Settings
-    DEFAULT_SYNC_INTERVAL_MINUTES: int = 60
+    DEFAULT_SYNC_INTERVAL_MINUTES: int = 30
     MIN_SYNC_INTERVAL_MINUTES: int = 5
     
     # ETL Batching Settings (for large table handling)

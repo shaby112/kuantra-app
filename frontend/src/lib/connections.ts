@@ -154,6 +154,8 @@ export type SyncStatusResponse = {
   is_syncing: boolean;
   progress: number;
   error: string | null;
+  sync_interval_minutes: number;
+  is_auto_sync_enabled: boolean;
 };
 
 export type SyncProgressResponse = {

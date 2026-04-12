@@ -46,6 +46,8 @@ class SyncStatusResponse(BaseModel):
     is_syncing: bool = False
     progress: int = 0
     error: Optional[str] = None
+    sync_interval_minutes: int = 30
+    is_auto_sync_enabled: bool = False
 
 
 class SyncProgressResponse(BaseModel):
@@ -130,12 +132,16 @@ def _build_effective_status(
         rows_cached = sync_config.rows_cached
         tables_cached = sync_config.tables_cached or []
         error = sync_config.last_error if status != "success" else None
+        sync_interval_minutes = sync_config.sync_interval_minutes or 30
+        is_auto_sync_enabled = bool(sync_config.is_auto_sync_enabled)
     else:
         status = "never"
         last_sync_at = None
         rows_cached = 0
         tables_cached = []
         error = None
+        sync_interval_minutes = 30
+        is_auto_sync_enabled = False
 
     # If metadata says "success" but this deployment has no cached tables,
     # treat as unsynced to avoid false-positive "Synced" UI.
@@ -165,6 +171,8 @@ def _build_effective_status(
         is_syncing=is_syncing,
         progress=progress,
         error=error,
+        sync_interval_minutes=sync_interval_minutes,
+        is_auto_sync_enabled=is_auto_sync_enabled,
     )
 
 

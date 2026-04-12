@@ -90,7 +90,7 @@ class ETLScheduler:
                     if not config.last_sync_at:
                         is_due = True
                     else:
-                        next_sync = config.last_sync_at + timedelta(minutes=config.sync_interval_minutes or 60)
+                        next_sync = config.last_sync_at + timedelta(minutes=config.sync_interval_minutes or 30)
                         is_due = datetime.now(timezone.utc) >= next_sync
                     
                     if is_due:

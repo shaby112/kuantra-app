@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Icon } from "@/components/Icon";
-import { getConnections, deleteConnection, testConnection, ConnectionResponse, uploadFile, triggerSync, syncAllConnections, getAllSyncStatuses } from "@/lib/connections";
+import { getConnections, deleteConnection, testConnection, ConnectionResponse, uploadFile, triggerSync, syncAllConnections, getAllSyncStatuses, updateSyncConfig } from "@/lib/connections";
 import { ConnectionModal } from "./ConnectionModal";
 import { SchemaViewerModal } from "./SchemaViewerModal";
 import { SyncProgressDialog } from "./SyncProgressDialog";
@@ -35,6 +35,7 @@ export function ConnectionsView() {
     const [syncingId, setSyncingId] = useState<string | null>(null);
     const [syncingAll, setSyncingAll] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [autoSyncDraft, setAutoSyncDraft] = useState<Record<string, { enabled: boolean; minutes: number }>>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { toast } = useToast();
@@ -51,7 +52,36 @@ export function ConnectionsView() {
         refetchInterval: 5000,
     });
 
+
     const getStatusForConn = (id: string) => syncStatuses?.find(s => s.connection_id === id);
+
+    const getConnectionLogo = (conn: ConnectionResponse) => {
+        if (conn.connection_type === "file") {
+            const file = (conn.file_path || conn.name || "").toLowerCase();
+            if (file.endsWith(".xlsx") || file.endsWith(".xls")) return "/logos/excel.svg";
+            if (file.endsWith(".csv")) return "/logos/csv.svg";
+            return null;
+        }
+        return "/logos/postgres.svg";
+    };
+
+    const getConnectionTypeLabel = (conn: ConnectionResponse) => {
+        if (conn.connection_type === "file") {
+            const file = (conn.file_path || conn.name || "").toLowerCase();
+            if (file.endsWith(".xlsx") || file.endsWith(".xls")) return "Excel File";
+            if (file.endsWith(".csv")) return "CSV File";
+            return "File Upload";
+        }
+        return "PostgreSQL";
+    };
+
+    const getAutoSyncValue = (connId: string) => {
+        const status = getStatusForConn(connId);
+        return autoSyncDraft[connId] || {
+            enabled: status?.is_auto_sync_enabled ?? false,
+            minutes: status?.sync_interval_minutes ?? 30,
+        };
+    };
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => deleteConnection(id),
@@ -107,6 +137,21 @@ export function ConnectionsView() {
             toast({ title: "Sync All Failed", description: e.message || "Failed to sync all", variant: "destructive" });
             setSyncingAll(false);
         }
+    });
+
+    const syncConfigMutation = useMutation({
+        mutationFn: ({ connectionId, enabled, minutes }: { connectionId: string; enabled: boolean; minutes: number }) =>
+            updateSyncConfig(connectionId, {
+                is_auto_sync_enabled: enabled,
+                sync_interval_minutes: minutes,
+            }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["syncStatus"] });
+            toast({ title: "Auto-sync updated", description: "Schedule saved." });
+        },
+        onError: (e: any) => {
+            toast({ title: "Auto-sync update failed", description: e.message || "Could not save auto-sync settings", variant: "destructive" });
+        },
     });
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,16 +349,17 @@ export function ConnectionsView() {
 
                                             <div className="flex justify-between items-start relative z-10">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-obsidian-primary/10 border border-obsidian-primary/20 rounded-lg flex items-center justify-center">
-                                                        <Icon
-                                                            name={conn.connection_type === "file" ? "description" : "database"}
-                                                            className="text-obsidian-primary"
-                                                        />
+                                                    <div className="w-12 h-12 bg-obsidian-primary/10 border border-obsidian-primary/20 rounded-lg flex items-center justify-center overflow-hidden">
+                                                        {getConnectionLogo(conn) ? (
+                                                            <img src={getConnectionLogo(conn) as string} alt={getConnectionTypeLabel(conn)} className="w-8 h-8 object-contain" />
+                                                        ) : (
+                                                            <Icon name={conn.connection_type === "file" ? "description" : "database"} className="text-obsidian-primary" />
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <h3 className={`font-bold text-white ${isPrimary ? "text-xl" : "text-base"}`}>{conn.name}</h3>
                                                         <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500">
-                                                            {conn.connection_type || "PostgreSQL"} {conn.connection_type !== "file" && conn.host ? `• ${conn.host}` : ""}
+                                                            {getConnectionTypeLabel(conn)} {conn.connection_type !== "file" && conn.host ? `• ${conn.host}` : ""}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -392,6 +438,43 @@ export function ConnectionsView() {
                                                     </div>
                                                 </div>
                                             )}
+
+                                            <div className="mt-5 border-t border-obsidian-outline-variant/10 pt-4 space-y-3 relative z-10">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[11px] uppercase tracking-widest text-zinc-500 font-label">Auto Sync</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const current = getAutoSyncValue(conn.id);
+                                                            setAutoSyncDraft(prev => ({ ...prev, [conn.id]: { ...current, enabled: !current.enabled } }));
+                                                        }}
+                                                        className={`px-2.5 py-1 rounded-full text-[10px] font-label uppercase tracking-widest border ${getAutoSyncValue(conn.id).enabled ? "bg-obsidian-primary/10 border-obsidian-primary/30 text-obsidian-primary" : "bg-zinc-500/10 border-zinc-500/20 text-zinc-400"}`}
+                                                    >
+                                                        {getAutoSyncValue(conn.id).enabled ? "Enabled" : "Disabled"}
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-zinc-500">Every</span>
+                                                    <select
+                                                        value={getAutoSyncValue(conn.id).minutes}
+                                                        onChange={(e) => {
+                                                            const current = getAutoSyncValue(conn.id);
+                                                            setAutoSyncDraft(prev => ({ ...prev, [conn.id]: { ...current, minutes: Number(e.target.value) } }));
+                                                        }}
+                                                        className="bg-obsidian-surface-high border border-obsidian-outline-variant/20 rounded px-2 py-1 text-xs text-white"
+                                                    >
+                                                        {[5, 10, 15, 30, 60, 120].map((m) => (<option key={m} value={m}>{m} min</option>))}
+                                                    </select>
+                                                    <button
+                                                        onClick={() => {
+                                                            const current = getAutoSyncValue(conn.id);
+                                                            syncConfigMutation.mutate({ connectionId: conn.id, enabled: current.enabled, minutes: current.minutes || 30 });
+                                                        }}
+                                                        className="ml-auto px-3 py-1.5 bg-obsidian-secondary-purple/20 border border-obsidian-outline-variant/20 text-white text-[10px] font-label uppercase tracking-widest rounded"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </div>
 
                                             {/* Action Buttons */}
                                             <div className="mt-6 flex gap-3 relative z-10">
