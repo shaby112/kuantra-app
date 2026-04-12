@@ -62,7 +62,7 @@ export function ConnectionsView() {
             if (file.endsWith(".csv")) return "/logos/csv.svg";
             return null;
         }
-        return "/logos/postgres.svg";
+        return "/logos/postgres.png";
     };
 
     const getConnectionTypeLabel = (conn: ConnectionResponse) => {
@@ -329,8 +329,6 @@ export function ConnectionsView() {
                         <AnimatePresence mode="popLayout">
                             {filteredConnections?.map((conn, idx) => {
                                 const status = getStatusForConn(conn.id);
-                                const isFirstAndBig = idx === 0 && filteredConnections.length > 1;
-                                const isPrimary = isFirstAndBig;
 
                                 return (
                                     <motion.div
@@ -340,12 +338,9 @@ export function ConnectionsView() {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         transition={{ duration: 0.2, delay: idx * 0.05 }}
-                                        className={isPrimary ? "col-span-12 lg:col-span-8" : "col-span-12 md:col-span-6 lg:col-span-4"}
+                                        className="col-span-12 md:col-span-6 lg:col-span-4"
                                     >
-                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-xl p-6 relative overflow-hidden group hover:border-obsidian-outline-variant/30 transition-all">
-                                            {isPrimary && (
-                                                <div className="absolute top-0 right-0 w-64 h-64 bg-obsidian-primary/5 rounded-full -mr-20 -mt-20 blur-3xl" />
-                                            )}
+                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-xl p-6 relative overflow-hidden group hover:border-obsidian-outline-variant/30 transition-all h-[330px] flex flex-col">
 
                                             <div className="flex justify-between items-start relative z-10">
                                                 <div className="flex items-center gap-4">
@@ -357,7 +352,7 @@ export function ConnectionsView() {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <h3 className={`font-bold text-white ${isPrimary ? "text-xl" : "text-base"}`}>{conn.name}</h3>
+                                                        <h3 className="font-bold text-white text-2xl">{conn.name}</h3>
                                                         <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500">
                                                             {getConnectionTypeLabel(conn)} {conn.connection_type !== "file" && conn.host ? `• ${conn.host}` : ""}
                                                         </p>
@@ -401,43 +396,16 @@ export function ConnectionsView() {
                                             </div>
 
                                             {/* Connection details */}
-                                            {isPrimary && (
-                                                <div className="mt-8 grid grid-cols-3 gap-8 border-t border-obsidian-outline-variant/10 pt-6 relative z-10">
-                                                    <div>
-                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Database</p>
-                                                        <p className="text-white font-medium">{conn.database_name || "N/A"}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2">User</p>
-                                                        <p className="text-white font-medium font-label">{conn.username || "Local"}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Last Sync</p>
-                                                        <p className="text-white font-medium">
-                                                            {status?.last_sync_at
-                                                                ? formatDistanceToNow(new Date(status.last_sync_at.endsWith("Z") ? status.last_sync_at : status.last_sync_at + "Z"), { addSuffix: true })
-                                                                : "Never"}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {!isPrimary && (
-                                                <div className="mt-4 space-y-2">
-                                                    <div className="flex justify-between items-center text-xs">
-                                                        <span className="text-zinc-500">Database</span>
-                                                        <span className="text-white font-label">{conn.database_name || "N/A"}</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center text-xs">
-                                                        <span className="text-zinc-500">Last Sync</span>
-                                                        <span className="text-white">
-                                                            {status?.last_sync_at
-                                                                ? formatDistanceToNow(new Date(status.last_sync_at.endsWith("Z") ? status.last_sync_at : status.last_sync_at + "Z"), { addSuffix: true })
-                                                                : "Never"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-obsidian-outline-variant/10 pt-4 relative z-10 text-xs">
+                                                <span className="text-zinc-500">Database</span>
+                                                <span className="text-white text-right truncate">{conn.database_name || conn.name}</span>
+                                                <span className="text-zinc-500">Last Sync</span>
+                                                <span className="text-white text-right">
+                                                    {status?.last_sync_at
+                                                        ? formatDistanceToNow(new Date(status.last_sync_at.endsWith("Z") ? status.last_sync_at : status.last_sync_at + "Z"), { addSuffix: true })
+                                                        : "Never"}
+                                                </span>
+                                            </div>
 
                                             <div className="mt-5 border-t border-obsidian-outline-variant/10 pt-4 space-y-3 relative z-10">
                                                 <div className="flex items-center justify-between">
@@ -477,7 +445,7 @@ export function ConnectionsView() {
                                             </div>
 
                                             {/* Action Buttons */}
-                                            <div className="mt-6 flex gap-3 relative z-10">
+                                            <div className="mt-auto pt-4 flex gap-3 relative z-10">
                                                 <button
                                                     onClick={() => handleViewSchema(conn)}
                                                     className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-widest hover:bg-obsidian-primary/20 hover:text-obsidian-primary transition-all border border-obsidian-outline-variant/20"
