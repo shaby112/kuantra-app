@@ -340,10 +340,10 @@ export function ConnectionsView() {
                                         transition={{ duration: 0.2, delay: idx * 0.05 }}
                                         className="col-span-12 md:col-span-6 lg:col-span-4"
                                     >
-                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-none p-6 relative overflow-hidden group hover:border-obsidian-outline-variant/30 transition-all h-[330px] flex flex-col">
+                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-none p-6 relative overflow-visible group hover:border-obsidian-outline-variant/30 transition-all h-[370px] flex flex-col">
 
                                             <div className="flex justify-between items-start relative z-10">
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-4 min-w-0">
                                                     <div className="w-12 h-12 bg-obsidian-primary/10 border border-obsidian-primary/20 rounded-none flex items-center justify-center">
                                                         {getConnectionLogo(conn) ? (
                                                             <img src={getConnectionLogo(conn) as string} alt={getConnectionTypeLabel(conn)} className="w-10 h-10 object-contain" />
@@ -351,14 +351,14 @@ export function ConnectionsView() {
                                                             <Icon name={conn.connection_type === "file" ? "description" : "database"} className="text-obsidian-primary" />
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-white text-2xl">{conn.name}</h3>
+                                                    <div className="min-w-0">
+                                                        <h3 className="font-bold text-white text-xl leading-tight break-words">{conn.name}</h3>
                                                         <p className="font-label text-[10px] uppercase tracking-widest text-zinc-500">
                                                             {getConnectionTypeLabel(conn)} {conn.connection_type !== "file" && conn.host ? `• ${conn.host}` : ""}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2 items-center">
+                                                <div className="flex gap-2 items-center shrink-0">
                                                     {/* Status badge */}
                                                     {status?.status === "running" && (
                                                         <span className="px-3 py-1 bg-blue-500/10 text-blue-400 font-label text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-1 border border-blue-500/20">
@@ -445,10 +445,10 @@ export function ConnectionsView() {
                                             </div>
 
                                             {/* Action Buttons */}
-                                            <div className="mt-auto pt-4 flex gap-3 relative z-10">
+                                            <div className="mt-auto pt-4 flex gap-2 relative z-10">
                                                 <button
                                                     onClick={() => handleViewSchema(conn)}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-widest hover:bg-obsidian-primary/20 hover:text-obsidian-primary transition-all border border-obsidian-outline-variant/20"
+                                                    className="flex-1 min-w-0 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-wide hover:bg-obsidian-primary/20 hover:text-obsidian-primary transition-all border border-obsidian-outline-variant/20 rounded-none"
                                                 >
                                                     <Icon name="database" size="sm" />
                                                     Schema
@@ -456,14 +456,14 @@ export function ConnectionsView() {
                                                 <button
                                                     onClick={() => handleSync(conn)}
                                                     disabled={syncingId === conn.id}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-widest hover:bg-obsidian-secondary-purple/20 hover:text-obsidian-secondary transition-all border border-obsidian-outline-variant/20 disabled:opacity-50"
+                                                    className="flex-1 min-w-0 flex items-center justify-center gap-2 py-2.5 bg-obsidian-surface-highest text-white font-label text-xs uppercase tracking-wide hover:bg-obsidian-secondary-purple/20 hover:text-obsidian-secondary transition-all border border-obsidian-outline-variant/20 disabled:opacity-50 rounded-none"
                                                 >
                                                     <Icon name="sync" size="sm" className={syncingId === conn.id ? "animate-spin" : ""} />
                                                     Sync
                                                 </button>
                                                 <button
                                                     onClick={() => handleExplore(conn)}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-obsidian-primary-container text-obsidian-surface font-label text-xs font-bold uppercase tracking-widest hover:bg-obsidian-primary transition-all rounded-lg"
+                                                    className="flex-1 min-w-0 flex items-center justify-center gap-2 py-2.5 bg-obsidian-primary-container text-obsidian-surface font-label text-xs font-bold uppercase tracking-wide hover:bg-obsidian-primary transition-all rounded-none"
                                                 >
                                                     <Icon name="terminal" size="sm" />
                                                     Explore
