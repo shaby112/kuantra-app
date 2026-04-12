@@ -340,13 +340,13 @@ export function ConnectionsView() {
                                         transition={{ duration: 0.2, delay: idx * 0.05 }}
                                         className="col-span-12 md:col-span-6 lg:col-span-4"
                                     >
-                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-xl p-6 relative overflow-hidden group hover:border-obsidian-outline-variant/30 transition-all h-[330px] flex flex-col">
+                                        <div className="bg-obsidian-surface-low border border-obsidian-outline-variant/10 rounded-none p-6 relative overflow-hidden group hover:border-obsidian-outline-variant/30 transition-all h-[330px] flex flex-col">
 
                                             <div className="flex justify-between items-start relative z-10">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-obsidian-primary/10 border border-obsidian-primary/20 rounded-lg flex items-center justify-center overflow-hidden">
+                                                    <div className="w-12 h-12 bg-obsidian-primary/10 border border-obsidian-primary/20 rounded-none flex items-center justify-center">
                                                         {getConnectionLogo(conn) ? (
-                                                            <img src={getConnectionLogo(conn) as string} alt={getConnectionTypeLabel(conn)} className="w-8 h-8 object-contain" />
+                                                            <img src={getConnectionLogo(conn) as string} alt={getConnectionTypeLabel(conn)} className="w-10 h-10 object-contain" />
                                                         ) : (
                                                             <Icon name={conn.connection_type === "file" ? "description" : "database"} className="text-obsidian-primary" />
                                                         )}
