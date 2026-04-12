@@ -175,6 +175,89 @@ def _execute_with_qualified_fallback(sql: str):
         return duckdb_manager.execute(qualified_sql)
 
 
+def _is_repairable_sql_error(error_message: str) -> bool:
+    msg = (error_message or "").lower()
+    repair_markers = [
+        "binder error",
+        "parser error",
+        "catalog error",
+        "referenced column",
+        "table with name",
+        "no function matches",
+        "column \"",
+        "syntax error",
+    ]
+    return any(marker in msg for marker in repair_markers)
+
+
+async def _repair_sql_with_llm(original_sql: str, error_message: str) -> Optional[str]:
+    from app.services.llm_provider_service import llm_provider_registry
+
+    schema_context = _build_schema_context()
+    repair_system_prompt = (
+        "You are a DuckDB SQL repair assistant. Return only corrected SQL, no markdown, no explanation. "
+        "The SQL must stay read-only (SELECT/WITH only), preserve intent, and use existing columns/tables only."
+    )
+    repair_prompt = (
+        "Fix this DuckDB SQL query using the execution error and schema context.\n\n"
+        f"Error:\n{error_message}\n\n"
+        f"Original SQL:\n{original_sql}\n\n"
+        f"Schema Context:\n{schema_context}\n\n"
+        "Return only corrected SQL."
+    )
+
+    try:
+        provider = llm_provider_registry.get_provider()
+        repaired = await provider.generate(
+            prompt=repair_prompt,
+            system_prompt=repair_system_prompt,
+            config={"temperature": 0.0, "num_predict": 768},
+        )
+        if not repaired:
+            return None
+        cleaned = repaired.strip()
+        fence_match = re.search(r"```(?:sql)?\s*\n?([\s\S]*?)```", cleaned)
+        if fence_match:
+            cleaned = fence_match.group(1).strip()
+        return cleaned or None
+    except Exception as e:
+        logger.warning(f"SQL repair generation failed: {e}")
+        return None
+
+
+async def _execute_with_feedback_loop(sql: str, max_attempts: int = 2):
+    current_sql = sql
+    last_error: Optional[Exception] = None
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            results = _execute_with_qualified_fallback(current_sql)
+            return results
+        except Exception as e:
+            last_error = e
+            error_text = str(e)
+            if attempt >= max_attempts or not _is_repairable_sql_error(error_text):
+                raise
+
+            repaired_sql = await _repair_sql_with_llm(current_sql, error_text)
+            if not repaired_sql or repaired_sql.strip() == current_sql.strip():
+                raise
+
+            if not connection_service.is_safe_query(repaired_sql):
+                logger.warning("Rejected repaired SQL because it was not read-only")
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "READ_ONLY_ENFORCED", "message": "Only read-only SELECT queries are allowed."},
+                )
+
+            logger.info(f"Retrying SQL execution with LLM-repaired query (attempt {attempt + 1}/{max_attempts})")
+            current_sql = repaired_sql
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("SQL execution failed")
+
+
 @router.post("/execute", response_model=ExecuteResponse)
 @limiter.limit(settings.RATE_LIMIT_QUERY_EXECUTE)
 async def execute_query_endpoint(
@@ -193,7 +276,7 @@ async def execute_query_endpoint(
             )
 
         # Always execute against DuckDB warehouse — this is where all synced data lives
-        results = _execute_with_qualified_fallback(body.sql)
+        results = await _execute_with_feedback_loop(body.sql, max_attempts=2)
         return {"results": results}
     except QueryTimeoutError as e:
         logger.warning(f"Query timeout: {e}")
